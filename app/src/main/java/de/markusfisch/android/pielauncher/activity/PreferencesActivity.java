@@ -90,6 +90,14 @@ public class PreferencesActivity extends Activity {
 		int primaryTextColor = getResources().getColor(prefs.invertColors()
 				? R.color.text_color_inverted
 				: R.color.text_color);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+			for (android.graphics.drawable.Drawable d : toolbar.getCompoundDrawablesRelative()) {
+				if (d != null) {
+					d.mutate().setColorFilter(primaryTextColor,
+							android.graphics.PorterDuff.Mode.SRC_IN);
+				}
+			}
+		}
 		for (android.graphics.drawable.Drawable d : toolbar.getCompoundDrawables()) {
 			if (d != null) {
 				d.mutate().setColorFilter(primaryTextColor,

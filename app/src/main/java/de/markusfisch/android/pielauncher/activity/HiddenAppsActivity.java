@@ -68,6 +68,14 @@ public class HiddenAppsActivity extends Activity {
 		android.widget.TextView toolbar = findViewById(R.id.toolbar);
 		if (prefs.invertColors()) {
 			int textColor = getResources().getColor(R.color.text_color_inverted);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+				for (Drawable d : toolbar.getCompoundDrawablesRelative()) {
+					if (d != null) {
+						d.mutate().setColorFilter(textColor,
+								android.graphics.PorterDuff.Mode.SRC_IN);
+					}
+				}
+			}
 			for (Drawable d : toolbar.getCompoundDrawables()) {
 				if (d != null) {
 					d.mutate().setColorFilter(textColor,

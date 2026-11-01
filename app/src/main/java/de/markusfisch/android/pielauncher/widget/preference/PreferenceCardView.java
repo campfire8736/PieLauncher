@@ -23,7 +23,6 @@ public class PreferenceCardView extends LinearLayout {
 	private Paint strokePaint;
 	private float cornerRadius;
 	private int cardColor;
-	private boolean inverted;
 
 	public PreferenceCardView(Context context) {
 		super(context);
@@ -51,7 +50,7 @@ public class PreferenceCardView extends LinearLayout {
 			cornerRadius = defaultRadius;
 		}
 
-		inverted = de.markusfisch.android.pielauncher.app.PieLauncherApp.getPrefs(context).invertColors();
+		boolean inverted = de.markusfisch.android.pielauncher.app.PieLauncherApp.getPrefs(context).invertColors();
 		cardColor = context.getResources().getColor(inverted
 				? R.color.bg_card_inverted
 				: R.color.bg_card);
@@ -66,11 +65,6 @@ public class PreferenceCardView extends LinearLayout {
 			strokePaint.setColor(strokeColor);
 			strokePaint.setStyle(Paint.Style.STROKE);
 			strokePaint.setStrokeWidth(strokeWidth);
-		}
-
-		if (inverted) {
-			setDividerDrawable(context.getResources().getDrawable(
-					R.drawable.preference_divider_inverted));
 		}
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -110,41 +104,22 @@ public class PreferenceCardView extends LinearLayout {
 			}
 
 			if (firstVisible != -1) {
-				if (inverted) {
-					View first = getChildAt(firstVisible);
-					View last = getChildAt(lastVisible);
-					rect.set(first.getLeft(), first.getTop(), first.getRight(), last.getBottom());
-					if (cornerRadius > 0) {
-						childPath.reset();
-						childPath.addRoundRect(rect, cornerRadius, cornerRadius, Path.Direction.CW);
-						canvas.drawPath(childPath, cardPaint);
-						if (strokePaint != null) {
-							canvas.drawPath(childPath, strokePaint);
-						}
-					} else {
-						canvas.drawRect(rect, cardPaint);
-						if (strokePaint != null) {
-							canvas.drawRect(rect, strokePaint);
-						}
-					}
-				} else {
-					for (int i = 0; i < childCount; i++) {
-						View child = getChildAt(i);
-						if (child.getVisibility() == View.VISIBLE) {
-							rect.set(child.getLeft(), child.getTop(), child.getRight(), child.getBottom());
-							if (cornerRadius > 0) {
-								childPath.reset();
-								getChildRadii(i, firstVisible, lastVisible, cornerRadius, radii);
-								childPath.addRoundRect(rect, radii, Path.Direction.CW);
-								canvas.drawPath(childPath, cardPaint);
-								if (strokePaint != null) {
-									canvas.drawPath(childPath, strokePaint);
-								}
-							} else {
-								canvas.drawRect(rect, cardPaint);
-								if (strokePaint != null) {
-									canvas.drawRect(rect, strokePaint);
-								}
+				for (int i = 0; i < childCount; i++) {
+					View child = getChildAt(i);
+					if (child.getVisibility() == View.VISIBLE) {
+						rect.set(child.getLeft(), child.getTop(), child.getRight(), child.getBottom());
+						if (cornerRadius > 0) {
+							childPath.reset();
+							getChildRadii(i, firstVisible, lastVisible, cornerRadius, radii);
+							childPath.addRoundRect(rect, radii, Path.Direction.CW);
+							canvas.drawPath(childPath, cardPaint);
+							if (strokePaint != null) {
+								canvas.drawPath(childPath, strokePaint);
+							}
+						} else {
+							canvas.drawRect(rect, cardPaint);
+							if (strokePaint != null) {
+								canvas.drawRect(rect, strokePaint);
 							}
 						}
 					}
@@ -173,19 +148,12 @@ public class PreferenceCardView extends LinearLayout {
 					}
 				}
 				if (firstVisible != -1) {
-					if (inverted) {
-						View first = getChildAt(firstVisible);
-						View last = getChildAt(lastVisible);
-						rect.set(first.getLeft(), first.getTop(), first.getRight(), last.getBottom());
-						clipPath.addRoundRect(rect, cornerRadius, cornerRadius, Path.Direction.CW);
-					} else {
-						for (int i = 0; i < childCount; i++) {
-							View child = getChildAt(i);
-							if (child.getVisibility() == View.VISIBLE) {
-								rect.set(child.getLeft(), child.getTop(), child.getRight(), child.getBottom());
-								getChildRadii(i, firstVisible, lastVisible, cornerRadius, radii);
-								clipPath.addRoundRect(rect, radii, Path.Direction.CW);
-							}
+					for (int i = 0; i < childCount; i++) {
+						View child = getChildAt(i);
+						if (child.getVisibility() == View.VISIBLE) {
+							rect.set(child.getLeft(), child.getTop(), child.getRight(), child.getBottom());
+							getChildRadii(i, firstVisible, lastVisible, cornerRadius, radii);
+							clipPath.addRoundRect(rect, radii, Path.Direction.CW);
 						}
 					}
 				}

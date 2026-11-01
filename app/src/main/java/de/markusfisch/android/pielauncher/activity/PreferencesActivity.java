@@ -442,7 +442,18 @@ public class PreferencesActivity extends Activity {
 		Map<T, G> optionsMap = options.onGetOptions();
 		pcv.setOnClickListener(v -> {
 			CharSequence[] items = getItemsFromOptions(optionsMap);
-			OptionsDialog.show(this, titleId, items, (dialog, which) -> {
+			int selectedIndex = -1;
+			int index = 0;
+			T current = getter.onGet();
+			for (T key : optionsMap.keySet()) {
+				if ((key != null && key.equals(current)) ||
+						(key == null && current == null)) {
+					selectedIndex = index;
+					break;
+				}
+				index++;
+			}
+			OptionsDialog.show(this, titleId, items, selectedIndex, (dialog, which) -> {
 				Set<T> keys = optionsMap.keySet();
 				int i = 0;
 				for (T key : keys) {

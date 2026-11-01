@@ -9,6 +9,8 @@ import android.util.AttributeSet;
 import android.view.ViewOutlineProvider;
 import android.widget.LinearLayout;
 
+import de.markusfisch.android.pielauncher.R;
+
 public class PreferenceCardView extends LinearLayout {
 	private final Path clipPath = new Path();
 	private final RectF rect = new RectF();
@@ -30,7 +32,7 @@ public class PreferenceCardView extends LinearLayout {
 	}
 
 	private void init(Context context) {
-		cornerRadius = 16f * context.getResources().getDisplayMetrics().density;
+		cornerRadius = context.getResources().getDimension(R.dimen.card_corner_radius);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			setOutlineProvider(ViewOutlineProvider.BACKGROUND);
 			setClipToOutline(true);

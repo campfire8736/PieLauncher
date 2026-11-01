@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import android.content.Context;
 import android.content.Intent;
 import android.view.View;
+import android.widget.TextView;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -156,6 +157,44 @@ public class PreferencesActivityTest {
 		assertTrue(hiddenApps.isClickable());
 		assertTrue(hiddenApps.hasOnClickListeners());
 		assertTrue(hiddenApps.performClick());
+
+		controller.destroy();
+	}
+
+	@Test
+	public void testOptionsDialogRendersAndClicks() {
+		ActivityController<PreferencesActivity> controller =
+				Robolectric.buildActivity(PreferencesActivity.class);
+		PreferencesActivity activity = controller.create().start().resume().visible().get();
+
+		final int[] clickedIndex = {-1};
+		de.markusfisch.android.pielauncher.widget.OptionsDialog.show(
+				activity,
+				R.string.orientation,
+				new CharSequence[]{"Option A", "Option B"},
+				0,
+				(dialog, which) -> clickedIndex[0] = which);
+
+		android.app.Dialog dialog = org.robolectric.shadows.ShadowDialog.getLatestDialog();
+		assertNotNull(dialog);
+		assertTrue(dialog.isShowing());
+
+		TextView title = dialog.findViewById(R.id.dialog_title);
+		assertNotNull(title);
+		assertEquals(activity.getString(R.string.orientation), title.getText().toString());
+
+		android.widget.LinearLayout container = dialog.findViewById(R.id.options_container);
+		assertNotNull(container);
+		assertEquals(2, container.getChildCount());
+
+		View firstItem = container.getChildAt(0);
+		View check = firstItem.findViewById(R.id.option_check);
+		assertEquals(View.VISIBLE, check.getVisibility());
+
+		View secondItem = container.getChildAt(1);
+		secondItem.performClick();
+		assertEquals(1, clickedIndex[0]);
+		org.junit.Assert.assertFalse(dialog.isShowing());
 
 		controller.destroy();
 	}

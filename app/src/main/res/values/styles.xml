@@ -6,6 +6,7 @@
 		<item name="android:windowNoTitle">true</item>
 		<item name="android:textColorPrimary">@color/text_color</item>
 		<item name="android:textColorSecondary">@color/text_color_preference</item>
+		<item name="android:colorAccent">@color/accent</item>
 		<item name="primaryTextColor">@color/text_color</item>
 		<item name="secondaryTextColor">@color/text_color_preference</item>
 		<item name="uiBackgroundColor">@color/bg_ui</item>
@@ -18,6 +19,7 @@
 	<style name="HomeTheme.Inverted" parent="HomeTheme">
 		<item name="android:textColorPrimary">@color/text_color_inverted</item>
 		<item name="android:textColorSecondary">@color/text_color_preference_inverted</item>
+		<item name="android:colorAccent">@color/accent_inverted</item>
 		<item name="primaryTextColor">@color/text_color_inverted</item>
 		<item name="secondaryTextColor">@color/text_color_preference_inverted</item>
 		<item name="uiBackgroundColor">@color/bg_ui_inverted</item>
@@ -79,7 +81,7 @@
 	<style name="PreferenceValue" parent="@android:style/Widget.TextView">
 		<item name="android:layout_width">wrap_content</item>
 		<item name="android:layout_height">wrap_content</item>
-		<item name="android:textColor">@color/accent</item>
+		<item name="android:textColor">?android:attr/colorAccent</item>
 		<item name="android:textSize">13sp</item>
 		<item name="android:textStyle">bold</item>
 		<item name="android:layout_marginTop">2dp</item>

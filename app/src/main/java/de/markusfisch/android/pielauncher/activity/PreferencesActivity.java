@@ -157,6 +157,11 @@ public class PreferencesActivity extends Activity {
 		});
 		SystemBars.addPaddingFromWindowInsets(toolbar, scrollView);
 		SystemBars.setTransparentSystemBars(window);
+		if (prefs.invertColors() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			View decor = window.getDecorView();
+			decor.setSystemUiVisibility(decor.getSystemUiVisibility() |
+					View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+		}
 	}
 
 	@Override

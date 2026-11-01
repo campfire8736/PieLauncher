@@ -78,7 +78,12 @@ public class OptionsDialog {
 
 			if (position == selectedIndex) {
 				check.setVisibility(View.VISIBLE);
-				text.setTextColor(context.getResources().getColor(R.color.accent));
+				int accent = context.getResources().getColor(
+						de.markusfisch.android.pielauncher.app.PieLauncherApp.getPrefs(context).invertColors()
+								? R.color.accent_inverted
+								: R.color.accent);
+				text.setTextColor(accent);
+				check.setColorFilter(accent, android.graphics.PorterDuff.Mode.SRC_IN);
 			} else {
 				check.setVisibility(View.GONE);
 			}

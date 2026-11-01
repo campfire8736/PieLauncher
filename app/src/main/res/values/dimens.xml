@@ -1,7 +1,7 @@
 <resources>
 	<dimen name="icon_size">48dp</dimen>
 	<dimen name="card_corner_radius">16dp</dimen>
-	<dimen name="card_stroke_width">0dp</dimen>
+	<dimen name="card_stroke_width">1dp</dimen>
 	<dimen name="card_margin">0dp</dimen>
 	<dimen name="preference_padding">16dp</dimen>
 	<dimen name="preference_divider_inset">8dp</dimen>

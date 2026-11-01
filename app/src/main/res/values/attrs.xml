@@ -5,4 +5,7 @@
 		<attr name="summary" format="string" />
 		<attr name="icon" format="reference" />
 	</declare-styleable>
+	<declare-styleable name="PreferenceCardView">
+		<attr name="cardCornerRadius" format="dimension" />
+	</declare-styleable>
 </resources>

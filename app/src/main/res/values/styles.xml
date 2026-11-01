@@ -18,10 +18,10 @@
 	<style name="CategoryHeader" parent="@android:style/Widget.TextView">
 		<item name="android:layout_width">match_parent</item>
 		<item name="android:layout_height">wrap_content</item>
-		<item name="android:paddingLeft">24dp</item>
-		<item name="android:paddingRight">24dp</item>
-		<item name="android:paddingStart">24dp</item>
-		<item name="android:paddingEnd">24dp</item>
+		<item name="android:paddingLeft">16dp</item>
+		<item name="android:paddingRight">16dp</item>
+		<item name="android:paddingStart">16dp</item>
+		<item name="android:paddingEnd">16dp</item>
 		<item name="android:paddingTop">20dp</item>
 		<item name="android:paddingBottom">8dp</item>
 		<item name="android:textColor">@color/text_color_preference</item>
@@ -34,10 +34,10 @@
 		<item name="android:layout_height">wrap_content</item>
 		<item name="android:orientation">vertical</item>
 		<item name="android:background">@drawable/bg_preference_card</item>
-		<item name="android:layout_marginLeft">16dp</item>
-		<item name="android:layout_marginRight">16dp</item>
-		<item name="android:layout_marginStart">16dp</item>
-		<item name="android:layout_marginEnd">16dp</item>
+		<item name="android:layout_marginLeft">@dimen/card_margin</item>
+		<item name="android:layout_marginRight">@dimen/card_margin</item>
+		<item name="android:layout_marginStart">@dimen/card_margin</item>
+		<item name="android:layout_marginEnd">@dimen/card_margin</item>
 		<item name="android:layout_marginBottom">16dp</item>
 		<item name="android:showDividers">middle</item>
 		<item name="android:divider">@drawable/preference_divider</item>

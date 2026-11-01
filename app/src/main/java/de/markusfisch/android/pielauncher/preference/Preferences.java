@@ -271,7 +271,7 @@ public class Preferences {
 
 	public void setInvertColors(boolean invertColors) {
 		this.invertColors = invertColors;
-		put(INVERT_COLORS, invertColors).apply();
+		put(INVERT_COLORS, invertColors).commit();
 	}
 
 	public int getBackgroundBlurRadius() {

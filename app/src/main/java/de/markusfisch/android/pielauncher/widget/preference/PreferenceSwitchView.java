@@ -2,7 +2,9 @@ package de.markusfisch.android.pielauncher.widget.preference;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -76,6 +78,16 @@ public class PreferenceSwitchView extends LinearLayout {
 	public boolean performClick() {
 		toggle();
 		return super.performClick();
+	}
+
+	@Override
+	protected void dispatchSaveInstanceState(SparseArray<Parcelable> container) {
+		dispatchFreezeSelfOnly(container);
+	}
+
+	@Override
+	protected void dispatchRestoreInstanceState(SparseArray<Parcelable> container) {
+		dispatchThawSelfOnly(container);
 	}
 
 	public void toggle() {

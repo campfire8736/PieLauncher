@@ -2,7 +2,9 @@ package de.markusfisch.android.pielauncher.widget.preference;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -115,6 +117,16 @@ public class PreferenceSliderView extends LinearLayout {
 	public void setProgress(int progress) {
 		seekBar.setProgress(progress);
 		updateValueText(progress);
+	}
+
+	@Override
+	protected void dispatchSaveInstanceState(SparseArray<Parcelable> container) {
+		dispatchFreezeSelfOnly(container);
+	}
+
+	@Override
+	protected void dispatchRestoreInstanceState(SparseArray<Parcelable> container) {
+		dispatchThawSelfOnly(container);
 	}
 
 	public int getProgress() {

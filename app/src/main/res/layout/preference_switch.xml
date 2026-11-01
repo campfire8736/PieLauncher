@@ -23,5 +23,6 @@
 		android:layout_marginLeft="16dp"
 		android:layout_marginStart="16dp"
 		android:clickable="false"
-		android:focusable="false" />
+		android:focusable="false"
+		android:saveEnabled="false" />
 </merge>

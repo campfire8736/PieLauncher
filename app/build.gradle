@@ -9,7 +9,7 @@ android {
 	}
 
 	defaultConfig {
-		minSdk 9
+		minSdk 21
 		targetSdk sdk_version
 
 		versionCode 75
@@ -43,6 +43,17 @@ android {
 			excludes += 'kotlin/**'
 		}
 	}
+
+	testOptions {
+		unitTests {
+			includeAndroidResources = true
+		}
+	}
+}
+
+dependencies {
+	testImplementation 'junit:junit:4.13.2'
+	testImplementation 'org.robolectric:robolectric:4.12.1'
 }
 
 androidComponents {

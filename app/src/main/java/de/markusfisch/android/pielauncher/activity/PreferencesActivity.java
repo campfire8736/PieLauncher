@@ -8,8 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Html;
-import android.text.Spanned;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
@@ -32,6 +30,10 @@ import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.view.SystemBars;
 import de.markusfisch.android.pielauncher.widget.OptionsDialog;
 import de.markusfisch.android.pielauncher.widget.ScrollWithListenerView;
+import de.markusfisch.android.pielauncher.widget.preference.PreferenceActionView;
+import de.markusfisch.android.pielauncher.widget.preference.PreferenceChoiceView;
+import de.markusfisch.android.pielauncher.widget.preference.PreferenceSliderView;
+import de.markusfisch.android.pielauncher.widget.preference.PreferenceSwitchView;
 
 public class PreferencesActivity extends Activity {
 	private static final String WELCOME = "welcome";
@@ -44,8 +46,9 @@ public class PreferencesActivity extends Activity {
 
 	private Preferences prefs;
 	private ToolbarBackground toolbarBackground;
-	private View disableBatteryOptimizations;
-	private View defaultLauncherView;
+	private View setupCard;
+	private PreferenceActionView disableBatteryOptimizations;
+	private PreferenceActionView defaultLauncherView;
 	private boolean isWelcomeMode = false;
 
 	public static void startWelcome(Context context) {
@@ -76,13 +79,28 @@ public class PreferencesActivity extends Activity {
 		TextView toolbar = findViewById(R.id.toolbar);
 		View skipButton = findViewById(R.id.skip);
 
+		setupCard = findViewById(R.id.setup_card);
 		disableBatteryOptimizations = findViewById(
 				R.id.disable_battery_optimization);
 		defaultLauncherView = findViewById(R.id.make_default_launcher);
+		if (disableBatteryOptimizations != null) {
+			disableBatteryOptimizations.setChevronVisible(false);
+		}
+		if (defaultLauncherView != null) {
+			defaultLauncherView.setChevronVisible(false);
+		}
 
 		Intent intent = getIntent();
 		isWelcomeMode = intent != null &&
 				intent.getBooleanExtra(WELCOME, false);
+
+		PreferenceActionView welcomeView = findViewById(R.id.welcome);
+		if (welcomeView != null) {
+			welcomeView.setChevronVisible(false);
+			welcomeView.setClickable(false);
+			welcomeView.setFocusable(false);
+			welcomeView.setBackground(null);
+		}
 
 		if (isWelcomeMode) {
 			toolbar.setText(R.string.welcome);
@@ -96,14 +114,19 @@ public class PreferencesActivity extends Activity {
 			findViewById(R.id.hide_in_welcome_mode).setVisibility(View.GONE);
 		} else {
 			toolbar.setOnClickListener(v -> finish());
-			findViewById(R.id.welcome).setVisibility(View.GONE);
+			if (welcomeView != null) {
+				welcomeView.setVisibility(View.GONE);
+			}
 
 			skipButton.setVisibility(View.GONE);
 
 			initPreferences();
-			findViewById(R.id.hidden_apps).setOnClickListener((view) -> {
-				HiddenAppsActivity.start(this);
-			});
+			View hiddenApps = findViewById(R.id.hidden_apps);
+			if (hiddenApps != null) {
+				hiddenApps.setOnClickListener((view) -> {
+					HiddenAppsActivity.start(this);
+				});
+			}
 		}
 
 		Window window = getWindow();
@@ -122,20 +145,17 @@ public class PreferencesActivity extends Activity {
 		super.onResume();
 		setRequestedOrientation(prefs.getOrientation());
 
-		// These may change while this activity is shown.
 		boolean disableBatteryVisible = updateDisableBatteryOptimizations();
 		boolean updateDefaultVisible = updateDefaultLauncher();
-		if (disableBatteryVisible && updateDefaultVisible &&
-				// Auto close in welcome mode only.
-				isWelcomeMode) {
+		if (disableBatteryVisible && updateDefaultVisible && isWelcomeMode) {
 			finish();
 		}
 
-		// Ugly hack to hide the separator between these views when
-		// defaultLauncherView is invisible.
-		if (disableBatteryOptimizations.getVisibility() == View.VISIBLE &&
-				defaultLauncherView.getVisibility() == View.GONE) {
-			disableBatteryOptimizations.setBackgroundResource(0);
+		if (setupCard != null && !isWelcomeMode) {
+			setupCard.setVisibility(
+					(!disableBatteryVisible || !updateDefaultVisible)
+							? View.VISIBLE
+							: View.GONE);
 		}
 	}
 
@@ -170,236 +190,279 @@ public class PreferencesActivity extends Activity {
 	}
 
 	private void initPreferences() {
-		initPreference(R.id.orientation,
+		initChoice(R.id.orientation,
 				R.string.orientation,
 				PreferencesActivity::getOrientationOptions,
-				() -> prefs.getOrientation(),
-				(value) -> prefs.setOrientation(value));
-		initPreference(R.id.darken_background,
+				prefs::getOrientation,
+				prefs::setOrientation);
+
+		initChoice(R.id.darken_background,
 				R.string.darken_background,
 				PreferencesActivity::getDarkenBackgroundOptions,
-				() -> prefs.darkenBackground(),
-				(value) -> prefs.setDarkenBackground(value));
+				prefs::darkenBackground,
+				prefs::setDarkenBackground);
+
 		if (BackgroundBlur.canBlur(getWindow())) {
-			initPreference(R.id.blur_background,
-					R.string.blur_background,
-					PreferencesActivity::getBackgroundBlurRadiusOptions,
-					() -> prefs.getBackgroundBlurRadius(),
-					(value) -> {
-						prefs.setBackgroundBlurRadius(value);
-						BackgroundBlur.setBlurRadius(getWindow(), value);
-					});
+			PreferenceSliderView slider = findViewById(R.id.blur_background);
+			if (slider != null) {
+				slider.setMax(80);
+				slider.setProgress(prefs.getBackgroundBlurRadius());
+				slider.setValueFormatter(val -> val == 0
+						? getString(R.string.background_blur_radius_none)
+						: val + " dp");
+				slider.setOnSliderChangeListener((v, progress, fromUser) -> {
+					prefs.setBackgroundBlurRadius(progress);
+					BackgroundBlur.setBlurRadius(getWindow(), progress);
+				});
+			}
 		} else {
-			findViewById(R.id.blur_background).setVisibility(View.GONE);
+			View blurBg = findViewById(R.id.blur_background);
+			if (blurBg != null) {
+				blurBg.setVisibility(View.GONE);
+			}
 		}
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-			initPreference(R.id.blur_menu,
-					R.string.blur_menu,
-					PreferencesActivity::getBlurMenuOptions,
-					() -> prefs.blurMenu(),
-					(value) -> prefs.setBlurMenu(value));
+			initSwitch(R.id.blur_menu,
+					prefs::blurMenu,
+					prefs::setBlurMenu);
 		} else {
-			findViewById(R.id.blur_menu).setVisibility(View.GONE);
+			View blurMenu = findViewById(R.id.blur_menu);
+			if (blurMenu != null) {
+				blurMenu.setVisibility(View.GONE);
+			}
 		}
-		initPreference(R.id.dead_zone,
+
+		initChoice(R.id.dead_zone,
 				R.string.dead_zone,
 				PreferencesActivity::getDeadZoneOptions,
-				() -> prefs.getDeadZone(),
-				(value) -> prefs.setDeadZone(value));
-		initPreference(R.id.expand_panel_in_dead_zone,
-				R.string.expand_panel_in_dead_zone,
-				PreferencesActivity::getExpandPanelInDeadZoneOptions,
-				() -> prefs.expandPanelInDeadZone(),
-				(value) -> {
+				prefs::getDeadZone,
+				prefs::setDeadZone);
+
+		initSwitch(R.id.expand_panel_in_dead_zone,
+				prefs::expandPanelInDeadZone,
+				value -> {
 					if (value) {
 						prefs.setDeadZone(Preferences.DEAD_ZONE_ALL);
+						PreferenceChoiceView deadZoneView = findViewById(R.id.dead_zone);
+						if (deadZoneView != null) {
+							updateChoiceValue(deadZoneView,
+									getDeadZoneOptions().get(prefs.getDeadZone()));
+						}
 					}
 					prefs.setExpandPanelInDeadZone(value);
 				});
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			initPreference(R.id.immersive_mode,
+			initChoice(R.id.immersive_mode,
 					R.string.immersive_mode,
 					PreferencesActivity::getImmersiveModeOptions,
-					() -> prefs.getImmersiveMode(),
-					(value) -> prefs.setImmersiveMode(value));
+					prefs::getImmersiveMode,
+					prefs::setImmersiveMode);
 		} else {
-			findViewById(R.id.immersive_mode).setVisibility(View.GONE);
+			View imm = findViewById(R.id.immersive_mode);
+			if (imm != null) {
+				imm.setVisibility(View.GONE);
+			}
 		}
-		initPreference(R.id.animate_in_out,
-				R.string.animate_in_out,
-				PreferencesActivity::getAnimateInOutOptions,
-				() -> prefs.animateInOut(),
-				(value) -> prefs.setAnimateInOut(value));
-		initPreference(R.id.split_pie_menu,
+
+		initSwitch(R.id.animate_in_out,
+				prefs::animateInOut,
+				prefs::setAnimateInOut);
+
+		initChoice(R.id.split_pie_menu,
 				R.string.split_pie_menu,
 				PreferencesActivity::getAlternateMenuOptions,
-				() -> prefs.splitPieMenu(),
-				(value) -> prefs.setSplitPieMenu(value));
-		initPreference(R.id.circle_swaps_menus,
+				prefs::splitPieMenu,
+				prefs::setSplitPieMenu);
+
+		initChoice(R.id.circle_swaps_menus,
 				R.string.circle_swaps_menus,
 				PreferencesActivity::getAlternateMenuOptions,
-				() -> prefs.circleSwapsMenus(),
-				(value) -> prefs.setCircleSwapsMenus(value));
-		initPreference(R.id.home_button_opens_drawer,
-				R.string.home_button_opens_drawer,
-				PreferencesActivity::getHomeButtonOpensDrawerOptions,
-				() -> prefs.showDrawerOnHome(),
-				(value) -> prefs.setShowDrawerOnHome(value));
-		initPreference(R.id.open_list_with,
+				prefs::circleSwapsMenus,
+				prefs::setCircleSwapsMenus);
+
+		initSwitch(R.id.home_button_opens_drawer,
+				prefs::showDrawerOnHome,
+				prefs::setShowDrawerOnHome);
+
+		initChoice(R.id.open_list_with,
 				R.string.open_list_with,
 				PreferencesActivity::getOpenListWithOptions,
-				() -> prefs.openListWith(),
-				(value) -> {
+				prefs::openListWith,
+				value -> {
 					prefs.setOpenListWith(value);
 					PieLauncherApp.apps.updateIconsAsync(this);
 				});
-		initPreference(R.id.list_animation_appearance,
+
+		initChoice(R.id.list_animation_appearance,
 				R.string.list_animation_appearance,
 				PreferencesActivity::getListAnimationAppearanceOptions,
-				() -> prefs.listAnimationAppearance(),
-				(value) -> prefs.setListAnimationAppearance(value));
-		initPreference(R.id.display_keyboard,
-				R.string.display_keyboard,
-				PreferencesActivity::getDisplayKeyboardOptions,
-				() -> prefs.displayKeyboard(),
-				(value) -> prefs.setDisplayKeyboard(value));
-		initPreference(R.id.space_action,
-				R.string.space_action,
-				PreferencesActivity::getSpaceActionOptions,
-				() -> prefs.doubleSpaceLaunch(),
-				(value) -> prefs.setDoubleSpaceLaunch(value));
-		initPreference(R.id.show_app_shortcuts,
-				R.string.show_app_shortcuts,
-				PreferencesActivity::getShowAppShortcutsOptions,
-				() -> prefs.showAppShortcuts(),
-				(value) -> prefs.setShowAppShortcuts(value));
-		initPreference(R.id.auto_launch_matching,
-				R.string.auto_launch_matching,
-				PreferencesActivity::getAutoLaunchMatchingOptions,
-				() -> prefs.autoLaunchMatching(),
-				(value) -> prefs.setAutoLaunchMatching(value));
-		initPreference(R.id.remember_search_picks,
-				R.string.remember_search_picks,
-				PreferencesActivity::getRememberSearchPicksOptions,
-				() -> prefs.rememberSearchPicks(),
-				(value) -> prefs.setRememberSearchPicks(value));
-		initPreference(R.id.search_strictness,
+				prefs::listAnimationAppearance,
+				prefs::setListAnimationAppearance);
+
+		initSwitch(R.id.display_keyboard,
+				prefs::displayKeyboard,
+				prefs::setDisplayKeyboard);
+
+		initSwitch(R.id.space_action,
+				prefs::doubleSpaceLaunch,
+				prefs::setDoubleSpaceLaunch);
+
+		initSwitch(R.id.show_app_shortcuts,
+				prefs::showAppShortcuts,
+				prefs::setShowAppShortcuts);
+
+		initSwitch(R.id.auto_launch_matching,
+				prefs::autoLaunchMatching,
+				prefs::setAutoLaunchMatching);
+
+		initSwitch(R.id.remember_search_picks,
+				prefs::rememberSearchPicks,
+				prefs::setRememberSearchPicks);
+
+		initChoice(R.id.search_strictness,
 				R.string.search_strictness,
 				PreferencesActivity::getSearchStrictnessOptions,
-				() -> prefs.getSearchStrictness(),
-				(value) -> prefs.setSearchStrictness(value));
-		initPreference(R.id.search_parameter,
+				prefs::getSearchStrictness,
+				prefs::setSearchStrictness);
+
+		initChoice(R.id.search_parameter,
 				R.string.search_parameter,
 				PreferencesActivity::getSearchParameterOptions,
-				() -> prefs.getSearchParameter(),
-				(value) -> prefs.setSearchParameter(value));
-		initPreference(R.id.app_sorting,
+				prefs::getSearchParameter,
+				prefs::setSearchParameter);
+
+		initChoice(R.id.app_sorting,
 				R.string.app_sorting,
 				PreferencesActivity::getAppSortingOptions,
-				() -> prefs.getAppSorting(),
-				(value) -> prefs.setAppSorting(value));
-		initPreference(R.id.show_app_names,
+				prefs::getAppSorting,
+				prefs::setAppSorting);
+
+		initChoice(R.id.show_app_names,
 				R.string.show_app_names,
 				PreferencesActivity::getShowAppNamesOptions,
-				() -> prefs.showAppNames(),
-				(value) -> prefs.setShowAppNames(value));
-		initPreference(R.id.exclude_pie,
+				prefs::showAppNames,
+				prefs::setShowAppNames);
+
+		initChoice(R.id.exclude_pie,
 				R.string.exclude_pie,
 				PreferencesActivity::getExcludePieOptions,
-				() -> prefs.excludePie(),
-				(value) -> {
+				prefs::excludePie,
+				value -> {
 					prefs.setExcludePie(value);
 					PieLauncherApp.apps.updateIconsAsync(this);
 				});
-		initPreference(R.id.icon_press,
+
+		initChoice(R.id.icon_press,
 				R.string.icon_press,
 				PreferencesActivity::getIconPressOptions,
-				() -> prefs.getIconPress(),
-				(value) -> prefs.setIconPress(value));
-		initPreference(R.id.icon_pack,
+				prefs::getIconPress,
+				prefs::setIconPress);
+
+		initChoice(R.id.icon_pack,
 				R.string.icon_pack,
 				this::getIconPackOptions,
-				() -> prefs.getIconPack(),
-				(value) -> {
+				prefs::getIconPack,
+				value -> {
 					prefs.setIconPack(value);
 					PieLauncherApp.apps.updateIconsAsync(this);
 				},
 				() -> PieLauncherApp.iconPack.updatePacks(
 						getPackageManager()));
-		initPreference(R.id.haptic_feedback,
+
+		initChoice(R.id.haptic_feedback,
 				R.string.haptic_feedback,
 				PreferencesActivity::getHapticFeedbackOptions,
-				() -> prefs.hapticFeedback(),
-				(value) -> prefs.setHapticFeedback(value));
+				prefs::hapticFeedback,
+				prefs::setHapticFeedback);
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			initPreference(R.id.use_light_dialogs,
-					R.string.use_light_dialogs,
-					PreferencesActivity::getUseLightDialogOptions,
-					() -> prefs.useLightDialogs(),
-					(value) -> prefs.setUseLightDialogs(value));
+			initSwitch(R.id.use_light_dialogs,
+					prefs::useLightDialogs,
+					prefs::setUseLightDialogs);
 		} else {
-			findViewById(R.id.use_light_dialogs).setVisibility(View.GONE);
+			View lightDlg = findViewById(R.id.use_light_dialogs);
+			if (lightDlg != null) {
+				lightDlg.setVisibility(View.GONE);
+			}
 		}
-		initPreference(R.id.force_relaunch,
-				R.string.force_relaunch,
-				PreferencesActivity::getForceRelaunchOptions,
-				() -> prefs.forceRelaunch(),
-				(value) -> prefs.setForceRelaunch(value));
+
+		initSwitch(R.id.force_relaunch,
+				prefs::forceRelaunch,
+				prefs::setForceRelaunch);
 	}
 
-	private <T, G> void initPreference(
+	private interface BooleanGetter {
+		boolean get();
+	}
+
+	private interface BooleanSetter {
+		void set(boolean value);
+	}
+
+	private void initSwitch(int viewId, BooleanGetter getter, BooleanSetter setter) {
+		PreferenceSwitchView psv = findViewById(viewId);
+		if (psv == null) {
+			return;
+		}
+		psv.setChecked(getter.get());
+		psv.setOnCheckedChangeListener((v, isChecked) -> setter.set(isChecked));
+	}
+
+	private <T, G> void initChoice(
 			int viewId,
 			int titleId,
 			GetOptionsListener<T, G> options,
 			GetListener<T> getter,
 			SetListener<T> setter) {
-		initPreference(viewId, titleId, options, getter, setter, null);
+		initChoice(viewId, titleId, options, getter, setter, null);
 	}
 
-	private <T, G> void initPreference(
+	private <T, G> void initChoice(
 			int viewId,
 			int titleId,
 			GetOptionsListener<T, G> options,
 			GetListener<T> getter,
 			SetListener<T> setter,
 			Initializer initializer) {
-		TextView tv = findViewById(viewId);
-		initPreference(tv, titleId, options, getter, setter, initializer);
-	}
-
-	private <T, G> void initPreference(
-			TextView tv,
-			int titleId,
-			GetOptionsListener<T, G> options,
-			GetListener<T> getter,
-			SetListener<T> setter,
-			Initializer initializer) {
+		PreferenceChoiceView pcv = findViewById(viewId);
+		if (pcv == null) {
+			return;
+		}
 		if (initializer != null) {
 			executor.execute(() -> {
 				initializer.onInit();
-				handler.post(() -> initPreference(
-						tv, titleId, options, getter, setter, null));
+				handler.post(() -> initChoice(
+						viewId, titleId, options, getter, setter, null));
 			});
-			updatePreference(tv, titleId, R.string.tip_loading);
+			pcv.setValue(R.string.tip_loading);
 			return;
 		}
 		Map<T, G> optionsMap = options.onGetOptions();
-		tv.setOnClickListener(v -> {
+		pcv.setOnClickListener(v -> {
 			CharSequence[] items = getItemsFromOptions(optionsMap);
-			OptionsDialog.show(this, titleId, items, (view, which) -> {
+			OptionsDialog.show(this, titleId, items, (dialog, which) -> {
 				Set<T> keys = optionsMap.keySet();
 				int i = 0;
 				for (T key : keys) {
 					if (i++ == which) {
 						setter.onSet(key);
-						updatePreference(tv, titleId,
-								optionsMap.get(getter.onGet()));
+						updateChoiceValue(pcv, optionsMap.get(getter.onGet()));
 						break;
 					}
 				}
 			});
 		});
-		updatePreference(tv, titleId, optionsMap.get(getter.onGet()));
+		updateChoiceValue(pcv, optionsMap.get(getter.onGet()));
+	}
+
+	private static <T> void updateChoiceValue(PreferenceChoiceView pcv, T value) {
+		if (value instanceof Integer) {
+			pcv.setValue((int) value);
+		} else if (value instanceof String) {
+			pcv.setValue((String) value);
+		}
 	}
 
 	private <T, G> CharSequence[] getItemsFromOptions(Map<T, G> options) {
@@ -421,41 +484,12 @@ public class PreferencesActivity extends Activity {
 		}
 	}
 
-	private static <T> void updatePreference(TextView tv, int labelId, T value) {
-		if (value != null) {
-			tv.setText(getLabelAndValue(tv.getContext(), labelId, value));
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	private static <T> Spanned getLabelAndValue(
-			Context context,
-			int labelId,
-			T value) {
-		String valueString;
-		if (value instanceof Integer) {
-			valueString = context.getString((Integer) value);
-		} else if (value instanceof String) {
-			valueString = (String) value;
-		} else {
-			return null;
-		}
-		String html = "<big><font color=\"#ffffff\">" +
-				context.getString(labelId) +
-				"</font></big><br/>" +
-				valueString;
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-			return Html.fromHtml(html);
-		} else {
-			return Html.fromHtml(html, 0);
-		}
-	}
-
 	private boolean updateDisableBatteryOptimizations() {
 		if (BatteryOptimization.isIgnoringBatteryOptimizations(this)) {
 			disableBatteryOptimizations.setVisibility(View.GONE);
 			return true;
 		} else {
+			disableBatteryOptimizations.setVisibility(View.VISIBLE);
 			disableBatteryOptimizations.setOnClickListener(v ->
 					BatteryOptimization.requestDisable(
 							PreferencesActivity.this));
@@ -468,6 +502,7 @@ public class PreferencesActivity extends Activity {
 			defaultLauncherView.setVisibility(View.GONE);
 			return true;
 		} else {
+			defaultLauncherView.setVisibility(View.VISIBLE);
 			defaultLauncherView.setOnClickListener(v ->
 					DefaultLauncher.setAsDefault(this));
 			return false;
@@ -504,14 +539,6 @@ public class PreferencesActivity extends Activity {
 		return map;
 	}
 
-	private static Map<Integer, Integer> getBackgroundBlurRadiusOptions() {
-		Map<Integer, Integer> map = new LinkedHashMap<>();
-		map.put(20, R.string.background_blur_radius_medium);
-		map.put(80, R.string.background_blur_radius_heavy);
-		map.put(0, R.string.background_blur_radius_none);
-		return map;
-	}
-
 	private static Map<Integer, Integer> getDeadZoneOptions() {
 		Map<Integer, Integer> map = new LinkedHashMap<>();
 		map.put(Preferences.DEAD_ZONE_NONE, R.string.dead_zone_none);
@@ -520,13 +547,6 @@ public class PreferencesActivity extends Activity {
 		map.put(Preferences.DEAD_ZONE_TOP_BOTTOM,
 				R.string.dead_zone_top_bottom);
 		map.put(Preferences.DEAD_ZONE_ALL, R.string.dead_zone_all);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getExpandPanelInDeadZoneOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.expand_panel_in_dead_zone_yes);
-		map.put(Boolean.FALSE, R.string.expand_panel_in_dead_zone_no);
 		return map;
 	}
 
@@ -543,13 +563,6 @@ public class PreferencesActivity extends Activity {
 		return map;
 	}
 
-	private static Map<Boolean, Integer> getAnimateInOutOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.animate_in_out_yes);
-		map.put(Boolean.FALSE, R.string.animate_in_out_no);
-		return map;
-	}
-
 	private static Map<Integer, Integer> getAlternateMenuOptions() {
 		Map<Integer, Integer> map = new LinkedHashMap<>();
 		map.put(Preferences.ALTERNATE_MENU_NONE,
@@ -560,13 +573,6 @@ public class PreferencesActivity extends Activity {
 				R.string.alternate_menu_all_apps);
 		map.put(Preferences.ALTERNATE_MENU_LAST_USED,
 				R.string.alternate_menu_last_used);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getHomeButtonOpensDrawerOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.home_button_opens_drawer_yes);
-		map.put(Boolean.FALSE, R.string.home_button_opens_drawer_no);
 		return map;
 	}
 
@@ -595,48 +601,6 @@ public class PreferencesActivity extends Activity {
 				R.string.list_animation_appearance_slide);
 		map.put(Preferences.LIST_APPEARANCE_ANIMATION_FADE,
 				R.string.list_animation_appearance_fade);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getDisplayKeyboardOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.display_keyboard_yes);
-		map.put(Boolean.FALSE, R.string.display_keyboard_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getBlurMenuOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.blur_menu_yes);
-		map.put(Boolean.FALSE, R.string.blur_menu_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getSpaceActionOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.space_action_double_launch);
-		map.put(Boolean.FALSE, R.string.space_action_move_selection);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getShowAppShortcutsOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.show_app_shortcuts_yes);
-		map.put(Boolean.FALSE, R.string.show_app_shortcuts_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getAutoLaunchMatchingOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.auto_launch_matching_yes);
-		map.put(Boolean.FALSE, R.string.auto_launch_matching_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getRememberSearchPicksOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.remember_search_picks_yes);
-		map.put(Boolean.FALSE, R.string.remember_search_picks_no);
 		return map;
 	}
 
@@ -712,20 +676,6 @@ public class PreferencesActivity extends Activity {
 				R.string.haptic_feedback_disable_launch);
 		map.put(Preferences.HAPTIC_FEEDBACK_DISABLE_ALL,
 				R.string.haptic_feedback_disable_all);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getUseLightDialogOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.use_light_dialogs_yes);
-		map.put(Boolean.FALSE, R.string.use_light_dialogs_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getForceRelaunchOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.force_relaunch_yes);
-		map.put(Boolean.FALSE, R.string.force_relaunch_no);
 		return map;
 	}
 

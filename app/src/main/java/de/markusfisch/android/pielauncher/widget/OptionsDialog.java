@@ -85,7 +85,7 @@ public class OptionsDialog {
 		if (window != null) {
 			window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 			window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-			window.setDimAmount(0.5f);
+			window.setDimAmount(0.7f);
 			BackgroundBlur.setBlurRadius(window, 20);
 
 			int maxWidth = context.getResources().getDimensionPixelSize(

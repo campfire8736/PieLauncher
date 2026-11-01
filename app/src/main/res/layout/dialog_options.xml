@@ -6,7 +6,8 @@
 	<de.markusfisch.android.pielauncher.widget.preference.PreferenceCardView
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		style="@style/PreferenceCard"
+		android:orientation="vertical"
+		android:background="@drawable/bg_dialog_card"
 		android:layout_margin="0dp">
 
 		<TextView

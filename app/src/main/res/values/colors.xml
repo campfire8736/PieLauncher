@@ -11,8 +11,10 @@
 	<color name="text_color">#fff</color>
 	<color name="text_color_preference">#afff</color>
 	<color name="separator">#1fff</color>
-	<color name="bg_card">#25ffffff</color>
-	<color name="card_stroke">#18ffffff</color>
+	<color name="bg_card">#a000</color>
+	<color name="card_stroke">#14ffffff</color>
 	<color name="preference_divider">#14ffffff</color>
+	<color name="bg_dialog">#f218181a</color>
+	<color name="dialog_stroke">#28ffffff</color>
 	<color name="accent">#5c9aff</color>
 </resources>

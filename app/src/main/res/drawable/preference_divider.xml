@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-	android:insetLeft="@dimen/preference_divider_inset"
-	android:insetRight="@dimen/preference_divider_inset">
-	<shape android:shape="rectangle">
-		<solid android:color="@color/preference_divider" />
-		<size android:height="@dimen/preference_divider_height" />
-		<corners android:radius="@dimen/preference_divider_corner_radius" />
-	</shape>
-</inset>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+	android:shape="rectangle">
+	<solid android:color="@color/preference_divider" />
+	<size android:height="@dimen/preference_divider_height" />
+</shape>

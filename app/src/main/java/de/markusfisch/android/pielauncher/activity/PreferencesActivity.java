@@ -74,9 +74,11 @@ public class PreferencesActivity extends Activity {
 		prefs = PieLauncherApp.getPrefs(this);
 		BackgroundBlur.setBlurRadius(getWindow(),
 				prefs.getBackgroundBlurRadius());
-		toolbarBackground = new ToolbarBackground(getResources());
+		toolbarBackground = new ToolbarBackground(getResources(),
+				getResources().getColor(R.color.bg_ui));
 
 		TextView toolbar = findViewById(R.id.toolbar);
+		toolbar.setBackgroundColor(toolbarBackground.baseColor);
 		View skipButton = findViewById(R.id.skip);
 
 		setupCard = findViewById(R.id.setup_card);

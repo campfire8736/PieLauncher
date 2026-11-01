@@ -2,7 +2,6 @@
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 	<de.markusfisch.android.pielauncher.widget.ScrollWithListenerView
 		android:id="@+id/content"
-		android:background="@color/bg_ui"
 		android:clipToPadding="false"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
@@ -40,11 +39,12 @@
 				android:layout_height="wrap_content"
 				android:orientation="vertical">
 
-				<TextView
-					style="@style/CategoryHeader"
-					android:text="@string/category_home" />
 				<de.markusfisch.android.pielauncher.widget.preference.PreferenceCardView
-					style="@style/PreferenceCard">
+					style="@style/PreferenceCard"
+					android:layout_marginTop="16dp">
+					<TextView
+						style="@style/CategoryHeader"
+						android:text="@string/category_home" />
 					<de.markusfisch.android.pielauncher.widget.preference.PreferenceChoiceView
 						android:id="@+id/orientation"
 						android:layout_width="match_parent"
@@ -97,11 +97,11 @@
 						app:title="@string/circle_swaps_menus" />
 				</de.markusfisch.android.pielauncher.widget.preference.PreferenceCardView>
 
-				<TextView
-					style="@style/CategoryHeader"
-					android:text="@string/category_app_drawer" />
 				<de.markusfisch.android.pielauncher.widget.preference.PreferenceCardView
 					style="@style/PreferenceCard">
+					<TextView
+						style="@style/CategoryHeader"
+						android:text="@string/category_app_drawer" />
 					<de.markusfisch.android.pielauncher.widget.preference.PreferenceSwitchView
 						android:id="@+id/display_keyboard"
 						android:layout_width="match_parent"
@@ -174,11 +174,11 @@
 						app:title="@string/icon_press" />
 				</de.markusfisch.android.pielauncher.widget.preference.PreferenceCardView>
 
-				<TextView
-					style="@style/CategoryHeader"
-					android:text="@string/category_advanced" />
 				<de.markusfisch.android.pielauncher.widget.preference.PreferenceCardView
 					style="@style/PreferenceCard">
+					<TextView
+						style="@style/CategoryHeader"
+						android:text="@string/category_advanced" />
 					<de.markusfisch.android.pielauncher.widget.preference.PreferenceChoiceView
 						android:id="@+id/icon_pack"
 						android:layout_width="match_parent"
@@ -218,6 +218,7 @@
 	<TextView
 		style="@style/Toolbar"
 		android:id="@+id/toolbar"
+		android:background="@color/bg_ui"
 		android:drawableLeft="@drawable/ic_back"
 		android:drawableStart="@drawable/ic_back"
 		android:text="@string/preferences" />

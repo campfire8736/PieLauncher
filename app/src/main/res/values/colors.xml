@@ -11,7 +11,7 @@
 	<color name="text_color">#fff</color>
 	<color name="text_color_preference">#afff</color>
 	<color name="separator">#1fff</color>
-	<color name="bg_card">@android:color/transparent</color>
+	<color name="bg_card">@color/bg_ui</color>
 	<color name="card_stroke">@android:color/transparent</color>
 	<color name="preference_divider">#1fff</color>
 	<color name="bg_dialog">#f218181a</color>

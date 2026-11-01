@@ -15,8 +15,12 @@ public class ToolbarBackground {
 	}
 
 	public ToolbarBackground(Resources res, int baseColor) {
+		this(res, baseColor, res.getColor(R.color.bg_search_bar));
+	}
+
+	public ToolbarBackground(Resources res, int baseColor, int backgroundColor) {
 		this.baseColor = baseColor;
-		backgroundColor = res.getColor(R.color.bg_search_bar);
+		this.backgroundColor = backgroundColor;
 		threshold = res.getDisplayMetrics().density * 48f;
 	}
 

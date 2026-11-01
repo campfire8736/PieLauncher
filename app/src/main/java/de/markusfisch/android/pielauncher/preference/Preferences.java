@@ -68,6 +68,7 @@ public class Preferences {
 	private static final String SECONDARY_ICON_SCALE = "secondary_icon_scale";
 	private static final String ORIENTATION = "orientation";
 	private static final String DARKEN_BACKGROUND = "darken_background_level";
+	private static final String INVERT_COLORS = "invert_colors";
 	private static final String BLUR_BACKGROUND_RADIUS = "background_blur_radius";
 	private static final String BLUR_MENU = "blur_menu";
 	private static final String DEAD_ZONE = "dead_zone";
@@ -105,6 +106,7 @@ public class Preferences {
 	private float secondaryIconScale = 1f;
 	private int orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 	private int darkenBackground = DARKEN_BACKGROUND_HEAVY;
+	private boolean invertColors = false;
 	private int backgroundBlurRadius = 0;
 	private boolean blurMenu = false;
 	private int deadZone = DEAD_ZONE_ALL;
@@ -156,6 +158,7 @@ public class Preferences {
 		orientation = preferences.getInt(ORIENTATION, defaultOrientation);
 		darkenBackground = preferences.getInt(DARKEN_BACKGROUND,
 				darkenBackground);
+		invertColors = preferences.getBoolean(INVERT_COLORS, invertColors);
 		backgroundBlurRadius = preferences.getInt(BLUR_BACKGROUND_RADIUS,
 				backgroundBlurRadius);
 		blurMenu = preferences.getBoolean(BLUR_MENU, highRefreshRate);
@@ -260,6 +263,15 @@ public class Preferences {
 	public void setDarkenBackground(int darkenBackground) {
 		this.darkenBackground = darkenBackground;
 		put(DARKEN_BACKGROUND, darkenBackground).apply();
+	}
+
+	public boolean invertColors() {
+		return invertColors;
+	}
+
+	public void setInvertColors(boolean invertColors) {
+		this.invertColors = invertColors;
+		put(INVERT_COLORS, invertColors).apply();
 	}
 
 	public int getBackgroundBlurRadius() {

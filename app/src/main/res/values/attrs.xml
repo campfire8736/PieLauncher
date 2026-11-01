@@ -8,4 +8,12 @@
 	<declare-styleable name="PreferenceCardView">
 		<attr name="cardCornerRadius" format="dimension" />
 	</declare-styleable>
+	<attr name="primaryTextColor" format="color" />
+	<attr name="secondaryTextColor" format="color" />
+	<attr name="uiBackgroundColor" format="color" />
+	<attr name="cardBackgroundColor" format="color" />
+	<attr name="searchBarBackgroundColor" format="color" />
+	<attr name="dialogBackgroundColor" format="color" />
+	<attr name="dialogStrokeColor" format="color" />
+	<attr name="separatorColor" format="color" />
 </resources>

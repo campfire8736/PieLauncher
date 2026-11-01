@@ -15,6 +15,7 @@
 	<string name="orientation_landscape">Paysage</string>
 	<string name="orientation_user">Automatique</string>
 	<string name="darken_background">Assombrir le fond</string>
+	<string name="invert_colors">Inverser les couleurs</string>
 	<string name="darken_background_yes">Fort (par défaut)</string>
 	<string name="darken_background_light">Léger</string>
 	<string name="darken_background_no">Aucun</string>

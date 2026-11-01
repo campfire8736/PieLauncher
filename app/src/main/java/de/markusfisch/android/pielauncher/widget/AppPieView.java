@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderEffect;
@@ -254,29 +255,47 @@ public class AppPieView extends View {
 		hideAppTip = context.getString(R.string.hide_app);
 		removeAppTip = context.getString(R.string.tip_remove_app);
 
-		paintDropZone.setColor(res.getColor(R.color.bg_drop_zone));
+		boolean inverted = prefs.invertColors();
+		paintDropZone.setColor(res.getColor(inverted
+				? R.color.bg_drop_zone_inverted
+				: R.color.bg_drop_zone));
 		paintDropZone.setStyle(Paint.Style.FILL);
 		alphaDropZone = paintDropZone.getAlpha();
-		paintPressed.setColor(res.getColor(R.color.bg_action_pressed));
+		paintPressed.setColor(res.getColor(inverted
+				? R.color.bg_action_pressed_inverted
+				: R.color.bg_action_pressed));
 		paintPressed.setStyle(Paint.Style.FILL);
 		alphaPressed = paintPressed.getAlpha();
 
-		paintText.setColor(res.getColor(R.color.text_color));
+		int textColor = res.getColor(inverted
+				? R.color.text_color_inverted
+				: R.color.text_color);
+		if (inverted) {
+			paintAction.setColorFilter(new PorterDuffColorFilter(
+					textColor, PorterDuff.Mode.SRC_IN));
+		}
+		paintText.setColor(textColor);
 		alphaText = paintText.getAlpha();
 		paintText.setTextAlign(Paint.Align.CENTER);
 		paintText.setTextSize(14f * sp);
 		textHeight = paintText.descent() - paintText.ascent();
 		textOffset = (textHeight / 2) - paintText.descent();
-		translucentBackgroundColor = res.getColor(R.color.bg_ui);
+		translucentBackgroundColor = res.getColor(inverted
+				? R.color.bg_ui_inverted
+				: R.color.bg_ui);
 
-		paintAppShortcuts.setColor(res.getColor(R.color.bg_app_shortcuts));
+		paintAppShortcuts.setColor(res.getColor(inverted
+				? R.color.bg_app_shortcuts_inverted
+				: R.color.bg_app_shortcuts));
 		paintAppShortcuts.setStyle(Paint.Style.FILL);
 		alphaAppShortcuts = paintAppShortcuts.getAlpha();
-		paintAppShortcutsThumb.setColor(res.getColor(R.color.separator));
+		paintAppShortcutsThumb.setColor(res.getColor(inverted
+				? R.color.separator_inverted
+				: R.color.separator));
 		paintAppShortcutsThumb.setStyle(Paint.Style.FILL);
 		alphaAppShortcutsThumb = paintAppShortcutsThumb.getAlpha();
 		appShortcutsScroller = new OverScroller(context);
-		paintAppShortcutText.setColor(res.getColor(R.color.text_color));
+		paintAppShortcutText.setColor(textColor);
 		paintAppShortcutText.setTextSize(14f * sp);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

@@ -55,6 +55,11 @@
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						app:title="@string/darken_background" />
+					<de.markusfisch.android.pielauncher.widget.preference.PreferenceSwitchView
+						android:id="@+id/invert_colors"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						app:title="@string/invert_colors" />
 					<de.markusfisch.android.pielauncher.widget.preference.PreferenceSliderView
 						android:id="@+id/blur_background"
 						android:layout_width="match_parent"

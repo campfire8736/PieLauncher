@@ -50,11 +50,16 @@ public class PreferenceCardView extends LinearLayout {
 			cornerRadius = defaultRadius;
 		}
 
-		cardColor = context.getResources().getColor(R.color.bg_card);
+		boolean inverted = de.markusfisch.android.pielauncher.app.PieLauncherApp.getPrefs(context).invertColors();
+		cardColor = context.getResources().getColor(inverted
+				? R.color.bg_card_inverted
+				: R.color.bg_card);
 		cardPaint.setColor(cardColor);
 
 		float strokeWidth = context.getResources().getDimension(R.dimen.card_stroke_width);
-		int strokeColor = context.getResources().getColor(R.color.card_stroke);
+		int strokeColor = context.getResources().getColor(inverted
+				? R.color.card_stroke_inverted
+				: R.color.card_stroke);
 		if (strokeWidth > 0 && strokeColor != 0) {
 			strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 			strokePaint.setColor(strokeColor);

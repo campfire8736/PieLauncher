@@ -55,6 +55,12 @@ public class PreferenceActionView extends LinearLayout {
 		summaryView = findViewById(R.id.summary);
 		chevronView = findViewById(R.id.chevron);
 
+		if (de.markusfisch.android.pielauncher.app.PieLauncherApp.getPrefs(context).invertColors()) {
+			int textColor = context.getResources().getColor(R.color.text_color_inverted);
+			iconView.setColorFilter(textColor, android.graphics.PorterDuff.Mode.SRC_IN);
+			chevronView.setColorFilter(textColor, android.graphics.PorterDuff.Mode.SRC_IN);
+		}
+
 		if (attrs != null) {
 			TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PreferenceView);
 			String title = a.getString(R.styleable.PreferenceView_title);

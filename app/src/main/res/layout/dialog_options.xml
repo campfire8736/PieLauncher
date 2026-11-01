@@ -5,6 +5,7 @@
 	android:layout_height="wrap_content">
 
 	<de.markusfisch.android.pielauncher.widget.preference.PreferenceCardView
+		android:id="@+id/dialog_card"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:orientation="vertical"
@@ -30,7 +31,7 @@
 			android:id="@+id/dialog_title_divider"
 			android:layout_width="match_parent"
 			android:layout_height="1px"
-			android:background="@color/preference_divider" />
+			android:background="@color/separator" />
 
 		<de.markusfisch.android.pielauncher.widget.MaxHeightScrollView
 			android:layout_width="match_parent"

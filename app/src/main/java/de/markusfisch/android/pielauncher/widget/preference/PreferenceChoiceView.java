@@ -52,6 +52,11 @@ public class PreferenceChoiceView extends LinearLayout {
 		valueTextView = findViewById(R.id.value_text);
 		indicatorView = findViewById(R.id.indicator);
 
+		if (de.markusfisch.android.pielauncher.app.PieLauncherApp.getPrefs(context).invertColors()) {
+			int textColor = context.getResources().getColor(R.color.text_color_inverted);
+			indicatorView.setColorFilter(textColor, android.graphics.PorterDuff.Mode.SRC_IN);
+		}
+
 		if (attrs != null) {
 			TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PreferenceView);
 			String title = a.getString(R.styleable.PreferenceView_title);

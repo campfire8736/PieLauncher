@@ -67,18 +67,35 @@ public class PreferencesActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		prefs = PieLauncherApp.getPrefs(this);
+		if (prefs.invertColors()) {
+			setTheme(R.style.HomeTheme_Inverted);
+		}
 		super.onCreate(state);
 		registerBackCallback();
 		setContentView(R.layout.activity_preferences);
 
-		prefs = PieLauncherApp.getPrefs(this);
 		BackgroundBlur.setBlurRadius(getWindow(),
 				prefs.getBackgroundBlurRadius());
 		toolbarBackground = new ToolbarBackground(getResources(),
-				getResources().getColor(R.color.bg_ui));
+				getResources().getColor(prefs.invertColors()
+						? R.color.bg_ui_inverted
+						: R.color.bg_ui),
+				getResources().getColor(prefs.invertColors()
+						? R.color.bg_search_bar_inverted
+						: R.color.bg_search_bar));
 
 		TextView toolbar = findViewById(R.id.toolbar);
 		toolbar.setBackgroundColor(toolbarBackground.baseColor);
+		int primaryTextColor = getResources().getColor(prefs.invertColors()
+				? R.color.text_color_inverted
+				: R.color.text_color);
+		for (android.graphics.drawable.Drawable d : toolbar.getCompoundDrawables()) {
+			if (d != null) {
+				d.mutate().setColorFilter(primaryTextColor,
+						android.graphics.PorterDuff.Mode.SRC_IN);
+			}
+		}
 		View skipButton = findViewById(R.id.skip);
 
 		setupCard = findViewById(R.id.setup_card);
@@ -203,6 +220,13 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getDarkenBackgroundOptions,
 				prefs::darkenBackground,
 				prefs::setDarkenBackground);
+
+		initSwitch(R.id.invert_colors,
+				prefs::invertColors,
+				value -> {
+					prefs.setInvertColors(value);
+					recreate();
+				});
 
 		if (BackgroundBlur.canBlur(getWindow())) {
 			PreferenceSliderView slider = findViewById(R.id.blur_background);

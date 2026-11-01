@@ -105,6 +105,23 @@ public class PreferencesActivityTest {
 	}
 
 	@Test
+	public void testInvertColorsTogglesPreference() {
+		ActivityController<PreferencesActivity> controller =
+				Robolectric.buildActivity(PreferencesActivity.class);
+		PreferencesActivity activity = controller.create().start().resume().visible().get();
+
+		PreferenceSwitchView invertColors = activity.findViewById(R.id.invert_colors);
+		assertNotNull(invertColors);
+
+		boolean initialState = prefs.invertColors();
+		invertColors.performClick();
+
+		assertEquals(!initialState, prefs.invertColors());
+
+		controller.destroy();
+	}
+
+	@Test
 	public void testSliderUpdatesPreference() {
 		ActivityController<PreferencesActivity> controller =
 				Robolectric.buildActivity(PreferencesActivity.class);

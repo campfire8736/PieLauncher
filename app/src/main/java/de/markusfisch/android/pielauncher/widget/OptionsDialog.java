@@ -40,6 +40,18 @@ public class OptionsDialog {
 				R.layout.dialog_options, null);
 		dialog.setContentView(view);
 
+		if (de.markusfisch.android.pielauncher.app.PieLauncherApp.getPrefs(context).invertColors()) {
+			View card = view.findViewById(R.id.dialog_card);
+			if (card != null) {
+				card.setBackgroundResource(R.drawable.bg_dialog_card_inverted);
+			}
+			View divider = view.findViewById(R.id.dialog_title_divider);
+			if (divider != null) {
+				divider.setBackgroundColor(context.getResources().getColor(
+						R.color.separator_inverted));
+			}
+		}
+
 		TextView titleView = view.findViewById(R.id.dialog_title);
 		View titleDivider = view.findViewById(R.id.dialog_title_divider);
 		if (titleId != 0) {

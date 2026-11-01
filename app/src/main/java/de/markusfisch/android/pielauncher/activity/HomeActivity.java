@@ -41,6 +41,7 @@ public class HomeActivity extends Activity {
 	private boolean showAllAppsOnResume = false;
 	private int immersiveMode = Preferences.IMMERSIVE_MODE_DISABLED;
 	private long pausedAt = 0L;
+	private boolean lastInvertColors;
 	private OnBackInvokedCallback onBackInvokedCallback = null;
 
 	@SuppressLint("GestureBackNavigation")
@@ -78,9 +79,13 @@ public class HomeActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		prefs = PieLauncherApp.getPrefs(this);
+		lastInvertColors = prefs.invertColors();
+		if (lastInvertColors) {
+			setTheme(R.style.HomeTheme_Inverted);
+		}
 		super.onCreate(state);
 
-		prefs = PieLauncherApp.getPrefs(this);
 		kb = new SoftKeyboard(this);
 		gestureDetector = new GestureDetector(this, new FlingListener(
 				ViewConfiguration.get(this).getScaledMinimumFlingVelocity()));
@@ -91,10 +96,18 @@ public class HomeActivity extends Activity {
 			PreferencesActivity.startWelcome(this);
 		}
 
-		toolbarBackground = new ToolbarBackground(getResources());
+		toolbarBackground = new ToolbarBackground(getResources(), 0,
+				getResources().getColor(lastInvertColors
+						? R.color.bg_search_bar_inverted
+						: R.color.bg_search_bar));
 		pieView = findViewById(R.id.pie);
 		searchInput = findViewById(R.id.search);
 		prefsButton = findViewById(R.id.preferences);
+		if (lastInvertColors) {
+			prefsButton.setColorFilter(
+					getResources().getColor(R.color.text_color_inverted),
+					android.graphics.PorterDuff.Mode.SRC_IN);
+		}
 
 		initPieView();
 		initPrefsButton();
@@ -205,6 +218,10 @@ public class HomeActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if (lastInvertColors != prefs.invertColors()) {
+			recreate();
+			return;
+		}
 		updateSystemBars();
 		if (showAllAppsOnResume) {
 			showAllApps();

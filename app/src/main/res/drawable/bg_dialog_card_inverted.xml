@@ -1,0 +1,8 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+	android:shape="rectangle">
+	<solid android:color="@color/bg_dialog_inverted" />
+	<stroke
+		android:width="@dimen/dialog_stroke_width"
+		android:color="@color/dialog_stroke_inverted" />
+	<corners android:radius="@dimen/dialog_corner_radius" />
+</shape>

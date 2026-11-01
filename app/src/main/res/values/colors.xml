@@ -17,4 +17,20 @@
 	<color name="bg_dialog">#f218181a</color>
 	<color name="dialog_stroke">#28ffffff</color>
 	<color name="accent">#5c9aff</color>
+	<color name="bg_ui_inverted">#a0ffffff</color>
+	<color name="bg_card_inverted">#a0ffffff</color>
+	<color name="bg_search_bar_inverted">#c0ffffff</color>
+	<color name="bg_app_shortcuts_inverted">#c0ffffff</color>
+	<color name="bg_button_inverted">#222</color>
+	<color name="bg_button_pressed_inverted">#444</color>
+	<color name="bg_action_pressed_inverted">#20000000</color>
+	<color name="bg_drop_zone_inverted">#80ffffff</color>
+	<color name="button_text_inverted">#fff</color>
+	<color name="text_color_inverted">#111</color>
+	<color name="text_color_preference_inverted">#8a000000</color>
+	<color name="separator_inverted">#1f000000</color>
+	<color name="card_stroke_inverted">@android:color/transparent</color>
+	<color name="preference_divider_inverted">@android:color/transparent</color>
+	<color name="bg_dialog_inverted">#f2f6f6f8</color>
+	<color name="dialog_stroke_inverted">#28000000</color>
 </resources>

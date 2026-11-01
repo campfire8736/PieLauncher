@@ -31,6 +31,7 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppLauncher;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
 import de.markusfisch.android.pielauncher.graphics.ToolbarBackground;
+import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.view.SystemBars;
 import de.markusfisch.android.pielauncher.widget.OptionsDialog;
 
@@ -50,14 +51,30 @@ public class HiddenAppsActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		Preferences prefs = PieLauncherApp.getPrefs(this);
+		if (prefs.invertColors()) {
+			setTheme(R.style.HomeTheme_Inverted);
+		}
 		super.onCreate(state);
 
 		setContentView(R.layout.activity_hidden_apps);
 
 		BackgroundBlur.setBlurRadius(getWindow(),
-				PieLauncherApp.getPrefs(this).getBackgroundBlurRadius());
-		toolbarBackground = new ToolbarBackground(getResources());
-		View toolbar = findViewById(R.id.toolbar);
+				prefs.getBackgroundBlurRadius());
+		toolbarBackground = new ToolbarBackground(getResources(), 0,
+				getResources().getColor(prefs.invertColors()
+						? R.color.bg_search_bar_inverted
+						: R.color.bg_search_bar));
+		android.widget.TextView toolbar = findViewById(R.id.toolbar);
+		if (prefs.invertColors()) {
+			int textColor = getResources().getColor(R.color.text_color_inverted);
+			for (Drawable d : toolbar.getCompoundDrawables()) {
+				if (d != null) {
+					d.mutate().setColorFilter(textColor,
+							android.graphics.PorterDuff.Mode.SRC_IN);
+				}
+			}
+		}
 		toolbar.setOnClickListener(v -> finish());
 		progressView = findViewById(R.id.progress);
 

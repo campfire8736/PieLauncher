@@ -4,6 +4,28 @@
 		<item name="android:colorBackgroundCacheHint">@null</item>
 		<item name="android:windowShowWallpaper">true</item>
 		<item name="android:windowNoTitle">true</item>
+		<item name="android:textColorPrimary">@color/text_color</item>
+		<item name="android:textColorSecondary">@color/text_color_preference</item>
+		<item name="primaryTextColor">@color/text_color</item>
+		<item name="secondaryTextColor">@color/text_color_preference</item>
+		<item name="uiBackgroundColor">@color/bg_ui</item>
+		<item name="cardBackgroundColor">@color/bg_card</item>
+		<item name="searchBarBackgroundColor">@color/bg_search_bar</item>
+		<item name="dialogBackgroundColor">@color/bg_dialog</item>
+		<item name="dialogStrokeColor">@color/dialog_stroke</item>
+		<item name="separatorColor">@color/separator</item>
+	</style>
+	<style name="HomeTheme.Inverted" parent="HomeTheme">
+		<item name="android:textColorPrimary">@color/text_color_inverted</item>
+		<item name="android:textColorSecondary">@color/text_color_preference_inverted</item>
+		<item name="primaryTextColor">@color/text_color_inverted</item>
+		<item name="secondaryTextColor">@color/text_color_preference_inverted</item>
+		<item name="uiBackgroundColor">@color/bg_ui_inverted</item>
+		<item name="cardBackgroundColor">@color/bg_card_inverted</item>
+		<item name="searchBarBackgroundColor">@color/bg_search_bar_inverted</item>
+		<item name="dialogBackgroundColor">@color/bg_dialog_inverted</item>
+		<item name="dialogStrokeColor">@color/dialog_stroke_inverted</item>
+		<item name="separatorColor">@color/separator_inverted</item>
 	</style>
 	<style name="Toolbar" parent="@android:style/Widget.TextView">
 		<item name="android:layout_width">match_parent</item>
@@ -11,7 +33,7 @@
 		<item name="android:padding">16dp</item>
 		<item name="android:layout_marginBottom">1dp</item>
 		<item name="android:drawablePadding">32dp</item>
-		<item name="android:textColor">@color/text_color</item>
+		<item name="android:textColor">?android:attr/textColorPrimary</item>
 		<item name="android:textSize">20sp</item>
 		<item name="android:textStyle">bold</item>
 	</style>
@@ -24,7 +46,7 @@
 		<item name="android:paddingEnd">16dp</item>
 		<item name="android:paddingTop">16dp</item>
 		<item name="android:paddingBottom">12dp</item>
-		<item name="android:textColor">@color/text_color_preference</item>
+		<item name="android:textColor">?android:attr/textColorSecondary</item>
 		<item name="android:textSize">12sp</item>
 		<item name="android:textStyle">bold</item>
 		<item name="android:textAllCaps">true</item>
@@ -44,13 +66,13 @@
 	<style name="PreferenceTitle" parent="@android:style/Widget.TextView">
 		<item name="android:layout_width">wrap_content</item>
 		<item name="android:layout_height">wrap_content</item>
-		<item name="android:textColor">@color/text_color</item>
+		<item name="android:textColor">?android:attr/textColorPrimary</item>
 		<item name="android:textSize">16sp</item>
 	</style>
 	<style name="PreferenceSummary" parent="@android:style/Widget.TextView">
 		<item name="android:layout_width">wrap_content</item>
 		<item name="android:layout_height">wrap_content</item>
-		<item name="android:textColor">@color/text_color_preference</item>
+		<item name="android:textColor">?android:attr/textColorSecondary</item>
 		<item name="android:textSize">13sp</item>
 		<item name="android:layout_marginTop">2dp</item>
 	</style>
@@ -66,7 +88,7 @@
 		<item name="android:layout_width">match_parent</item>
 		<item name="android:layout_height">wrap_content</item>
 		<item name="android:padding">16dp</item>
-		<item name="android:textColor">@color/text_color_preference</item>
+		<item name="android:textColor">?android:attr/textColorSecondary</item>
 		<item name="android:lineSpacingExtra">3dp</item>
 	</style>
 	<style name="PreferenceWithSeparator" parent="Preference">

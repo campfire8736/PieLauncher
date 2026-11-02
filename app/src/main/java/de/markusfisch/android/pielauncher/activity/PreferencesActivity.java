@@ -25,7 +25,6 @@ import java.util.concurrent.Executors;
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
-import de.markusfisch.android.pielauncher.graphics.ToolbarBackground;
 import de.markusfisch.android.pielauncher.os.BatteryOptimization;
 import de.markusfisch.android.pielauncher.os.DefaultLauncher;
 import de.markusfisch.android.pielauncher.preference.Preferences;
@@ -43,7 +42,6 @@ public class PreferencesActivity extends Activity {
 	private OnBackInvokedCallback onBackInvokedCallback = null;
 
 	private Preferences prefs;
-	private ToolbarBackground toolbarBackground;
 	private View disableBatteryOptimizations;
 	private View defaultLauncherView;
 	private boolean isWelcomeMode = false;
@@ -71,9 +69,10 @@ public class PreferencesActivity extends Activity {
 		prefs = PieLauncherApp.getPrefs(this);
 		BackgroundBlur.setBlurRadius(getWindow(),
 				prefs.getBackgroundBlurRadius());
-		toolbarBackground = new ToolbarBackground(getResources());
 
 		TextView toolbar = findViewById(R.id.toolbar);
+		toolbar.setBackgroundColor(
+				getResources().getColor(R.color.bg_search_bar));
 		View skipButton = findViewById(R.id.skip);
 
 		disableBatteryOptimizations = findViewById(
@@ -108,10 +107,11 @@ public class PreferencesActivity extends Activity {
 
 		Window window = getWindow();
 		ScrollWithListenerView scrollView = findViewById(R.id.content);
+		final int navigationBarColor =
+				getResources().getColor(R.color.bg_search_bar);
 		scrollView.setOnScrollPositionListener((int y, boolean scrollable) -> {
-			toolbar.setBackgroundColor(toolbarBackground.getColorForY(y));
 			SystemBars.setNavigationBarColor(window,
-					scrollable ? toolbarBackground.backgroundColor : 0);
+					scrollable ? navigationBarColor : 0);
 		});
 		SystemBars.addPaddingFromWindowInsets(toolbar, scrollView);
 		SystemBars.setTransparentSystemBars(window);
@@ -136,6 +136,23 @@ public class PreferencesActivity extends Activity {
 		if (disableBatteryOptimizations.getVisibility() == View.VISIBLE &&
 				defaultLauncherView.getVisibility() == View.GONE) {
 			disableBatteryOptimizations.setBackgroundResource(0);
+		}
+
+		View setupGroup = findViewById(R.id.setup_group);
+		if (setupGroup != null && !isWelcomeMode) {
+			boolean showSetup = !disableBatteryVisible || !updateDefaultVisible;
+			setupGroup.setVisibility(showSetup ? View.VISIBLE : View.GONE);
+			View hideInWelcome = findViewById(R.id.hide_in_welcome_mode);
+			if (hideInWelcome != null) {
+				android.view.ViewGroup.MarginLayoutParams lp =
+						(android.view.ViewGroup.MarginLayoutParams) hideInWelcome.getLayoutParams();
+				if (lp != null) {
+					lp.topMargin = showSetup
+							? 0
+							: (int) (getResources().getDisplayMetrics().density * 16f);
+					hideInWelcome.setLayoutParams(lp);
+				}
+			}
 		}
 	}
 

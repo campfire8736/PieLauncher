@@ -10,11 +10,15 @@
 	<string name="disable_battery_optimization"><big><font color="#ffffff">Disable battery optimizations</font></big>\nSaves energy and makes this launcher work faster</string>
 	<string name="make_default_launcher"><big><font color="#ffffff">Make default launcher</font></big>\nAvoids returning to your previous launcher</string>
 	<string name="category_home">Home</string>
+	<string name="category_pie_menu">Pie menu</string>
+	<string name="category_search">Search</string>
+	<string name="category_appearance">Appearance</string>
 	<string name="orientation">Orientation</string>
 	<string name="orientation_portrait">Portrait (Default)</string>
 	<string name="orientation_landscape">Landscape</string>
 	<string name="orientation_user">Auto</string>
-	<string name="darken_background">Darken background</string>
+	<string name="darken_background">Pie darken background</string>
+	<string name="darken_background_description">Background applied when showing the Pie menu</string>
 	<string name="darken_background_yes">Heavy (Default)</string>
 	<string name="darken_background_light">Light</string>
 	<string name="darken_background_no">None</string>
@@ -22,7 +26,7 @@
 	<string name="background_blur_radius_medium">Medium</string>
 	<string name="background_blur_radius_heavy">Heavy</string>
 	<string name="background_blur_radius_none">No (Default)</string>
-	<string name="blur_menu">Blur menu</string>
+	<string name="blur_menu">Blur pie menu</string>
 	<string name="blur_menu_yes">Yes (Default)</string>
 	<string name="blur_menu_no">No</string>
 	<string name="dead_zone">Ignore touches</string>

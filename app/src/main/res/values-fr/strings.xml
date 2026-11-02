@@ -9,12 +9,15 @@
 	<string name="check_these_settings">Veuillez vérifier les paramètres suivants :</string>
 	<string name="disable_battery_optimization"><big><font color="#ffffff">Désactiver l\'optimisation de la batterie</font></big>\nÉconomise de l\'énergie et rend ce lanceur plus rapide</string>
 	<string name="make_default_launcher"><big><font color="#ffffff">Définir comme lanceur par défaut</font></big>\nÉvite de revenir à votre lanceur précédent</string>
-	<string name="category_home">Écran d\'accueil</string>
+	<string name="category_pie_menu">Menu Pie</string>
+	<string name="category_search">Recherche</string>
+	<string name="category_appearance">Apparence</string>
 	<string name="orientation">Orientation</string>
 	<string name="orientation_portrait">Portrait (par défaut)</string>
 	<string name="orientation_landscape">Paysage</string>
 	<string name="orientation_user">Automatique</string>
-	<string name="darken_background">Assombrir le fond</string>
+	<string name="darken_background">Assombrir le fond du menu Pie</string>
+	<string name="darken_background_description">Fond appliqué lors de l\'affichage du menu Pie</string>
 	<string name="darken_background_yes">Fort (par défaut)</string>
 	<string name="darken_background_light">Léger</string>
 	<string name="darken_background_no">Aucun</string>
@@ -22,7 +25,7 @@
 	<string name="background_blur_radius_medium">Moyen</string>
 	<string name="background_blur_radius_heavy">Fort</string>
 	<string name="background_blur_radius_none">Non (par défaut)</string>
-	<string name="blur_menu">Flouter le menu</string>
+	<string name="blur_menu">Flouter le menu Pie</string>
 	<string name="blur_menu_yes">Oui (par défaut)</string>
 	<string name="blur_menu_no">Non</string>
 	<string name="dead_zone">Ignorer les touches</string>

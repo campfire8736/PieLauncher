@@ -194,6 +194,7 @@ public class PreferencesActivity extends Activity {
 				(value) -> prefs.setOrientation(value));
 		initPreference(R.id.darken_background,
 				R.string.darken_background,
+				R.string.darken_background_description,
 				PreferencesActivity::getDarkenBackgroundOptions,
 				() -> prefs.darkenBackground(),
 				(value) -> prefs.setDarkenBackground(value));
@@ -378,7 +379,17 @@ public class PreferencesActivity extends Activity {
 			GetOptionsListener<T, G> options,
 			GetListener<T> getter,
 			SetListener<T> setter) {
-		initPreference(viewId, titleId, options, getter, setter, null);
+		initPreference(viewId, titleId, 0, options, getter, setter, null);
+	}
+
+	private <T, G> void initPreference(
+			int viewId,
+			int titleId,
+			int descriptionId,
+			GetOptionsListener<T, G> options,
+			GetListener<T> getter,
+			SetListener<T> setter) {
+		initPreference(viewId, titleId, descriptionId, options, getter, setter, null);
 	}
 
 	private <T, G> void initPreference(
@@ -388,13 +399,25 @@ public class PreferencesActivity extends Activity {
 			GetListener<T> getter,
 			SetListener<T> setter,
 			Initializer initializer) {
+		initPreference(viewId, titleId, 0, options, getter, setter, initializer);
+	}
+
+	private <T, G> void initPreference(
+			int viewId,
+			int titleId,
+			int descriptionId,
+			GetOptionsListener<T, G> options,
+			GetListener<T> getter,
+			SetListener<T> setter,
+			Initializer initializer) {
 		TextView tv = findViewById(viewId);
-		initPreference(tv, titleId, options, getter, setter, initializer);
+		initPreference(tv, titleId, descriptionId, options, getter, setter, initializer);
 	}
 
 	private <T, G> void initPreference(
 			TextView tv,
 			int titleId,
+			int descriptionId,
 			GetOptionsListener<T, G> options,
 			GetListener<T> getter,
 			SetListener<T> setter,
@@ -403,9 +426,9 @@ public class PreferencesActivity extends Activity {
 			executor.execute(() -> {
 				initializer.onInit();
 				handler.post(() -> initPreference(
-						tv, titleId, options, getter, setter, null));
+						tv, titleId, descriptionId, options, getter, setter, null));
 			});
-			updatePreference(tv, titleId, R.string.tip_loading);
+			updatePreference(tv, titleId, descriptionId, R.string.tip_loading);
 			return;
 		}
 		Map<T, G> optionsMap = options.onGetOptions();
@@ -417,14 +440,14 @@ public class PreferencesActivity extends Activity {
 				for (T key : keys) {
 					if (i++ == which) {
 						setter.onSet(key);
-						updatePreference(tv, titleId,
+						updatePreference(tv, titleId, descriptionId,
 								optionsMap.get(getter.onGet()));
 						break;
 					}
 				}
 			});
 		});
-		updatePreference(tv, titleId, optionsMap.get(getter.onGet()));
+		updatePreference(tv, titleId, descriptionId, optionsMap.get(getter.onGet()));
 	}
 
 	private <T, G> CharSequence[] getItemsFromOptions(Map<T, G> options) {
@@ -446,9 +469,13 @@ public class PreferencesActivity extends Activity {
 		}
 	}
 
-	private static <T> void updatePreference(TextView tv, int labelId, T value) {
+	private static <T> void updatePreference(
+			TextView tv,
+			int labelId,
+			int descriptionId,
+			T value) {
 		if (value != null) {
-			tv.setText(getLabelAndValue(tv.getContext(), labelId, value));
+			tv.setText(getLabelAndValue(tv.getContext(), labelId, descriptionId, value));
 		}
 	}
 
@@ -456,6 +483,7 @@ public class PreferencesActivity extends Activity {
 	private static <T> Spanned getLabelAndValue(
 			Context context,
 			int labelId,
+			int descriptionId,
 			T value) {
 		String valueString;
 		if (value instanceof Integer) {
@@ -465,10 +493,17 @@ public class PreferencesActivity extends Activity {
 		} else {
 			return null;
 		}
-		String html = "<big><font color=\"#ffffff\">" +
-				context.getString(labelId) +
-				"</font></big><br/>" +
-				valueString;
+		StringBuilder sb = new StringBuilder();
+		sb.append("<big><font color=\"#ffffff\">")
+				.append(context.getString(labelId))
+				.append("</font></big>");
+		if (descriptionId > 0) {
+			sb.append("<br/><font color=\"#afff\"><small>")
+					.append(context.getString(descriptionId))
+					.append("</small></font>");
+		}
+		sb.append("<br/>").append(valueString);
+		String html = sb.toString();
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
 			return Html.fromHtml(html);
 		} else {

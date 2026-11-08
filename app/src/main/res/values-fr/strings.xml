@@ -138,4 +138,6 @@
 	<string name="activity_not_enabled">Activité non activée</string>
 	<string name="added_to_home_screen">%1$s ajouté</string>
 	<string name="removed_from_home_screen">%1$s supprimé</string>
+	<string name="back">Retour</string>
+	<string name="apply">Appliquer</string>
 </resources>

@@ -58,5 +58,8 @@
 		<activity
 			android:name=".activity.HiddenAppsActivity"
 			android:exported="true"/>
+		<activity
+			android:name=".activity.PickPieAppsActivity"
+			android:exported="true"/>
 	</application>
 </manifest>

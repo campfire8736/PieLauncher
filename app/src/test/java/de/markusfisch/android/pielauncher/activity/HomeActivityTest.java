@@ -6,6 +6,7 @@ import android.view.View;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +15,12 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowLooper;
+
+import android.content.ComponentName;
+import android.graphics.Bitmap;
+import android.os.Process;
+import android.os.UserHandle;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,6 +29,8 @@ import static org.junit.Assert.assertTrue;
 
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
+import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.LauncherItemKey;
 import de.markusfisch.android.pielauncher.widget.AppPieView;
 
 @RunWith(RobolectricTestRunner.class)
@@ -31,11 +40,32 @@ public class HomeActivityTest {
     private HomeActivity activity;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
         Context context = ApplicationProvider.getApplicationContext();
         PieLauncherApp.getPrefs(context).setSkipSetup();
+
+        Bitmap bitmap = Bitmap.createBitmap(48, 48, Bitmap.Config.ARGB_8888);
+        java.lang.reflect.Constructor<Apps.AppIcon> constructor = Apps.AppIcon.class.getDeclaredConstructor(
+                ComponentName.class, String.class, Bitmap.class, UserHandle.class);
+        constructor.setAccessible(true);
+        Apps.AppIcon icon = constructor.newInstance(
+                new ComponentName("com.mock", "MockActivity"),
+                "Mock App", bitmap, Process.myUserHandle());
+        PieLauncherApp.apps.apps.put(new LauncherItemKey(icon.componentName, icon.userHandle), icon);
+
         controller = Robolectric.buildActivity(HomeActivity.class).setup();
         activity = controller.get();
+    }
+
+    @After
+    public void tearDown() {
+        if (controller != null) {
+            controller.pause().stop().destroy();
+        }
+        PieLauncherApp.apps.apps.clear();
+        PieLauncherApp.apps.menuPrimary.clear();
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
     }
 
     @Test
@@ -102,5 +132,20 @@ public class HomeActivityTest {
         searchInput.setText("test");
         assertEquals(View.GONE, editButton.getVisibility());
         assertEquals(View.GONE, prefsButton.getVisibility());
+    }
+
+    @Test
+    public void testShowEditorOnResumeReEntersEditMode() throws Exception {
+        AppPieView pieView = activity.findViewById(R.id.pie);
+        assertFalse(pieView.inEditMode());
+
+        java.lang.reflect.Field field = HomeActivity.class.getDeclaredField("showEditorOnResume");
+        field.setAccessible(true);
+        field.setBoolean(activity, true);
+
+        controller.resume();
+
+        assertTrue(pieView.inEditMode());
+        assertFalse(field.getBoolean(activity));
     }
 }

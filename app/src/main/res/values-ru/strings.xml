@@ -138,4 +138,6 @@
 	<string name="activity_not_enabled">Деятельность не включена</string>
 	<string name="added_to_home_screen">%1$s добавлено</string>
 	<string name="removed_from_home_screen">%1$s удалено</string>
+	<string name="back">Назад</string>
+	<string name="apply">Применить</string>
 </resources>

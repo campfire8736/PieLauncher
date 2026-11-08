@@ -41,6 +41,7 @@ public class HomeActivity extends Activity {
 	private ImageView editButton;
 	private boolean updateAfterTextChange = true;
 	private boolean showAllAppsOnResume = false;
+	private boolean showEditorOnResume = false;
 	private int immersiveMode = Preferences.IMMERSIVE_MODE_DISABLED;
 	private long pausedAt = 0L;
 	private OnBackInvokedCallback onBackInvokedCallback = null;
@@ -81,6 +82,10 @@ public class HomeActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle state) {
 		super.onCreate(state);
+
+		if (state != null) {
+			showEditorOnResume = state.getBoolean("show_editor_on_resume", false);
+		}
 
 		prefs = PieLauncherApp.getPrefs(this);
 		kb = new SoftKeyboard(this);
@@ -206,10 +211,20 @@ public class HomeActivity extends Activity {
 	}
 
 	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putBoolean("show_editor_on_resume",
+				showEditorOnResume || (pieView != null && pieView.inEditMode()));
+	}
+
+	@Override
 	protected void onResume() {
 		super.onResume();
 		updateSystemBars();
-		if (showAllAppsOnResume) {
+		if (showEditorOnResume) {
+			showEditor();
+			showEditorOnResume = false;
+		} else if (showAllAppsOnResume) {
 			showAllApps();
 			showAllAppsOnResume = false;
 		} else {
@@ -324,6 +339,10 @@ public class HomeActivity extends Activity {
 			public void onShowAllAppsOnResume() {
 				showAllAppsOnResume = true;
 			}
+		});
+		pieView.setEditListener(isPrimary -> {
+			showEditorOnResume = true;
+			PickPieAppsActivity.start(HomeActivity.this, isPrimary);
 		});
 	}
 

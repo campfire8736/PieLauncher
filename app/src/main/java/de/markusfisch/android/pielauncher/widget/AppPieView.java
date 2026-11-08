@@ -42,6 +42,7 @@ import java.util.List;
 
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.activity.PickIconActivity;
+import de.markusfisch.android.pielauncher.activity.PickPieAppsActivity;
 import de.markusfisch.android.pielauncher.activity.PreferencesActivity;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppSearch;
@@ -93,6 +94,16 @@ public class AppPieView extends View {
         void onScrollList(int y, boolean isScrolling);
 
         void onDragDown(float alpha);
+    }
+
+    public interface EditListener {
+        void onPickPieApps(boolean isPrimary);
+    }
+
+    private EditListener editListener;
+
+    public void setEditListener(EditListener listener) {
+        editListener = listener;
     }
 
     private static final int HAPTIC_FEEDBACK_DOWN =
@@ -985,7 +996,11 @@ public class AppPieView extends View {
                 return true;
             case BACK_OR_REMOVE_ICON:
                 if (!pieEditor.hasGrabbedIcon()) {
-                    ((Activity) context).onBackPressed();
+                    if (editListener != null) {
+                        editListener.onPickPieApps(isPrimaryMenu());
+                    } else {
+                        PickPieAppsActivity.start(context, isPrimaryMenu());
+                    }
                 } else {
                     removeIconFromPie(pieEditor.getGrabbedIcon(),
                             PieLauncherApp.apps.isDrawerIcon(

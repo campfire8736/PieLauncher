@@ -124,8 +124,8 @@ public class EditorRendererTest {
 
         invokeDraw(mockFaderEdit, grabbedIcon);
 
-        // With a grabbed icon, 3 action icons are drawn (remove, edit/hide, details)
-        verify(mockCanvas, times(3)).drawBitmap(any(Bitmap.class), nullable(Rect.class), any(Rect.class), any(Paint.class));
+        // With a grabbed icon, 3 action icons are drawn (remove, edit/hide, details) plus the grabbed icon under cursor
+        verify(mockCanvas, times(4)).drawBitmap(any(Bitmap.class), nullable(Rect.class), any(Rect.class), any(Paint.class));
         verify(mockCanvas, atLeastOnce()).drawCircle(anyFloat(), anyFloat(), anyFloat(), any(Paint.class));
     }
 

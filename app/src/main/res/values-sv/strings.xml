@@ -93,6 +93,9 @@
 	<string name="exclude_pie_yes">Från primärmenyn</string>
 	<string name="exclude_pie_all">Från båda menyerna</string>
 	<string name="exclude_pie_no">Nej (standard)</string>
+	<string name="rigid_pie_menu">Stel cirkelmeny-layout</string>
+	<string name="rigid_pie_menu_yes">Fasta platser (potenser av 2)</string>
+	<string name="rigid_pie_menu_no">Lika delar (Standard)</string>
 	<string name="split_pie_menu">Separata cirkelmenyer upptill/nedtill</string>
 	<string name="circle_swaps_menus">Att cirkla växlar menyer</string>
 	<string name="alternate_menu_none">Nej (standard)</string>

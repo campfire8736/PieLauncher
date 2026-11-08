@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Looper;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.util.Pair;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -34,6 +35,7 @@ import java.util.concurrent.Executors;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.graphics.Converter;
 import de.markusfisch.android.pielauncher.graphics.IconPack;
+import de.markusfisch.android.pielauncher.preference.Preferences;
 
 public class Database {
 	private static final String APPS = "apps";
@@ -97,19 +99,49 @@ public class Database {
 			Map<LauncherItemKey, Apps.AppIcon> allApps) {
 		ArrayList<Apps.AppIcon> icons = new ArrayList<>();
 		Cursor cursor = openHelper.getReadableDatabase().query(MENU_ITEMS,
-				new String[]{ITEM_KEY},
+				new String[]{ITEM_KEY, POSITION},
 				MENU_NAME + "=?",
 				new String[]{name},
 				null,
 				null,
 				POSITION);
+		Preferences prefs = PieLauncherApp.getPrefs(context);
+		boolean isRigid = prefs != null && prefs.isRigidPie();
 		try {
+			int maxPos = -1;
+			List<Pair<Integer, Apps.AppIcon>> list = new ArrayList<>();
 			while (cursor.moveToNext()) {
 				Apps.AppIcon icon = allApps.get(
 						LauncherItemKey.unflattenFromString(
 								context, cursor.getString(0)));
+				int pos = cursor.getInt(1);
 				if (icon != null) {
-					icons.add(icon);
+					if (!isRigid) {
+						icons.add(icon);
+					} else {
+						list.add(new Pair<>(pos, icon));
+						if (pos > maxPos) {
+							maxPos = pos;
+						}
+					}
+				}
+			}
+			if (isRigid && !list.isEmpty()) {
+				int minS = Math.max(2, list.size());
+				if (maxPos >= minS) {
+					minS = maxPos + 1;
+				}
+				int S = 2;
+				while (S < minS) {
+					S <<= 1;
+				}
+				for (int i = 0; i < S; ++i) {
+					icons.add(Apps.AppIcon.createGhost());
+				}
+				for (Pair<Integer, Apps.AppIcon> pair : list) {
+					if (pair.first < S) {
+						icons.set(pair.first, pair.second);
+					}
 				}
 			}
 		} finally {
@@ -133,12 +165,15 @@ public class Database {
 			db.delete(MENU_ITEMS, MENU_NAME + "=?", new String[]{name});
 			int position = 0;
 			for (Apps.AppIcon icon : icons) {
-				ContentValues values = new ContentValues();
-				values.put(MENU_NAME, name);
-				values.put(POSITION, position++);
-				values.put(ITEM_KEY, LauncherItemKey.flattenToString(
-						context, icon.componentName, icon.userHandle));
-				db.insertOrThrow(MENU_ITEMS, null, values);
+				if (icon != null && !icon.isGhost) {
+					ContentValues values = new ContentValues();
+					values.put(MENU_NAME, name);
+					values.put(POSITION, position);
+					values.put(ITEM_KEY, LauncherItemKey.flattenToString(
+							context, icon.componentName, icon.userHandle));
+					db.insertOrThrow(MENU_ITEMS, null, values);
+				}
+				position++;
 			}
 			db.setTransactionSuccessful();
 		} finally {
@@ -818,6 +853,12 @@ public class Database {
 	}
 
 	private static Apps.AppIcon copyIcon(Apps.AppIcon icon) {
+		if (icon == null) {
+			return null;
+		}
+		if (icon.isGhost) {
+			return Apps.AppIcon.createGhost();
+		}
 		Apps.AppIcon copy = new Apps.AppIcon(icon.componentName, icon.label,
 				icon.bitmap, icon.userHandle);
 		copy.shortcutPackage = icon.shortcutPackage;

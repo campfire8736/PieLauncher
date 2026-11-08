@@ -94,6 +94,7 @@ public class Preferences {
 	private static final String SHOW_DRAWER_ON_HOME = "show_drawer_on_home";
 	private static final String SPLIT_PIE_MENU = "split_pie_menu";
 	private static final String CIRCLE_SWAPS_MENUS = "circle_swaps";
+	private static final String RIGID_PIE_MENU = "rigid_pie_menu";
 
 	private final SharedPreferences preferences;
 	private final SystemSettings systemSettings;
@@ -131,6 +132,7 @@ public class Preferences {
 	private boolean showDrawerOnHome = true;
 	private int splitPieMenu = ALTERNATE_MENU_NONE;
 	private int circleSwapsMenus = ALTERNATE_MENU_NONE;
+	private boolean rigidPie = false;
 
 	public Preferences(Context context) {
 		Context appContext = context.getApplicationContext();
@@ -197,6 +199,7 @@ public class Preferences {
 		splitPieMenu = preferences.getInt(SPLIT_PIE_MENU, splitPieMenu);
 		circleSwapsMenus = preferences.getInt(CIRCLE_SWAPS_MENUS,
 				circleSwapsMenus);
+		rigidPie = preferences.getBoolean(RIGID_PIE_MENU, rigidPie);
 	}
 
 	public boolean skipSetup() {
@@ -494,6 +497,15 @@ public class Preferences {
 	public void setCircleSwapsMenus(int circleSwapsMenus) {
 		this.circleSwapsMenus = circleSwapsMenus;
 		put(CIRCLE_SWAPS_MENUS, circleSwapsMenus).apply();
+	}
+
+	public boolean isRigidPie() {
+		return rigidPie;
+	}
+
+	public void setRigidPie(boolean rigidPie) {
+		this.rigidPie = rigidPie;
+		put(RIGID_PIE_MENU, rigidPie).apply();
 	}
 
 	public float getAnimationDuration() {

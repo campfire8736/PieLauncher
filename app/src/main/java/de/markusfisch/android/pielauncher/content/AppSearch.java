@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps.AppIcon;
@@ -128,12 +129,18 @@ public class AppSearch {
 				}
 			}
 			switch (prefs.excludePie()) {
-				case Preferences.EXCLUDE_PIE_ALL:
-					list.removeAll(new HashSet<>(repo.menuSecondary));
+				case Preferences.EXCLUDE_PIE_ALL: {
+					Set<AppIcon> sec = new HashSet<>(repo.menuSecondary);
+					sec.remove(null);
+					list.removeAll(sec);
 					// Fall through.
-				case Preferences.EXCLUDE_PIE_PRIMARY:
-					list.removeAll(new HashSet<>(repo.menuPrimary));
+				}
+				case Preferences.EXCLUDE_PIE_PRIMARY: {
+					Set<AppIcon> pri = new HashSet<>(repo.menuPrimary);
+					pri.remove(null);
+					list.removeAll(pri);
 					break;
+				}
 			}
 		} else {
 			int item = prefs.getSearchParameter();

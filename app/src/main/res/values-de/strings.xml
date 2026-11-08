@@ -93,6 +93,9 @@
 	<string name="exclude_pie_yes">Aus primärem Menü</string>
 	<string name="exclude_pie_all">Aus beiden Menüs</string>
 	<string name="exclude_pie_no">Nein (Standard)</string>
+	<string name="rigid_pie_menu">Starres Pie-Layout</string>
+	<string name="rigid_pie_menu_yes">Feste Plätze (Zweierpotenzen)</string>
+	<string name="rigid_pie_menu_no">Gleiche Teile (Standard)</string>
 	<string name="split_pie_menu">Ein Menu für oben und unten</string>
 	<string name="circle_swaps_menus">Umkreisen wechselt Menüs</string>
 	<string name="alternate_menu_none">Nein (Standard)</string>

@@ -13,6 +13,7 @@ import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 import de.markusfisch.android.pielauncher.graphics.Converter;
+import de.markusfisch.android.pielauncher.graphics.PieMenu;
 import de.markusfisch.android.pielauncher.widget.state.Fader;
 import de.markusfisch.android.pielauncher.widget.state.EditorAction;
 
@@ -124,6 +125,8 @@ public class EditorRenderer {
         boolean hasIcon = grabbedIcon != null;
         boolean invalidate = f < 1f;
 
+        drawPlaceholders(canvas, pieMenu);
+
         // Only draw tips in portrait orientation.
         // There's probably not enough space in landscape.
         if (canvas.getWidth() < canvas.getHeight()) {
@@ -161,6 +164,23 @@ public class EditorRenderer {
             drawAction(canvas, iconAdd, iconStartRect, 0f, highlightedAction);
             drawAction(canvas, hasSecondaryMenu ? iconSplitPie : iconPreferences, iconCenterRect, 0f, highlightedAction);
             drawAction(canvas, iconDone, iconEndRect, 0f, highlightedAction);
+        }
+
+        if (hasIcon && !pieMenu.icons.contains(grabbedIcon)) {
+            double iconDrawSize = grabbedIcon.size;
+            if (iconDrawSize <= 0) {
+                for (int i = 0; i < pieMenu.icons.size(); ++i) {
+                    PieMenu.Icon ic = (PieMenu.Icon) pieMenu.icons.get(i);
+                    if (ic != null && ic.size > 0) {
+                        iconDrawSize = ic.size;
+                        break;
+                    }
+                }
+            }
+            if (iconDrawSize <= 0) {
+                iconDrawSize = actionSize;
+            }
+            grabbedIcon.draw(canvas, iconDrawSize, grabbedIcon.x, grabbedIcon.y);
         }
 
         return invalidate;
@@ -341,6 +361,22 @@ public class EditorRenderer {
         }
 
         return EditorAction.NONE;
+    }
+
+    private void drawPlaceholders(Canvas canvas, CanvasPieMenu pieMenu) {
+        if (pieMenu == null || !pieMenu.isRigid()) {
+            return;
+        }
+        int numberOfSlots = pieMenu.icons.size();
+        for (int i = 0; i < numberOfSlots; ++i) {
+            PieMenu.Icon icon = (PieMenu.Icon) pieMenu.icons.get(i);
+            if (icon != null && icon.isGhost) {
+                float r = (float) (icon.size * 0.5);
+                if (r > 1) {
+                    canvas.drawCircle(icon.x, icon.y, r, paintDropZone);
+                }
+            }
+        }
     }
 
     private boolean contains(Rect rect, Point point) {

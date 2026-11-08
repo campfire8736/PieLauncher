@@ -86,6 +86,12 @@ public class Apps {
 			this.userHandle = userHandle;
 		}
 
+		public static AppIcon createGhost() {
+			AppIcon ghost = new AppIcon(null, "", (Bitmap) null, null);
+			ghost.isGhost = true;
+			return ghost;
+		}
+
 		byte[] iconBytes;
 		double frecencyScore;
 		long frecencyUpdatedAt;
@@ -873,11 +879,193 @@ public class Apps {
 		Iterator<AppIcon> it = icons.iterator();
 		while (it.hasNext()) {
 			AppIcon appIcon = it.next();
-			if (isPackageMatch(appIcon, packageName, true) &&
+			if (appIcon != null &&
+					isPackageMatch(appIcon, packageName, true) &&
 					(userHandle == null || userHandle.equals(appIcon.userHandle))) {
 				it.remove();
 			}
 		}
+	}
+
+	public static boolean isGhost(AppIcon icon) {
+		return icon == null || icon.isGhost;
+	}
+
+	public static void ensureRigidCapacityForAdd(List<AppIcon> icons) {
+		if (icons.isEmpty()) {
+			icons.add(AppIcon.createGhost());
+			icons.add(AppIcon.createGhost());
+			return;
+		}
+		boolean hasEmptySlot = false;
+		for (AppIcon ic : icons) {
+			if (isGhost(ic)) {
+				hasEmptySlot = true;
+				break;
+			}
+		}
+		if (!hasEmptySlot) {
+			expandRigidCapacity(icons);
+		}
+	}
+
+	public static void expandRigidCapacity(List<AppIcon> icons) {
+		int oldS = icons.size();
+		int newS = Math.max(2, oldS << 1);
+		List<AppIcon> expanded = new ArrayList<>(newS);
+		for (int i = 0; i < newS; ++i) {
+			expanded.add(AppIcon.createGhost());
+		}
+		for (int i = 0; i < oldS; ++i) {
+			AppIcon ic = icons.get(i);
+			if (!isGhost(ic)) {
+				expanded.set(i * 2, ic);
+			}
+		}
+		icons.clear();
+		icons.addAll(expanded);
+	}
+
+	public static void shrinkRigidCapacityIfNeeded(List<AppIcon> icons) {
+		int S = icons.size();
+		if (S <= 2 || (S & (S - 1)) != 0) {
+			return;
+		}
+		int appCount = 0;
+		boolean allEven = true;
+		for (int i = 0; i < S; ++i) {
+			AppIcon ic = icons.get(i);
+			if (!isGhost(ic)) {
+				appCount++;
+				if ((i % 2) != 0) {
+					allEven = false;
+				}
+			}
+		}
+		if (appCount == 0) {
+			icons.clear();
+			return;
+		}
+		if (appCount <= S / 2 && allEven) {
+			int halfS = S / 2;
+			List<AppIcon> shrunk = new ArrayList<>(halfS);
+			for (int i = 0; i < halfS; ++i) {
+				AppIcon ic = icons.get(i * 2);
+				shrunk.add(isGhost(ic) ? AppIcon.createGhost() : ic);
+			}
+			icons.clear();
+			icons.addAll(shrunk);
+			shrinkRigidCapacityIfNeeded(icons);
+		}
+	}
+
+	public static void convertToRigid(List<AppIcon> menu) {
+		List<AppIcon> nonNull = new ArrayList<>();
+		for (AppIcon ic : menu) {
+			if (!isGhost(ic)) {
+				nonNull.add(ic);
+			}
+		}
+		int N = nonNull.size();
+		if (N == 0) {
+			menu.clear();
+			return;
+		}
+		int S = 2;
+		while (S < N) {
+			S <<= 1;
+		}
+		int k = Integer.numberOfTrailingZeros(S);
+		List<AppIcon> rigidMenu = new ArrayList<>(S);
+		for (int i = 0; i < S; ++i) {
+			rigidMenu.add(AppIcon.createGhost());
+		}
+		for (int i = 0; i < N; ++i) {
+			int slot = Integer.reverse(i) >>> (32 - k);
+			rigidMenu.set(slot, nonNull.get(i));
+		}
+		menu.clear();
+		menu.addAll(rigidMenu);
+	}
+
+	public static void convertToStandard(List<AppIcon> menu) {
+		List<AppIcon> nonNull = new ArrayList<>();
+		for (AppIcon ic : menu) {
+			if (!isGhost(ic)) {
+				nonNull.add(ic);
+			}
+		}
+		menu.clear();
+		menu.addAll(nonNull);
+	}
+
+	public void updateRigidState(Context context, boolean isRigid) {
+		if (isRigid) {
+			convertToRigid(menuPrimary);
+			convertToRigid(menuSecondary);
+		} else {
+			convertToStandard(menuPrimary);
+			convertToStandard(menuSecondary);
+		}
+		store(context);
+	}
+
+	public static void updateSelectionInRigidMenu(
+			List<AppIcon> targetMenu,
+			Set<LauncherItemKey> selectedKeys,
+			List<AppIcon> allAvailableApps) {
+		for (int i = 0; i < targetMenu.size(); ++i) {
+			AppIcon icon = targetMenu.get(i);
+			if (!isGhost(icon)) {
+				LauncherItemKey key = new LauncherItemKey(
+						icon.componentName, icon.userHandle);
+				if (!selectedKeys.contains(key)) {
+					targetMenu.set(i, AppIcon.createGhost());
+				}
+			}
+		}
+		List<AppIcon> newlySelected = new ArrayList<>();
+		if (allAvailableApps != null) {
+			for (AppIcon icon : allAvailableApps) {
+				if (!isGhost(icon)) {
+					LauncherItemKey key = new LauncherItemKey(
+							icon.componentName, icon.userHandle);
+					if (selectedKeys.contains(key) && !targetMenu.contains(icon)) {
+						newlySelected.add(icon);
+					}
+				}
+			}
+		}
+		if (!newlySelected.isEmpty()) {
+			if (targetMenu.isEmpty()) {
+				targetMenu.add(AppIcon.createGhost());
+				targetMenu.add(AppIcon.createGhost());
+			}
+			for (AppIcon newIcon : newlySelected) {
+				int freeSlot = findFreeSlotInPriorityOrder(targetMenu);
+				if (freeSlot < 0) {
+					expandRigidCapacity(targetMenu);
+					freeSlot = findFreeSlotInPriorityOrder(targetMenu);
+				}
+				targetMenu.set(freeSlot, newIcon);
+			}
+		}
+		shrinkRigidCapacityIfNeeded(targetMenu);
+	}
+
+	private static int findFreeSlotInPriorityOrder(List<AppIcon> menu) {
+		int S = menu.size();
+		if (S < 1) {
+			return -1;
+		}
+		int k = Integer.numberOfTrailingZeros(S);
+		for (int i = 0; i < S; ++i) {
+			int slot = Integer.reverse(i) >>> (32 - k);
+			if (slot < S && isGhost(menu.get(slot))) {
+				return slot;
+			}
+		}
+		return -1;
 	}
 
 	private static boolean isPackageMatch(

@@ -230,6 +230,14 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getAnimateInOutOptions,
 				() -> prefs.animateInOut(),
 				(value) -> prefs.setAnimateInOut(value));
+		initPreference(R.id.rigid_pie_menu,
+				R.string.rigid_pie_menu,
+				PreferencesActivity::getRigidPieOptions,
+				() -> prefs.isRigidPie(),
+				(value) -> {
+					prefs.setRigidPie(value);
+					PieLauncherApp.apps.updateRigidState(this, value);
+				});
 		initPreference(R.id.split_pie_menu,
 				R.string.split_pie_menu,
 				PreferencesActivity::getAlternateMenuOptions,
@@ -547,6 +555,13 @@ public class PreferencesActivity extends Activity {
 		Map<Boolean, Integer> map = new LinkedHashMap<>();
 		map.put(Boolean.TRUE, R.string.animate_in_out_yes);
 		map.put(Boolean.FALSE, R.string.animate_in_out_no);
+		return map;
+	}
+
+	private static Map<Boolean, Integer> getRigidPieOptions() {
+		Map<Boolean, Integer> map = new LinkedHashMap<>();
+		map.put(Boolean.TRUE, R.string.rigid_pie_menu_yes);
+		map.put(Boolean.FALSE, R.string.rigid_pie_menu_no);
 		return map;
 	}
 

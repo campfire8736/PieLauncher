@@ -93,6 +93,9 @@
 	<string name="exclude_pie_yes">Из основного меню</string>
 	<string name="exclude_pie_all">Из обоих меню</string>
 	<string name="exclude_pie_no">Нет (Стандартно)</string>
+	<string name="rigid_pie_menu">Фиксированная сетка кругового меню</string>
+	<string name="rigid_pie_menu_yes">Фиксированные позиции (степени двойки)</string>
+	<string name="rigid_pie_menu_no">Равные секторы (По умолчанию)</string>
 	<string name="split_pie_menu">Отдельные круговые меню сверху/снизу</string>
 	<string name="circle_swaps_menus">Обведение по кругу переключает меню</string>
 	<string name="alternate_menu_none">Нет (Стандартно)</string>

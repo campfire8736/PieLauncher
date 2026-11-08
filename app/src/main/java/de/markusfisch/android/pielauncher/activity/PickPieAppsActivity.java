@@ -112,8 +112,10 @@ public class PickPieAppsActivity extends Activity {
 				: PieLauncherApp.apps.menuSecondary;
 		selectedKeys.clear();
 		for (Apps.AppIcon icon : targetMenu) {
-			selectedKeys.add(new LauncherItemKey(
-					icon.componentName, icon.userHandle));
+			if (icon != null) {
+				selectedKeys.add(new LauncherItemKey(
+						icon.componentName, icon.userHandle));
+			}
 		}
 	}
 
@@ -141,33 +143,50 @@ public class PickPieAppsActivity extends Activity {
 		List<Apps.AppIcon> targetMenu = isPrimary
 				? PieLauncherApp.apps.menuPrimary
 				: PieLauncherApp.apps.menuSecondary;
+		Preferences prefs = PieLauncherApp.getPrefs(this);
+		boolean isRigid = prefs != null && prefs.isRigidPie();
 
-		ArrayList<Apps.AppIcon> newMenu = new ArrayList<>();
-		// 1. Retain existing pie icons that remain selected (preserving order).
-		for (Apps.AppIcon icon : targetMenu) {
-			LauncherItemKey key = new LauncherItemKey(
-					icon.componentName, icon.userHandle);
-			if (selectedKeys.contains(key)) {
-				newMenu.add(icon);
+		if (!isRigid) {
+			ArrayList<Apps.AppIcon> newMenu = new ArrayList<>();
+			// 1. Retain existing pie icons that remain selected (preserving order).
+			for (Apps.AppIcon icon : targetMenu) {
+				if (icon == null) continue;
+				LauncherItemKey key = new LauncherItemKey(
+						icon.componentName, icon.userHandle);
+				if (selectedKeys.contains(key)) {
+					newMenu.add(icon);
+				}
 			}
-		}
-		// 2. Append newly selected icons.
-		if (adapter != null) {
-			int count = adapter.getCount();
-			for (int i = 0; i < count; ++i) {
-				Apps.AppIcon icon = adapter.getItem(i);
-				if (icon != null) {
-					LauncherItemKey key = new LauncherItemKey(
-							icon.componentName, icon.userHandle);
-					if (selectedKeys.contains(key) && !newMenu.contains(icon)) {
-						newMenu.add(icon);
+			// 2. Append newly selected icons.
+			if (adapter != null) {
+				int count = adapter.getCount();
+				for (int i = 0; i < count; ++i) {
+					Apps.AppIcon icon = adapter.getItem(i);
+					if (icon != null) {
+						LauncherItemKey key = new LauncherItemKey(
+								icon.componentName, icon.userHandle);
+						if (selectedKeys.contains(key) && !newMenu.contains(icon)) {
+							newMenu.add(icon);
+						}
 					}
 				}
 			}
-		}
 
-		targetMenu.clear();
-		targetMenu.addAll(newMenu);
+			targetMenu.clear();
+			targetMenu.addAll(newMenu);
+		} else {
+			List<Apps.AppIcon> allAvailable = new ArrayList<>();
+			if (adapter != null) {
+				int count = adapter.getCount();
+				for (int i = 0; i < count; ++i) {
+					Apps.AppIcon icon = adapter.getItem(i);
+					if (icon != null) {
+						allAvailable.add(icon);
+					}
+				}
+			}
+			Apps.updateSelectionInRigidMenu(targetMenu, selectedKeys, allAvailable);
+		}
 		PieLauncherApp.apps.store(this);
 		if (PieLauncherApp.getPrefs(this).excludePie() !=
 				Preferences.EXCLUDE_PIE_NONE) {

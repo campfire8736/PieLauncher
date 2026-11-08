@@ -93,6 +93,9 @@
 	<string name="exclude_pie_yes">Uit primair menu</string>
 	<string name="exclude_pie_all">Uit beide menu\'s</string>
 	<string name="exclude_pie_no">Nee (standaard)</string>
+	<string name="rigid_pie_menu">Starre Pie-indeling</string>
+	<string name="rigid_pie_menu_yes">Vaste posities (machten van 2)</string>
+	<string name="rigid_pie_menu_no">Gelijke delen (Standaard)</string>
 	<string name="split_pie_menu">Aparte bovenste/onderste Pie-menu\'s</string>
 	<string name="circle_swaps_menus">Omcirkelen wisselt menu\'s</string>
 	<string name="alternate_menu_none">Nee (standaard)</string>

@@ -13,6 +13,7 @@ public class PieMenu<T extends PieMenu.Icon> {
 		public double cellSize;
 		public int x;
 		public int y;
+		public boolean isGhost = false;
 	}
 
 	public interface OnCircleListener {
@@ -30,6 +31,7 @@ public class PieMenu<T extends PieMenu.Icon> {
 	private double radius = 0;
 	private double twist = 0;
 	private float iconScale = 1f;
+	private boolean rigid = false;
 
 	public static double getPositiveAngle(double a) {
 		return (a + TAU + TAU) % TAU;
@@ -86,6 +88,22 @@ public class PieMenu<T extends PieMenu.Icon> {
 
 	public void setRadius(double radius) {
 		this.radius = radius;
+	}
+
+	public double getRadius() {
+		return radius;
+	}
+
+	public float getIconScale() {
+		return iconScale;
+	}
+
+	public boolean isRigid() {
+		return rigid;
+	}
+
+	public void setRigid(boolean rigid) {
+		this.rigid = rigid;
 	}
 
 	public double getTwist() {
@@ -178,6 +196,9 @@ public class PieMenu<T extends PieMenu.Icon> {
 
 				if (!cursorNearCenter) {
 					selectedIcon = closestIcon;
+					if (selectedIcon >= 0 && icons.get(selectedIcon).isGhost) {
+						selectedIcon = -1;
+					}
 				}
 			}
 		}

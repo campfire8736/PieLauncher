@@ -35,6 +35,9 @@ public class PieRenderer {
     public void startCircleTransition(int direction, List<Apps.AppIcon> currentIcons, long now) {
         outgoingPieIcons.clear();
         for (Apps.AppIcon icon : currentIcons) {
+            if (icon == null) {
+                continue;
+            }
             CanvasPieMenu.CanvasIcon snapshot = new CanvasPieMenu.CanvasIcon(icon.bitmap);
             snapshot.x = icon.x;
             snapshot.y = icon.y;

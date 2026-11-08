@@ -244,6 +244,7 @@ public class AppPieView extends View {
         sp = dm.scaledDensity;
 
         pieMenu.icons = menuPrimary;
+        pieMenu.setRigid(prefs.isRigidPie());
         pieMenu.onCircle(this::onCircle);
 
         controlsPadding = Math.round(80f * dp);
@@ -909,7 +910,9 @@ public class AppPieView extends View {
         pieConfig.updateSplitPieIcon(getResources(), editorRenderer, !isPrimaryMenu());
         setCenter(viewWidth >> 1, viewHeight >> 1);
         pieEditor.beginEdit(pieMenu.icons);
-        pieMenu.icons.remove(icon);
+        if (!pieMenu.isRigid()) {
+            pieMenu.icons.remove(icon);
+        }
         CanvasPieMenu.paint.setAlpha(255);
         pieEditor.editIcon(icon);
         if (stateManager.getMode() != ViewStateManager.MODE_EDIT) {
@@ -944,6 +947,9 @@ public class AppPieView extends View {
             int index = pieMenu.getSelectedIcon();
             if (index > -1 && index < pieMenu.icons.size()) {
                 appIcon = pieMenu.icons.get(index);
+                if (appIcon != null && appIcon.isGhost) {
+                    appIcon = null;
+                }
             }
             boolean pieVisible = stateManager.getFadePie().isVisible();
             fadeOutMode();
@@ -1132,7 +1138,19 @@ public class AppPieView extends View {
         if (isDrawerIcon) {
             prefs.setOpenListWith(Preferences.OPEN_LIST_WITH_TAP);
         }
-        pieMenu.icons.remove(icon);
+        if (pieMenu.isRigid()) {
+            if (pieEditor.getGrabbedIcon() == icon) {
+                pieEditor.removeGrabbedIcon();
+                return;
+            }
+            int idx = pieMenu.icons.indexOf(icon);
+            if (idx >= 0) {
+                pieMenu.icons.set(idx, Apps.AppIcon.createGhost());
+                Apps.shrinkRigidCapacityIfNeeded(pieMenu.icons);
+            }
+        } else {
+            pieMenu.icons.remove(icon);
+        }
         // Undo any rotation if the menu has not otherwise changed.
         if (!pieEditor.isMenuChanged(pieMenu.icons)) {
             pieEditor.rollback(pieMenu.icons);
@@ -1144,7 +1162,9 @@ public class AppPieView extends View {
             int centerX,
             int centerY) {
         for (Apps.AppIcon ic : icons) {
-            ic.setStartPosition(centerX, centerY);
+            if (ic != null) {
+                ic.setStartPosition(centerX, centerY);
+            }
         }
     }
 
@@ -1214,6 +1234,7 @@ public class AppPieView extends View {
     }
 
     private void setCenter(int x, int y) {
+        pieMenu.setRigid(prefs.isRigidPie());
         int radius = pieConfig.getRadius();
         pieMenu.set(
                 clamp(x, radius, viewWidth - radius),
@@ -1235,6 +1256,9 @@ public class AppPieView extends View {
         int size = pieMenu.icons.size();
         for (int i = 0; i < size; ++i) {
             Apps.AppIcon icon = (Apps.AppIcon) pieMenu.icons.get(i);
+            if (icon == null || icon.isGhost) {
+                continue;
+            }
             double rad = icon.size * .5;
             float sizeSq = Math.round(rad * rad);
             if (distSq(point.x, point.y, icon.x, icon.y) < sizeSq) {

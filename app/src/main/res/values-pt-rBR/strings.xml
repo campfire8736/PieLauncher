@@ -97,6 +97,9 @@
 	<string name="exclude_pie_yes">Do menu principal</string>
 	<string name="exclude_pie_all">Dos dois menus</string>
 	<string name="exclude_pie_no">Não (Padrão)</string>
+	<string name="rigid_pie_menu">Layout Pie rígido</string>
+	<string name="rigid_pie_menu_yes">Posições fixas (potências de 2)</string>
+	<string name="rigid_pie_menu_no">Partes iguais (Padrão)</string>
 	<string name="split_pie_menu">Menus Pie separados em cima/embaixo</string>
 	<string name="circle_swaps_menus">Circular alterna menus</string>
 	<string name="alternate_menu_none">Não (Padrão)</string>

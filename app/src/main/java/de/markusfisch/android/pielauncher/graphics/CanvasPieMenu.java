@@ -34,6 +34,9 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 				double iconSize,
 				int centerX,
 				int centerY) {
+			if (isGhost || bitmap == null) {
+				return;
+			}
 			int s = (int) iconSize >> 1;
 			if (s < 1) {
 				return;
@@ -71,7 +74,10 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 
 	public void draw(Canvas canvas) {
 		for (int n = icons.size(); n-- > 0; ) {
-			((CanvasIcon) icons.get(n)).draw(canvas);
+			CanvasIcon icon = (CanvasIcon) icons.get(n);
+			if (icon != null) {
+				icon.draw(canvas);
+			}
 		}
 	}
 
@@ -79,7 +85,10 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 		long delta = SystemClock.uptimeMillis() - lastChange;
 		float t = Math.min(1f, delta / 200f);
 		for (int n = icons.size(); n-- > 0; ) {
-			((CanvasIcon) icons.get(n)).drawSmoothed(canvas, t, lastT);
+			CanvasIcon icon = (CanvasIcon) icons.get(n);
+			if (icon != null) {
+				icon.drawSmoothed(canvas, t, lastT);
+			}
 		}
 		lastT = t;
 		return t < 1f;
@@ -92,7 +101,10 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 
 	public void initSmoothing() {
 		for (int n = icons.size(); n-- > 0; ) {
-			((CanvasIcon) icons.get(n)).initSmoothing();
+			CanvasIcon icon = (CanvasIcon) icons.get(n);
+			if (icon != null) {
+				icon.initSmoothing();
+			}
 		}
 	}
 }

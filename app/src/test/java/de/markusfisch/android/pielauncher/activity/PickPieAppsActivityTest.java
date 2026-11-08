@@ -20,6 +20,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.annotation.GraphicsMode;
 
 import java.lang.reflect.Constructor;
 
@@ -35,6 +36,7 @@ import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
 
 @RunWith(RobolectricTestRunner.class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = 34)
 public class PickPieAppsActivityTest {
 	private Apps.AppIcon appA;

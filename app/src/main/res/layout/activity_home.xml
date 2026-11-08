@@ -23,16 +23,29 @@
 		android:maxLength="128"
 		android:importantForAutofill="no"
 		android:visibility="gone"/>
-	<de.markusfisch.android.pielauncher.widget.ActionButton
-		android:id="@+id/preferences"
+	<LinearLayout
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_marginTop="48dp"
 		android:layout_marginRight="16dp"
 		android:layout_marginEnd="16dp"
-		android:padding="16dp"
 		android:layout_gravity="end"
-		android:contentDescription="@string/preferences"
-		android:src="@drawable/ic_preferences"
-		android:visibility="gone"/>
+		android:orientation="horizontal">
+		<de.markusfisch.android.pielauncher.widget.ActionButton
+			android:id="@+id/edit"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:padding="16dp"
+			android:contentDescription="@string/edit_pie_menu"
+			android:src="@drawable/ic_edit"
+			android:visibility="gone"/>
+		<de.markusfisch.android.pielauncher.widget.ActionButton
+			android:id="@+id/preferences"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:padding="16dp"
+			android:contentDescription="@string/preferences"
+			android:src="@drawable/ic_preferences"
+			android:visibility="gone"/>
+	</LinearLayout>
 </merge>

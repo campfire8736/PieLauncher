@@ -30,6 +30,7 @@ public class EditorRenderer {
     private final Paint paintPressed;
     private final Paint paintAction;
     private final Paint paintText;
+    private final Paint paintSlotHighlight;
     private final int alphaDropZone;
     private final int alphaPressed;
     private final int alphaText;
@@ -81,6 +82,11 @@ public class EditorRenderer {
         paintText.setTextAlign(Paint.Align.CENTER);
         paintText.setTextSize(14f * res.getDisplayMetrics().scaledDensity);
         alphaText = paintText.getAlpha();
+
+        paintSlotHighlight = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paintSlotHighlight.setColor(0xffffffff);
+        paintSlotHighlight.setStyle(Paint.Style.STROKE);
+        paintSlotHighlight.setStrokeWidth(2.5f * res.getDisplayMetrics().density);
 
         dragToOrderTip = context.getString(R.string.tip_drag_to_order);
         removeIconTip = context.getString(R.string.tip_remove_icon);
@@ -149,11 +155,13 @@ public class EditorRenderer {
         paintPressed.setAlpha(Math.round(f * alphaPressed));
         paintAction.setAlpha(alpha);
         paintText.setAlpha(Math.round(f * alphaText));
+        paintSlotHighlight.setAlpha(alpha);
 
         boolean hasIcon = grabbedIcon != null;
         boolean invalidate = f < 1f;
 
         drawPlaceholders(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, isDisplacedOccupied);
+        drawSlotHighlights(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, grabbedIcon);
 
         // Only draw tips in portrait orientation.
         // There's probably not enough space in landscape.
@@ -389,6 +397,53 @@ public class EditorRenderer {
         }
 
         return EditorAction.NONE;
+    }
+
+    private void drawSlotHighlights(
+            Canvas canvas,
+            CanvasPieMenu pieMenu,
+            boolean hasGrabbedIcon,
+            int hoveredSlot,
+            int sourceSlot,
+            Apps.AppIcon grabbedIcon) {
+        if (!hasGrabbedIcon || pieMenu == null || !pieMenu.isRigid()) {
+            return;
+        }
+        int numberOfSlots = pieMenu.icons.size();
+        if (numberOfSlots < 1) {
+            return;
+        }
+        int cx = pieMenu.getCenterX();
+        int cy = pieMenu.getCenterY();
+        if (cx <= 0 || cy <= 0) {
+            cx = canvas.getWidth() >> 1;
+            cy = canvas.getHeight() >> 1;
+        }
+        double rad = pieMenu.getRadius();
+        double twist = pieMenu.getTwist();
+        double step = PieMenu.TAU / numberOfSlots;
+
+        double iconSize = grabbedIcon != null && grabbedIcon.size > 0 ? grabbedIcon.size : 0;
+        if (iconSize <= 0) {
+            for (int i = 0; i < numberOfSlots; ++i) {
+                PieMenu.Icon ic = (PieMenu.Icon) pieMenu.icons.get(i);
+                if (ic != null && ic.size > 0) {
+                    iconSize = ic.size;
+                    break;
+                }
+            }
+        }
+        if (iconSize <= 0) {
+            iconSize = actionSize;
+        }
+        float r = (float) (iconSize * 0.5);
+
+        if (hoveredSlot >= 0 && hoveredSlot < numberOfSlots) {
+            double a = twist + hoveredSlot * step;
+            int sx = cx + (int) Math.round(rad * Math.cos(a));
+            int sy = cy + (int) Math.round(rad * Math.sin(a));
+            canvas.drawCircle(sx, sy, r, paintSlotHighlight);
+        }
     }
 
     private void drawPlaceholders(

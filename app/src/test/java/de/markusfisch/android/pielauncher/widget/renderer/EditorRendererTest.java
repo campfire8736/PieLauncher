@@ -130,6 +130,38 @@ public class EditorRendererTest {
     }
 
     @Test
+    public void testDraw_RigidPie_WithGrabbedIcon_DrawsSlotHighlight() {
+        when(mockFaderEdit.isVisible()).thenReturn(true);
+        when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);
+
+        de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+                new de.markusfisch.android.pielauncher.graphics.CanvasPieMenu();
+        pieMenu.setRigid(true);
+        pieMenu.icons.add(createTestAppIcon("App 1"));
+        pieMenu.icons.add(Apps.AppIcon.createGhost());
+        pieMenu.calculate(500, 500);
+
+        Apps.AppIcon grabbedIcon = createTestAppIcon("Grabbed App");
+
+        editorRenderer.draw(
+                mockCanvas,
+                mockFaderEdit,
+                pieMenu,
+                grabbedIcon,
+                android.os.SystemClock.uptimeMillis() - 300L,
+                null,
+                300f,
+                false,
+                false,
+                1,
+                0,
+                false);
+
+        // Verify circle is drawn for slot highlight and drop zone
+        verify(mockCanvas, atLeastOnce()).drawCircle(anyFloat(), anyFloat(), anyFloat(), any(Paint.class));
+    }
+
+    @Test
     public void testGetActionAt_WithGrabbedIcon() {
         // Assume default rect size of 100x100 for testing
         editorRenderer.iconStartRect.set(0, 0, 100, 100);

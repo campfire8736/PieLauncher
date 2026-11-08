@@ -438,8 +438,8 @@ public class EditorRenderer {
         }
         float r = (float) (iconSize * 0.5);
 
-        if (hoveredSlot >= 0 && hoveredSlot < numberOfSlots) {
-            double a = twist + hoveredSlot * step;
+        if (sourceSlot >= 0 && sourceSlot < numberOfSlots) {
+            double a = twist + sourceSlot * step;
             int sx = cx + (int) Math.round(rad * Math.cos(a));
             int sy = cy + (int) Math.round(rad * Math.sin(a));
             canvas.drawCircle(sx, sy, r, paintSlotHighlight);

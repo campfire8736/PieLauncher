@@ -353,4 +353,63 @@ public class PieEditorTest {
         assertTrue(pieMenu.icons.get(0).isGhost);
         assertEquals(icon2, pieMenu.icons.get(1));
     }
+
+    @Test
+    public void testRigidReleaseAnimatesFromTouchPosition() {
+        pieMenu.setRigid(true);
+        pieMenu.set(500, 500, 200, 0, 1f);
+        Apps.AppIcon icon1 = createTestAppIcon("App 1");
+        Apps.AppIcon icon2 = createTestAppIcon("App 2");
+        pieMenu.icons.add(icon1);
+        pieMenu.icons.add(icon2);
+        pieMenu.calculate(500, 500);
+
+        pieEditor.editIcon(icon1);
+        // Drag to (400, 500)
+        pieEditor.setTouch(new Point(400, 500));
+        pieEditor.calculateEditablePie(500, 500);
+
+        // Commit release
+        pieEditor.commitGrabbedItem();
+
+        // Icon 1 should start its smoothing animation from the release touch position (400, 500)
+        assertEquals(400, icon1.getSmoothedX());
+        assertEquals(500, icon1.getSmoothedY());
+    }
+
+    @Test
+    public void testRigidHoverOverEmptySlotSwapsGhost() {
+        pieMenu.setRigid(true);
+        pieMenu.set(500, 500, 200, 0, 1f);
+        Apps.AppIcon icon1 = createTestAppIcon("App 1");
+        Apps.AppIcon ghost1 = Apps.AppIcon.createGhost();
+        pieMenu.icons.add(icon1); // Slot 0 (angle 0 -> 700, 500)
+        pieMenu.icons.add(ghost1); // Slot 1 (angle PI -> 300, 500)
+        pieMenu.calculate(500, 500);
+
+        pieEditor.editIcon(icon1); // Slot 0 now has ghost0
+        Apps.AppIcon ghost0 = pieMenu.icons.get(0);
+
+        // Hover over Slot 1 (angle PI, x=200, y=500) which is ghost1
+        pieEditor.setTouch(new Point(200, 500));
+        pieEditor.calculateEditablePie(500, 500);
+
+        // Ghost 1 should swap to Slot 0 coordinates (700, 500)
+        assertEquals(700, ghost1.x);
+        assertEquals(500, ghost1.y);
+        // Ghost 0 should swap to Slot 1 coordinates (300, 500)
+        assertEquals(300, ghost0.x);
+        assertEquals(500, ghost0.y);
+
+        // Hover away back to Slot 0
+        pieEditor.setTouch(new Point(800, 500));
+        pieEditor.calculateEditablePie(500, 500);
+
+        // Ghost 1 returns to Slot 1 coordinates (300, 500)
+        assertEquals(300, ghost1.x);
+        assertEquals(500, ghost1.y);
+        // Ghost 0 returns to Slot 0 coordinates (700, 500)
+        assertEquals(700, ghost0.x);
+        assertEquals(500, ghost0.y);
+    }
 }

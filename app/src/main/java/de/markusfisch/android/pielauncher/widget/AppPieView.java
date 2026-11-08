@@ -989,15 +989,20 @@ public class AppPieView extends View {
         switch (action) {
             case CHANGE_TWIST:
                 pieConfig.cycleTwist();
+                pieConfig.applyTo(pieMenu);
+                pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
                 pieConfig.updateChangeTwistIcon(getResources(), editorRenderer);
                 return true;
             case CHANGE_ICON_SCALE:
                 pieConfig.cycleIconScale();
+                pieConfig.applyTo(pieMenu);
+                pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
                 pieConfig.updateChangeIconScaleIcon(getResources(), editorRenderer);
                 return true;
             case CHANGE_RADIUS:
                 pieConfig.cycleRadius();
-                pieMenu.setRadius(pieConfig.getRadius());
+                pieConfig.applyTo(pieMenu);
+                pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
                 pieConfig.updateChangeRadiusIcon(getResources(), editorRenderer);
                 return true;
             case BACK_OR_REMOVE_ICON:

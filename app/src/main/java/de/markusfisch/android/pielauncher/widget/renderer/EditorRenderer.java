@@ -371,9 +371,20 @@ public class EditorRenderer {
         for (int i = 0; i < numberOfSlots; ++i) {
             PieMenu.Icon icon = (PieMenu.Icon) pieMenu.icons.get(i);
             if (icon != null && icon.isGhost) {
-                float r = (float) (icon.size * 0.5);
+                float r;
+                int x, y;
+                if (icon instanceof CanvasPieMenu.CanvasIcon) {
+                    CanvasPieMenu.CanvasIcon ci = (CanvasPieMenu.CanvasIcon) icon;
+                    r = (float) (ci.getSmoothedSize() * 0.5);
+                    x = ci.getSmoothedX();
+                    y = ci.getSmoothedY();
+                } else {
+                    r = (float) (icon.size * 0.5);
+                    x = icon.x;
+                    y = icon.y;
+                }
                 if (r > 1) {
-                    canvas.drawCircle(icon.x, icon.y, r, paintDropZone);
+                    canvas.drawCircle(x, y, r, paintDropZone);
                 }
             }
         }

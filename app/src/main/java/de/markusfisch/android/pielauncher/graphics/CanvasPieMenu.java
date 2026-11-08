@@ -19,6 +19,7 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 		private double smoothedSize;
 		private int smoothedX;
 		private int smoothedY;
+		private boolean smoothedInitialized = false;
 
 		public CanvasIcon(Bitmap bitmap) {
 			this.bitmap = bitmap;
@@ -27,6 +28,26 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 		public void setStartPosition(int x, int y) {
 			smoothedX = x;
 			smoothedY = y;
+			smoothedInitialized = true;
+		}
+
+		public void initSmoothing() {
+			smoothedSize = size;
+			smoothedX = x;
+			smoothedY = y;
+			smoothedInitialized = true;
+		}
+
+		public int getSmoothedX() {
+			return smoothedInitialized ? smoothedX : x;
+		}
+
+		public int getSmoothedY() {
+			return smoothedInitialized ? smoothedY : y;
+		}
+
+		public double getSmoothedSize() {
+			return smoothedInitialized && smoothedSize > 0 ? smoothedSize : size;
 		}
 
 		public void draw(
@@ -53,6 +74,9 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 		}
 
 		void drawSmoothed(Canvas canvas, float t, float lastT) {
+			if (!smoothedInitialized) {
+				initSmoothing();
+			}
 			double ds = size - smoothedSize;
 			int dx = x - smoothedX;
 			int dy = y - smoothedY;
@@ -63,12 +87,6 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 			smoothedX += Math.round(dx * f);
 			smoothedY += Math.round(dy * f);
 			draw(canvas, smoothedSize, smoothedX, smoothedY);
-		}
-
-		private void initSmoothing() {
-			smoothedSize = size;
-			smoothedX = x;
-			smoothedY = y;
 		}
 	}
 

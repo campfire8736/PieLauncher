@@ -34,7 +34,6 @@ public class PieEditor {
     private int grabbedSourceSlot = -1;
     private int lastHoveredSlot = -1;
     private Apps.AppIcon displacedHovered;
-    private Apps.AppIcon displacedSource;
     private double twist;
     private Point touch;
 
@@ -62,7 +61,6 @@ public class PieEditor {
         grabbedIcon = null;
         lastHoveredSlot = -1;
         displacedHovered = null;
-        displacedSource = null;
     }
 
     private boolean neverDropped = false;
@@ -132,6 +130,18 @@ public class PieEditor {
         return grabbedIcon != null;
     }
 
+    public int getLastHoveredSlot() {
+        return lastHoveredSlot;
+    }
+
+    public int getGrabbedSourceSlot() {
+        return grabbedSourceSlot;
+    }
+
+    public boolean isDisplacedOccupied() {
+        return displacedHovered != null && !displacedHovered.isGhost;
+    }
+
     public void editIcon(Apps.AppIcon icon) {
         grabbedIcon = icon;
         grabbedIconAt = android.os.SystemClock.uptimeMillis();
@@ -142,7 +152,6 @@ public class PieEditor {
             grabbedSourceSlot = pieMenu.icons.indexOf(grabbedIcon);
             lastHoveredSlot = -1;
             displacedHovered = null;
-            displacedSource = null;
             if (grabbedSourceSlot >= 0) {
                 Apps.AppIcon ghost = Apps.AppIcon.createGhost();
                 ghost.size = grabbedIcon.size;
@@ -180,7 +189,6 @@ public class PieEditor {
             grabbedIcon = null;
             lastHoveredSlot = -1;
             displacedHovered = null;
-            displacedSource = null;
             pieMenu.calculate(lastCenterX, lastCenterY);
             pieMenu.updateSmoothing();
             listener.invalidate();
@@ -216,10 +224,8 @@ public class PieEditor {
         int targetSlot = lastHoveredSlot;
         if (targetSlot >= 0 && targetSlot < pieMenu.icons.size() && targetSlot != grabbedSourceSlot) {
             Apps.AppIcon targetIcon = pieMenu.icons.get(targetSlot);
-            Apps.AppIcon sourceIcon = grabbedSourceSlot >= 0 ? pieMenu.icons.get(grabbedSourceSlot) : null;
-            if (targetIcon != null && sourceIcon != null) {
+            if (targetIcon != null && grabbedSourceSlot >= 0) {
                 displacedHovered = null;
-                displacedSource = null;
                 pieMenu.icons.set(grabbedSourceSlot, targetIcon);
                 pieMenu.icons.set(targetSlot, grabbedIcon);
             } else {
@@ -240,7 +246,6 @@ public class PieEditor {
         grabbedIcon = null;
         lastHoveredSlot = -1;
         displacedHovered = null;
-        displacedSource = null;
         int cx = lastCenterX > 0 ? lastCenterX : pieMenu.getCenterX();
         int cy = lastCenterY > 0 ? lastCenterY : pieMenu.getCenterY();
         pieMenu.calculate(cx, cy);
@@ -255,7 +260,6 @@ public class PieEditor {
         grabbedSourceSlot = -1;
         lastHoveredSlot = -1;
         displacedHovered = null;
-        displacedSource = null;
         if (pieMenu.isRigid()) {
             Apps.shrinkRigidCapacityIfNeeded(pieMenu.icons);
         }
@@ -338,16 +342,11 @@ public class PieEditor {
             resetDisplacedApp();
             if (hoveredSlot >= 0 && hoveredSlot != grabbedSourceSlot && grabbedSourceSlot >= 0) {
                 Apps.AppIcon targetIcon = pieMenu.icons.get(hoveredSlot);
-                Apps.AppIcon sourceIcon = pieMenu.icons.get(grabbedSourceSlot);
-                if (targetIcon != null && sourceIcon != null) {
+                if (targetIcon != null) {
                     double aSource = twist + grabbedSourceSlot * step;
-                    double aHovered = twist + hoveredSlot * step;
                     targetIcon.x = centerX + (int) Math.round(rad * Math.cos(aSource));
                     targetIcon.y = centerY + (int) Math.round(rad * Math.sin(aSource));
-                    sourceIcon.x = centerX + (int) Math.round(rad * Math.cos(aHovered));
-                    sourceIcon.y = centerY + (int) Math.round(rad * Math.sin(aHovered));
                     displacedHovered = targetIcon;
-                    displacedSource = sourceIcon;
                 }
             }
             pieMenu.updateSmoothing();
@@ -365,15 +364,6 @@ public class PieEditor {
             displacedHovered.x = cx + (int) Math.round(pieMenu.getRadius() * Math.cos(aHovered));
             displacedHovered.y = cy + (int) Math.round(pieMenu.getRadius() * Math.sin(aHovered));
             displacedHovered = null;
-        }
-        if (displacedSource != null && grabbedSourceSlot >= 0 && grabbedSourceSlot < pieMenu.icons.size()) {
-            double step = PieMenu.TAU / pieMenu.icons.size();
-            double aSource = twist + grabbedSourceSlot * step;
-            int cx = lastCenterX > 0 ? lastCenterX : pieMenu.getCenterX();
-            int cy = lastCenterY > 0 ? lastCenterY : pieMenu.getCenterY();
-            displacedSource.x = cx + (int) Math.round(pieMenu.getRadius() * Math.cos(aSource));
-            displacedSource.y = cy + (int) Math.round(pieMenu.getRadius() * Math.sin(aSource));
-            displacedSource = null;
         }
     }
 }

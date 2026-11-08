@@ -108,6 +108,34 @@ public class EditorRenderer {
             float animationDuration,
             boolean hasSecondaryMenu,
             boolean hasPacks) {
+        return draw(
+                canvas,
+                fadeEdit,
+                pieMenu,
+                grabbedIcon,
+                grabbedIconAt,
+                highlightedAction,
+                animationDuration,
+                hasSecondaryMenu,
+                hasPacks,
+                -1,
+                -1,
+                false);
+    }
+
+    public boolean draw(
+            Canvas canvas,
+            Fader fadeEdit,
+            CanvasPieMenu pieMenu,
+            Apps.AppIcon grabbedIcon,
+            long grabbedIconAt,
+            Rect highlightedAction,
+            float animationDuration,
+            boolean hasSecondaryMenu,
+            boolean hasPacks,
+            int hoveredSlot,
+            int sourceSlot,
+            boolean isDisplacedOccupied) {
 
         long now = SystemClock.uptimeMillis();
         float f = fadeEdit.get(now, animationDuration);
@@ -125,7 +153,7 @@ public class EditorRenderer {
         boolean hasIcon = grabbedIcon != null;
         boolean invalidate = f < 1f;
 
-        drawPlaceholders(canvas, pieMenu);
+        drawPlaceholders(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, isDisplacedOccupied);
 
         // Only draw tips in portrait orientation.
         // There's probably not enough space in landscape.
@@ -363,7 +391,13 @@ public class EditorRenderer {
         return EditorAction.NONE;
     }
 
-    private void drawPlaceholders(Canvas canvas, CanvasPieMenu pieMenu) {
+    private void drawPlaceholders(
+            Canvas canvas,
+            CanvasPieMenu pieMenu,
+            boolean hasGrabbedIcon,
+            int hoveredSlot,
+            int sourceSlot,
+            boolean isDisplacedOccupied) {
         if (pieMenu == null || !pieMenu.isRigid()) {
             return;
         }
@@ -371,6 +405,14 @@ public class EditorRenderer {
         for (int i = 0; i < numberOfSlots; ++i) {
             PieMenu.Icon icon = (PieMenu.Icon) pieMenu.icons.get(i);
             if (icon != null && icon.isGhost) {
+                if (hasGrabbedIcon) {
+                    if (i == hoveredSlot) {
+                        continue;
+                    }
+                    if (i == sourceSlot && (hoveredSlot == sourceSlot || isDisplacedOccupied)) {
+                        continue;
+                    }
+                }
                 float r;
                 int x, y;
                 if (icon instanceof CanvasPieMenu.CanvasIcon) {

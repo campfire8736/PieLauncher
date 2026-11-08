@@ -505,7 +505,19 @@ public class AppPieView extends View {
         }
 
         editorRenderer.setTouch(touch);
-        invalidate |= editorRenderer.draw(canvas, stateManager.getFadeEdit(), pieMenu, pieEditor.getGrabbedIcon(), pieEditor.getGrabbedIconAt(), highlightedAction, ad, hasSecondaryMenu(), PieLauncherApp.iconPack.hasPacks());
+        invalidate |= editorRenderer.draw(
+                canvas,
+                stateManager.getFadeEdit(),
+                pieMenu,
+                pieEditor.getGrabbedIcon(),
+                pieEditor.getGrabbedIconAt(),
+                highlightedAction,
+                ad,
+                hasSecondaryMenu(),
+                PieLauncherApp.iconPack.hasPacks(),
+                pieEditor.getLastHoveredSlot(),
+                pieEditor.getGrabbedSourceSlot(),
+                pieEditor.isDisplacedOccupied());
 
         if (invalidate) {
             invalidate();

@@ -397,9 +397,10 @@ public class PieEditorTest {
         // Ghost 1 should swap to Slot 0 coordinates (700, 500)
         assertEquals(700, ghost1.x);
         assertEquals(500, ghost1.y);
-        // Ghost 0 should swap to Slot 1 coordinates (300, 500)
-        assertEquals(300, ghost0.x);
-        assertEquals(500, ghost0.y);
+        // Hovered slot is 1 (under the cursor)
+        assertEquals(1, pieEditor.getLastHoveredSlot());
+        assertEquals(0, pieEditor.getGrabbedSourceSlot());
+        assertFalse(pieEditor.isDisplacedOccupied());
 
         // Hover away back to Slot 0
         pieEditor.setTouch(new Point(800, 500));
@@ -408,8 +409,6 @@ public class PieEditorTest {
         // Ghost 1 returns to Slot 1 coordinates (300, 500)
         assertEquals(300, ghost1.x);
         assertEquals(500, ghost1.y);
-        // Ghost 0 returns to Slot 0 coordinates (700, 500)
-        assertEquals(700, ghost0.x);
-        assertEquals(500, ghost0.y);
+        assertEquals(0, pieEditor.getLastHoveredSlot());
     }
 }

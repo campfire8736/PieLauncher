@@ -182,4 +182,34 @@ public class HomeActivityTest {
         assertTrue(pieView.inEditMode());
         assertFalse(field.getBoolean(activity));
     }
+
+    @Test
+    public void testPreferencesFromEditModeReturnsToEditMode() throws Exception {
+        AppPieView pieView = activity.findViewById(R.id.pie);
+        android.widget.TextView toolbar = activity.findViewById(R.id.toolbar);
+        View editButton = activity.findViewById(R.id.edit);
+
+        // Enter edit mode
+        editButton.performClick();
+        assertTrue(pieView.inEditMode());
+
+        // Get editListener from pieView and trigger onPreferences
+        java.lang.reflect.Field editListenerField = AppPieView.class.getDeclaredField("editListener");
+        editListenerField.setAccessible(true);
+        AppPieView.EditListener editListener = (AppPieView.EditListener) editListenerField.get(pieView);
+        assertNotNull(editListener);
+
+        editListener.onPreferences();
+
+        Intent nextIntent = ShadowApplication.getInstance().getNextStartedActivity();
+        assertNotNull(nextIntent);
+        assertEquals(PreferencesActivity.class.getName(), nextIntent.getComponent().getClassName());
+
+        // Resume activity (as if coming back from PreferencesActivity)
+        controller.resume();
+
+        assertTrue(pieView.inEditMode());
+        assertEquals(View.VISIBLE, toolbar.getVisibility());
+        assertEquals(activity.getString(R.string.edit_pie_menu), toolbar.getText().toString());
+    }
 }

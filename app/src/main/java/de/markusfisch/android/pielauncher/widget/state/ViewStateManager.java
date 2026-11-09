@@ -89,7 +89,7 @@ public class ViewStateManager {
     }
 
     public void hideList() {
-        if (mode == MODE_PIE) {
+        if (mode != MODE_LIST) {
             return;
         }
         fadeList.setMaxIn(dragProgress);

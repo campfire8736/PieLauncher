@@ -98,6 +98,7 @@ public class AppPieView extends View {
 
     public interface EditListener {
         void onPickPieApps(boolean isPrimary);
+        void onPreferences();
     }
 
     public interface EditorListener {
@@ -1072,7 +1073,11 @@ public class AppPieView extends View {
                         pieConfig.updateChangeIcons(context, editorRenderer);
                         invalidate();
                     } else {
-                        PreferencesActivity.start(context);
+                        if (editListener != null) {
+                            editListener.onPreferences();
+                        } else {
+                            PreferencesActivity.start(context);
+                        }
                     }
                 } else {
                     pieEditor.rollback(pieMenu.icons);

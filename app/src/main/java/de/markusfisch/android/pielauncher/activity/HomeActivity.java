@@ -271,6 +271,8 @@ public class HomeActivity extends Activity {
 		} else if (showAllAppsOnResume) {
 			showAllApps();
 			showAllAppsOnResume = false;
+		} else if (pieView != null && pieView.inEditMode()) {
+			showEditor();
 		} else {
 			hideAllApps();
 		}
@@ -401,9 +403,18 @@ public class HomeActivity extends Activity {
 				showAllAppsOnResume = true;
 			}
 		});
-		pieView.setEditListener(isPrimary -> {
-			showEditorOnResume = true;
-			PickPieAppsActivity.start(HomeActivity.this, isPrimary);
+		pieView.setEditListener(new AppPieView.EditListener() {
+			@Override
+			public void onPickPieApps(boolean isPrimary) {
+				showEditorOnResume = true;
+				PickPieAppsActivity.start(HomeActivity.this, isPrimary);
+			}
+
+			@Override
+			public void onPreferences() {
+				showEditorOnResume = true;
+				PreferencesActivity.start(HomeActivity.this);
+			}
 		});
 	}
 
@@ -562,10 +573,10 @@ public class HomeActivity extends Activity {
 	private void hideAllApps() {
 		if (isSearchVisible()) {
 			floatingToolbar.setVisibility(View.GONE);
-			if (pieView == null || !pieView.inEditMode()) {
-				toolbar.setVisibility(View.GONE);
-			}
 			hideKeyboardAndActionButtons();
+		}
+		if (pieView == null || !pieView.inEditMode()) {
+			toolbar.setVisibility(View.GONE);
 		}
 		// Ensure the pie menu is initially hidden because on some devices
 		// there's not always a matching ACTION_UP/_CANCEL event for every

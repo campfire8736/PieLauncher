@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 
 import de.markusfisch.android.pielauncher.R;
@@ -56,10 +57,10 @@ public class EditorRenderer {
     private int controlsPadding;
     private float textOffset;
 
-    private final Bitmap iconRemove;
-    private final Bitmap iconEdit;
-    private final Bitmap iconHide;
-    private final Bitmap iconDetails;
+    final Bitmap iconRemove;
+    final Bitmap iconEdit;
+    final Bitmap iconHide;
+    final Bitmap iconDetails;
     public Bitmap iconChangeTwist;
     public Bitmap iconChangeIconScale;
     public Bitmap iconChangeRadius;
@@ -115,12 +116,22 @@ public class EditorRenderer {
         removeAppTip = context.getString(R.string.tip_remove_app);
 
         iconAdd = Converter.getBitmapFromDrawable(context, R.drawable.ic_add);
-        iconEdit = Converter.getBitmapFromDrawable(context, R.drawable.ic_edit);
-        iconHide = Converter.getBitmapFromDrawable(context, R.drawable.ic_hide);
-        iconRemove = Converter.getBitmapFromDrawable(context, R.drawable.ic_remove);
-        iconDetails = Converter.getBitmapFromDrawable(context, R.drawable.ic_details);
+        iconEdit = getWhiteBitmapFromDrawable(context, R.drawable.ic_edit);
+        iconHide = getWhiteBitmapFromDrawable(context, R.drawable.ic_hide);
+        iconRemove = getWhiteBitmapFromDrawable(context, R.drawable.ic_remove);
+        iconDetails = getWhiteBitmapFromDrawable(context, R.drawable.ic_details);
         iconDone = Converter.getBitmapFromDrawable(context, R.drawable.ic_done);
         iconPreferences = Converter.getBitmapFromDrawable(context, R.drawable.ic_preferences);
+    }
+
+    private static Bitmap getWhiteBitmapFromDrawable(Context context, int resId) {
+        Drawable d = context.getDrawable(resId);
+        if (d != null) {
+            d = d.mutate();
+            d.setTint(0xffffffff);
+            return Converter.getBitmapFromDrawable(d);
+        }
+        return null;
     }
 
 

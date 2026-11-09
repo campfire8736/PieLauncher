@@ -8,6 +8,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Process;
+import android.view.ContextThemeWrapper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +17,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.annotation.GraphicsMode;
+
+import de.markusfisch.android.pielauncher.R;
 
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.widget.state.EditorAction;
@@ -34,6 +38,7 @@ import de.markusfisch.android.pielauncher.widget.state.Fader;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 34)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 public class EditorRendererTest {
 
     @Mock
@@ -395,5 +400,46 @@ public class EditorRendererTest {
         org.junit.Assert.assertTrue(editorRenderer.iconChangeTwistRect.left < width / 2);
 
         org.junit.Assert.assertTrue(editorRenderer.getActionSize() > 0);
+    }
+
+    @Test
+    public void testActionIconsAreWhiteInLightAndDarkThemes() {
+        android.content.Context appContext = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        android.content.Context lightContext = new ContextThemeWrapper(appContext, R.style.HomeTheme_Light);
+        EditorRenderer lightRenderer = new EditorRenderer(lightContext);
+
+        assertBitmapIsWhite("light iconRemove", lightRenderer.iconRemove);
+        assertBitmapIsWhite("light iconEdit", lightRenderer.iconEdit);
+        assertBitmapIsWhite("light iconHide", lightRenderer.iconHide);
+        assertBitmapIsWhite("light iconDetails", lightRenderer.iconDetails);
+
+        android.content.Context darkContext = new ContextThemeWrapper(appContext, R.style.HomeTheme);
+        EditorRenderer darkRenderer = new EditorRenderer(darkContext);
+
+        assertBitmapIsWhite("dark iconRemove", darkRenderer.iconRemove);
+        assertBitmapIsWhite("dark iconEdit", darkRenderer.iconEdit);
+        assertBitmapIsWhite("dark iconHide", darkRenderer.iconHide);
+        assertBitmapIsWhite("dark iconDetails", darkRenderer.iconDetails);
+    }
+
+    private static void assertBitmapIsWhite(String name, Bitmap bitmap) {
+        org.junit.Assert.assertNotNull(name + " should not be null", bitmap);
+        boolean hasOpaquePixel = false;
+        for (int y = 0; y < bitmap.getHeight(); y++) {
+            for (int x = 0; x < bitmap.getWidth(); x++) {
+                int pixel = bitmap.getPixel(x, y);
+                int alpha = (pixel >> 24) & 0xff;
+                if (alpha > 50) {
+                    hasOpaquePixel = true;
+                    int r = (pixel >> 16) & 0xff;
+                    int g = (pixel >> 8) & 0xff;
+                    int b = pixel & 0xff;
+                    assertEquals(name + " Red channel should be 255 for white icon", 255, r);
+                    assertEquals(name + " Green channel should be 255 for white icon", 255, g);
+                    assertEquals(name + " Blue channel should be 255 for white icon", 255, b);
+                }
+            }
+        }
+        assertTrue(name + " bitmap should have visible pixels", hasOpaquePixel);
     }
 }

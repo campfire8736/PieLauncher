@@ -145,7 +145,6 @@ public class AppPieViewTest {
     }
 
     @Test
-    @org.robolectric.annotation.Config(sdk = 19)
     public void testPieMenuDragLaunchesApp() {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 

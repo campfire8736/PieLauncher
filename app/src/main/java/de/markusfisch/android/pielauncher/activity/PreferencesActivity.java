@@ -30,6 +30,8 @@ import de.markusfisch.android.pielauncher.os.DefaultLauncher;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.view.SystemBars;
 import de.markusfisch.android.pielauncher.widget.OptionsDialog;
+import de.markusfisch.android.pielauncher.widget.PreferenceSliderView;
+import de.markusfisch.android.pielauncher.widget.PreferenceSwitchView;
 import de.markusfisch.android.pielauncher.widget.ScrollWithListenerView;
 
 public class PreferencesActivity extends Activity {
@@ -192,18 +194,33 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getOrientationOptions,
 				() -> prefs.getOrientation(),
 				(value) -> prefs.setOrientation(value));
-		initPreference(R.id.darken_background,
+		initSlider(R.id.darken_background,
 				R.string.darken_background,
 				R.string.darken_background_description,
-				PreferencesActivity::getDarkenBackgroundOptions,
+				0, 2, 1,
 				() -> prefs.darkenBackground(),
-				(value) -> prefs.setDarkenBackground(value));
+				(val) -> {
+					switch (val) {
+						case Preferences.DARKEN_BACKGROUND_NONE:
+							return getString(R.string.darken_background_no);
+						case Preferences.DARKEN_BACKGROUND_LIGHT:
+							return getString(R.string.darken_background_light);
+						case Preferences.DARKEN_BACKGROUND_HEAVY:
+						default:
+							return getString(R.string.darken_background_yes);
+					}
+				},
+				(value, isFinal) -> prefs.setDarkenBackground(value));
 		if (BackgroundBlur.canBlur(getWindow())) {
-			initPreference(R.id.blur_background,
+			initSlider(R.id.blur_background,
 					R.string.blur_background,
-					PreferencesActivity::getBackgroundBlurRadiusOptions,
+					0,
+					0, 100, 1,
 					() -> prefs.getBackgroundBlurRadius(),
-					(value) -> {
+					(val) -> val == 0
+							? getString(R.string.background_blur_radius_none)
+							: val + " px",
+					(value, isFinal) -> {
 						prefs.setBackgroundBlurRadius(value);
 						BackgroundBlur.setBlurRadius(getWindow(), value);
 					});
@@ -211,9 +228,8 @@ public class PreferencesActivity extends Activity {
 			findViewById(R.id.blur_background).setVisibility(View.GONE);
 		}
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-			initPreference(R.id.blur_menu,
+			initSwitch(R.id.blur_menu,
 					R.string.blur_menu,
-					PreferencesActivity::getBlurMenuOptions,
 					() -> prefs.blurMenu(),
 					(value) -> prefs.setBlurMenu(value));
 		} else {
@@ -224,9 +240,8 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getDeadZoneOptions,
 				() -> prefs.getDeadZone(),
 				(value) -> prefs.setDeadZone(value));
-		initPreference(R.id.expand_panel_in_dead_zone,
+		initSwitch(R.id.expand_panel_in_dead_zone,
 				R.string.expand_panel_in_dead_zone,
-				PreferencesActivity::getExpandPanelInDeadZoneOptions,
 				() -> prefs.expandPanelInDeadZone(),
 				(value) -> {
 					if (value) {
@@ -234,23 +249,17 @@ public class PreferencesActivity extends Activity {
 					}
 					prefs.setExpandPanelInDeadZone(value);
 				});
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			initPreference(R.id.immersive_mode,
-					R.string.immersive_mode,
-					PreferencesActivity::getImmersiveModeOptions,
-					() -> prefs.getImmersiveMode(),
-					(value) -> prefs.setImmersiveMode(value));
-		} else {
-			findViewById(R.id.immersive_mode).setVisibility(View.GONE);
-		}
-		initPreference(R.id.animate_in_out,
+		initPreference(R.id.immersive_mode,
+				R.string.immersive_mode,
+				PreferencesActivity::getImmersiveModeOptions,
+				() -> prefs.getImmersiveMode(),
+				(value) -> prefs.setImmersiveMode(value));
+		initSwitch(R.id.animate_in_out,
 				R.string.animate_in_out,
-				PreferencesActivity::getAnimateInOutOptions,
 				() -> prefs.animateInOut(),
 				(value) -> prefs.setAnimateInOut(value));
-		initPreference(R.id.rigid_pie_menu,
+		initSwitch(R.id.rigid_pie_menu,
 				R.string.rigid_pie_menu,
-				PreferencesActivity::getRigidPieOptions,
 				() -> prefs.isRigidPie(),
 				(value) -> {
 					prefs.setRigidPie(value);
@@ -266,9 +275,8 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getAlternateMenuOptions,
 				() -> prefs.circleSwapsMenus(),
 				(value) -> prefs.setCircleSwapsMenus(value));
-		initPreference(R.id.home_button_opens_drawer,
+		initSwitch(R.id.home_button_opens_drawer,
 				R.string.home_button_opens_drawer,
-				PreferencesActivity::getHomeButtonOpensDrawerOptions,
 				() -> prefs.showDrawerOnHome(),
 				(value) -> prefs.setShowDrawerOnHome(value));
 		initPreference(R.id.open_list_with,
@@ -284,9 +292,8 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getListAnimationAppearanceOptions,
 				() -> prefs.listAnimationAppearance(),
 				(value) -> prefs.setListAnimationAppearance(value));
-		initPreference(R.id.display_keyboard,
+		initSwitch(R.id.display_keyboard,
 				R.string.display_keyboard,
-				PreferencesActivity::getDisplayKeyboardOptions,
 				() -> prefs.displayKeyboard(),
 				(value) -> prefs.setDisplayKeyboard(value));
 		initPreference(R.id.space_action,
@@ -294,19 +301,16 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getSpaceActionOptions,
 				() -> prefs.doubleSpaceLaunch(),
 				(value) -> prefs.setDoubleSpaceLaunch(value));
-		initPreference(R.id.show_app_shortcuts,
+		initSwitch(R.id.show_app_shortcuts,
 				R.string.show_app_shortcuts,
-				PreferencesActivity::getShowAppShortcutsOptions,
 				() -> prefs.showAppShortcuts(),
 				(value) -> prefs.setShowAppShortcuts(value));
-		initPreference(R.id.auto_launch_matching,
+		initSwitch(R.id.auto_launch_matching,
 				R.string.auto_launch_matching,
-				PreferencesActivity::getAutoLaunchMatchingOptions,
 				() -> prefs.autoLaunchMatching(),
 				(value) -> prefs.setAutoLaunchMatching(value));
-		initPreference(R.id.remember_search_picks,
+		initSwitch(R.id.remember_search_picks,
 				R.string.remember_search_picks,
-				PreferencesActivity::getRememberSearchPicksOptions,
 				() -> prefs.rememberSearchPicks(),
 				(value) -> prefs.setRememberSearchPicks(value));
 		initPreference(R.id.search_strictness,
@@ -357,20 +361,58 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getHapticFeedbackOptions,
 				() -> prefs.hapticFeedback(),
 				(value) -> prefs.setHapticFeedback(value));
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			initPreference(R.id.use_light_dialogs,
-					R.string.use_light_dialogs,
-					PreferencesActivity::getUseLightDialogOptions,
-					() -> prefs.useLightDialogs(),
-					(value) -> prefs.setUseLightDialogs(value));
-		} else {
-			findViewById(R.id.use_light_dialogs).setVisibility(View.GONE);
-		}
-		initPreference(R.id.force_relaunch,
+		initSwitch(R.id.use_light_dialogs,
+				R.string.use_light_dialogs,
+				() -> prefs.useLightDialogs(),
+				(value) -> prefs.setUseLightDialogs(value));
+		initSwitch(R.id.force_relaunch,
 				R.string.force_relaunch,
-				PreferencesActivity::getForceRelaunchOptions,
 				() -> prefs.forceRelaunch(),
 				(value) -> prefs.setForceRelaunch(value));
+	}
+
+	private void initSwitch(
+			int viewId,
+			int titleId,
+			GetListener<Boolean> getter,
+			SetListener<Boolean> setter) {
+		initSwitch(viewId, titleId, 0, getter, setter);
+	}
+
+	private void initSwitch(
+			int viewId,
+			int titleId,
+			int descriptionId,
+			GetListener<Boolean> getter,
+			SetListener<Boolean> setter) {
+		PreferenceSwitchView switchView = findViewById(viewId);
+		switchView.setPreference(
+				titleId,
+				descriptionId,
+				getter.onGet(),
+				setter::onSet);
+	}
+
+	private void initSlider(
+			int viewId,
+			int titleId,
+			int descriptionId,
+			int min,
+			int max,
+			int step,
+			GetListener<Integer> getter,
+			PreferenceSliderView.ValueFormatter formatter,
+			PreferenceSliderView.OnSliderChangeListener listener) {
+		PreferenceSliderView sliderView = findViewById(viewId);
+		sliderView.setPreference(
+				titleId,
+				descriptionId,
+				min,
+				max,
+				step,
+				getter.onGet(),
+				formatter,
+				listener);
 	}
 
 	private <T, G> void initPreference(
@@ -553,25 +595,6 @@ public class PreferencesActivity extends Activity {
 		return map;
 	}
 
-	private static Map<Integer, Integer> getDarkenBackgroundOptions() {
-		Map<Integer, Integer> map = new LinkedHashMap<>();
-		map.put(Preferences.DARKEN_BACKGROUND_NONE,
-				R.string.darken_background_no);
-		map.put(Preferences.DARKEN_BACKGROUND_LIGHT,
-				R.string.darken_background_light);
-		map.put(Preferences.DARKEN_BACKGROUND_HEAVY,
-				R.string.darken_background_yes);
-		return map;
-	}
-
-	private static Map<Integer, Integer> getBackgroundBlurRadiusOptions() {
-		Map<Integer, Integer> map = new LinkedHashMap<>();
-		map.put(20, R.string.background_blur_radius_medium);
-		map.put(80, R.string.background_blur_radius_heavy);
-		map.put(0, R.string.background_blur_radius_none);
-		return map;
-	}
-
 	private static Map<Integer, Integer> getDeadZoneOptions() {
 		Map<Integer, Integer> map = new LinkedHashMap<>();
 		map.put(Preferences.DEAD_ZONE_NONE, R.string.dead_zone_none);
@@ -580,13 +603,6 @@ public class PreferencesActivity extends Activity {
 		map.put(Preferences.DEAD_ZONE_TOP_BOTTOM,
 				R.string.dead_zone_top_bottom);
 		map.put(Preferences.DEAD_ZONE_ALL, R.string.dead_zone_all);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getExpandPanelInDeadZoneOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.expand_panel_in_dead_zone_yes);
-		map.put(Boolean.FALSE, R.string.expand_panel_in_dead_zone_no);
 		return map;
 	}
 
@@ -603,20 +619,6 @@ public class PreferencesActivity extends Activity {
 		return map;
 	}
 
-	private static Map<Boolean, Integer> getAnimateInOutOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.animate_in_out_yes);
-		map.put(Boolean.FALSE, R.string.animate_in_out_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getRigidPieOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.rigid_pie_menu_yes);
-		map.put(Boolean.FALSE, R.string.rigid_pie_menu_no);
-		return map;
-	}
-
 	private static Map<Integer, Integer> getAlternateMenuOptions() {
 		Map<Integer, Integer> map = new LinkedHashMap<>();
 		map.put(Preferences.ALTERNATE_MENU_NONE,
@@ -627,13 +629,6 @@ public class PreferencesActivity extends Activity {
 				R.string.alternate_menu_all_apps);
 		map.put(Preferences.ALTERNATE_MENU_LAST_USED,
 				R.string.alternate_menu_last_used);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getHomeButtonOpensDrawerOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.home_button_opens_drawer_yes);
-		map.put(Boolean.FALSE, R.string.home_button_opens_drawer_no);
 		return map;
 	}
 
@@ -665,45 +660,10 @@ public class PreferencesActivity extends Activity {
 		return map;
 	}
 
-	private static Map<Boolean, Integer> getDisplayKeyboardOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.display_keyboard_yes);
-		map.put(Boolean.FALSE, R.string.display_keyboard_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getBlurMenuOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.blur_menu_yes);
-		map.put(Boolean.FALSE, R.string.blur_menu_no);
-		return map;
-	}
-
 	private static Map<Boolean, Integer> getSpaceActionOptions() {
 		Map<Boolean, Integer> map = new LinkedHashMap<>();
 		map.put(Boolean.TRUE, R.string.space_action_double_launch);
 		map.put(Boolean.FALSE, R.string.space_action_move_selection);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getShowAppShortcutsOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.show_app_shortcuts_yes);
-		map.put(Boolean.FALSE, R.string.show_app_shortcuts_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getAutoLaunchMatchingOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.auto_launch_matching_yes);
-		map.put(Boolean.FALSE, R.string.auto_launch_matching_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getRememberSearchPicksOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.remember_search_picks_yes);
-		map.put(Boolean.FALSE, R.string.remember_search_picks_no);
 		return map;
 	}
 
@@ -779,20 +739,6 @@ public class PreferencesActivity extends Activity {
 				R.string.haptic_feedback_disable_launch);
 		map.put(Preferences.HAPTIC_FEEDBACK_DISABLE_ALL,
 				R.string.haptic_feedback_disable_all);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getUseLightDialogOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.use_light_dialogs_yes);
-		map.put(Boolean.FALSE, R.string.use_light_dialogs_no);
-		return map;
-	}
-
-	private static Map<Boolean, Integer> getForceRelaunchOptions() {
-		Map<Boolean, Integer> map = new LinkedHashMap<>();
-		map.put(Boolean.TRUE, R.string.force_relaunch_yes);
-		map.put(Boolean.FALSE, R.string.force_relaunch_no);
 		return map;
 	}
 

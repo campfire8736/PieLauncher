@@ -59,26 +59,26 @@
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/dead_zone"
 						android:text="@string/dead_zone_top_bottom" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/expand_panel_in_dead_zone"
-						android:text="@string/expand_panel_in_dead_zone_yes" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+						android:text="@string/expand_panel_in_dead_zone" />
+					<de.markusfisch.android.pielauncher.widget.PreferenceSliderView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/darken_background"
-						android:text="@string/darken_background_no" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+						android:text="@string/darken_background" />
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/blur_menu"
-						android:text="@string/blur_menu_yes" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+						android:text="@string/blur_menu" />
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/PreferenceWithSeparator"
-                        android:id="@+id/rigid_pie_menu"
-                        android:text="@string/rigid_pie_menu" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+						android:id="@+id/rigid_pie_menu"
+						android:text="@string/rigid_pie_menu" />
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/Preference"
 						android:id="@+id/animate_in_out"
-						android:text="@string/animate_in_out_yes" />
+						android:text="@string/animate_in_out" />
 				</LinearLayout>
 				<LinearLayout
 					style="@style/PreferenceGroup"
@@ -90,10 +90,10 @@
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/open_list_with"
 						android:text="@string/open_list_with_tap" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/home_button_opens_drawer"
-						android:text="@string/home_button_opens_drawer_yes" />
+						android:text="@string/home_button_opens_drawer" />
 					<de.markusfisch.android.pielauncher.widget.PreferenceView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/list_animation_appearance"
@@ -114,10 +114,10 @@
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/icon_press"
 						android:text="@string/icon_press_default" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/Preference"
 						android:id="@+id/show_app_shortcuts"
-						android:text="@string/show_app_shortcuts_yes" />
+						android:text="@string/show_app_shortcuts" />
 				</LinearLayout>
 				<LinearLayout
 					style="@style/PreferenceGroup"
@@ -125,22 +125,22 @@
 					<TextView
 						style="@style/CategoryHeader"
 						android:text="@string/category_search" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/display_keyboard"
-						android:text="@string/display_keyboard_yes" />
+						android:text="@string/display_keyboard" />
 					<de.markusfisch.android.pielauncher.widget.PreferenceView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/space_action"
 						android:text="@string/space_action_move_selection" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/auto_launch_matching"
-						android:text="@string/auto_launch_matching_no" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+						android:text="@string/auto_launch_matching" />
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/remember_search_picks"
-						android:text="@string/remember_search_picks_no" />
+						android:text="@string/remember_search_picks" />
 					<de.markusfisch.android.pielauncher.widget.PreferenceView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/search_strictness"
@@ -160,10 +160,10 @@
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/icon_pack"
 						android:text="@string/icon_pack_default" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSliderView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/blur_background"
-						android:text="@string/background_blur_radius_none" />
+						android:text="@string/blur_background" />
 					<de.markusfisch.android.pielauncher.widget.PreferenceView
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/immersive_mode"
@@ -172,10 +172,10 @@
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/orientation"
 						android:text="@string/orientation_portrait" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/Preference"
 						android:id="@+id/use_light_dialogs"
-						android:text="@string/use_light_dialogs_no" />
+						android:text="@string/use_light_dialogs" />
 				</LinearLayout>
 				<LinearLayout
 					style="@style/PreferenceGroup"
@@ -191,10 +191,10 @@
 						style="@style/PreferenceWithSeparator"
 						android:id="@+id/haptic_feedback"
 						android:text="@string/haptic_feedback_follow_system" />
-					<de.markusfisch.android.pielauncher.widget.PreferenceView
+					<de.markusfisch.android.pielauncher.widget.PreferenceSwitchView
 						style="@style/Preference"
 						android:id="@+id/force_relaunch"
-						android:text="@string/force_relaunch_no" />
+						android:text="@string/force_relaunch" />
 				</LinearLayout>
 			</LinearLayout>
 			<Button

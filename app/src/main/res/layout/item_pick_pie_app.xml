@@ -32,6 +32,7 @@
 			android:padding="0dp"
 			android:scaleX="0.7"
 			android:scaleY="0.7"
+			android:buttonTint="?android:attr/colorAccent"
 			android:background="@drawable/bg_checkbox_circle"
 			android:clickable="false"
 			android:focusable="false"/>

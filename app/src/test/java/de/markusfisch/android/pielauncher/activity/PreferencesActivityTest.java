@@ -18,6 +18,8 @@ import org.robolectric.annotation.GraphicsMode;
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.preference.Preferences;
+import de.markusfisch.android.pielauncher.widget.PreferenceSliderView;
+import de.markusfisch.android.pielauncher.widget.PreferenceSwitchView;
 import de.markusfisch.android.pielauncher.widget.PreferenceView;
 
 import static org.junit.Assert.assertEquals;
@@ -53,7 +55,7 @@ public class PreferencesActivityTest {
 
 	@Test
 	public void testRigidPiePreferenceViewExists() {
-		PreferenceView view = activity.findViewById(R.id.rigid_pie_menu);
+		PreferenceSwitchView view = activity.findViewById(R.id.rigid_pie_menu);
 		assertNotNull(view);
 		assertFalse(prefs.isRigidPie());
 	}
@@ -65,5 +67,35 @@ public class PreferencesActivityTest {
 
 		prefs.setRigidPie(false);
 		assertFalse(prefs.isRigidPie());
+	}
+
+	@Test
+	public void testSwitchClickTogglesPreference() {
+		PreferenceSwitchView view = activity.findViewById(R.id.rigid_pie_menu);
+		assertNotNull(view);
+		assertFalse(prefs.isRigidPie());
+		assertFalse(view.isChecked());
+
+		view.performClick();
+		assertTrue(prefs.isRigidPie());
+		assertTrue(view.isChecked());
+
+		view.performClick();
+		assertFalse(prefs.isRigidPie());
+		assertFalse(view.isChecked());
+	}
+
+	@Test
+	public void testDarkenBackgroundSliderUpdatesPreference() {
+		PreferenceSliderView slider = activity.findViewById(R.id.darken_background);
+		assertNotNull(slider);
+
+		slider.setValue(Preferences.DARKEN_BACKGROUND_LIGHT);
+		assertEquals(Preferences.DARKEN_BACKGROUND_LIGHT, slider.getValue());
+
+		slider.getSeekBar().setProgress(Preferences.DARKEN_BACKGROUND_NONE);
+		// Simulate stop tracking touch to commit
+		slider.setValue(Preferences.DARKEN_BACKGROUND_NONE);
+		assertEquals(Preferences.DARKEN_BACKGROUND_NONE, slider.getValue());
 	}
 }

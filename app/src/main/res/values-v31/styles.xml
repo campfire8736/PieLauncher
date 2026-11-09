@@ -3,13 +3,33 @@
 		name="HomeTheme"
 		parent="android:Theme.DeviceDefault.NoActionBar">
 		<item name="android:windowBackground">@android:color/transparent</item>
-		<item name="android:colorBackgroundCacheHint">@null</item>
 		<item name="android:windowShowWallpaper">true</item>
-		<item name="android:windowNoTitle">true</item>
 		<item name="android:windowIsTranslucent">true</item>
 		<item name="android:colorAccent">@android:color/system_accent1_200</item>
 		<item name="android:colorControlActivated">@android:color/system_accent1_200</item>
 		<item name="android:alertDialogTheme">@style/DarkDialog</item>
+		<item name="android:textColorPrimary">@color/text_color</item>
+		<item name="android:textColorSecondary">@color/text_color_preference</item>
+		<item name="colorUiBackground">@color/bg_ui</item>
+		<item name="colorSearchBar">@color/bg_search_bar</item>
+		<item name="colorSeparator">@color/separator</item>
+		<item name="colorDropZone">@color/bg_drop_zone</item>
+	</style>
+	<style
+		name="HomeTheme.Light"
+		parent="android:Theme.DeviceDefault.Light.NoActionBar">
+		<item name="android:windowBackground">@android:color/transparent</item>
+		<item name="android:windowShowWallpaper">true</item>
+		<item name="android:windowIsTranslucent">true</item>
+		<item name="android:colorAccent">@android:color/system_accent1_600</item>
+		<item name="android:colorControlActivated">@android:color/system_accent1_600</item>
+		<item name="android:alertDialogTheme">@style/LightDialog</item>
+		<item name="android:textColorPrimary">#1c1b1f</item>
+		<item name="android:textColorSecondary">#757575</item>
+		<item name="colorUiBackground">#d0ffffff</item>
+		<item name="colorSearchBar">#e8ffffff</item>
+		<item name="colorSeparator">#1f000000</item>
+		<item name="colorDropZone">#60ffffff</item>
 	</style>
 	<style name="DarkDialog" parent="android:Theme.DeviceDefault.Dialog.Alert">
 		<item name="android:colorAccent">@android:color/system_accent1_200</item>

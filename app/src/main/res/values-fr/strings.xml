@@ -7,8 +7,8 @@
 	<string name="preferences">Paramètres</string>
 	<string name="welcome">Bienvenue!</string>
 	<string name="check_these_settings">Veuillez vérifier les paramètres suivants :</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">Désactiver l\'optimisation de la batterie</font></big>\nÉconomise de l\'énergie et rend ce lanceur plus rapide</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">Définir comme lanceur par défaut</font></big>\nÉvite de revenir à votre lanceur précédent</string>
+	<string name="disable_battery_optimization"><big><b>Désactiver l\'optimisation de la batterie</b></big>\nÉconomise de l\'énergie et rend ce lanceur plus rapide</string>
+	<string name="make_default_launcher"><big><b>Définir comme lanceur par défaut</b></big>\nÉvite de revenir à votre lanceur précédent</string>
 	<string name="category_pie_menu">Menu Pie</string>
 	<string name="category_search">Recherche</string>
 	<string name="category_appearance">Apparence</string>
@@ -113,7 +113,7 @@
 	<string name="category_advanced">Paramètres avancés</string>
 	<string name="icon_pack">Pack d\'icônes</string>
 	<string name="icon_pack_default">Système (par défaut)</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">App cachées</font></big>\nListe des applications cachées</string>
+	<string name="show_hidden_apps"><big><b>App cachées</b></big>\nListe des applications cachées</string>
 	<string name="haptic_feedback">Rétroaction haptique</string>
 	<string name="haptic_feedback_follow_system">Suivre les paramètres du système (par défaut)</string>
 	<string name="haptic_feedback_disable_launch">Désactiver uniquement le retour d\'information sur le lancement</string>

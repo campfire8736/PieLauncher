@@ -7,8 +7,8 @@
 	<string name="preferences">Configurações</string>
 	<string name="welcome">Bem-vindo!</string>
 	<string name="check_these_settings">Por favor, verifique as seguintes configurações:</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">Desativar otimizações de bateria</font></big>\nEconomiza energia e faz com que este app de início funcione mais rápido</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">Definir como app de início padrão</font></big>\nEvita o retorno ao seu app de início anterior</string>
+	<string name="disable_battery_optimization"><big><b>Desativar otimizações de bateria</b></big>\nEconomiza energia e faz com que este app de início funcione mais rápido</string>
+	<string name="make_default_launcher"><big><b>Definir como app de início padrão</b></big>\nEvita o retorno ao seu app de início anterior</string>
 	<string name="category_home">Início</string>
 	<string name="orientation">Orientação</string>
 	<string name="orientation_portrait">Retrato (Padrão)</string>
@@ -114,7 +114,7 @@
 	<string name="category_advanced">Avançadas</string>
 	<string name="icon_pack">Pacote de Ícones</string>
 	<string name="icon_pack_default">Sistema (Padrão)</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">Aplicativos ocultos</font></big>\nLista de aplicativos ocultos</string>
+	<string name="show_hidden_apps"><big><b>Aplicativos ocultos</b></big>\nLista de aplicativos ocultos</string>
 	<string name="use_light_dialogs">Inverter cores das caixas de diálogo</string>
 	<string name="use_light_dialogs_yes">Sim</string>
 	<string name="use_light_dialogs_no">Não (Padrão)</string>

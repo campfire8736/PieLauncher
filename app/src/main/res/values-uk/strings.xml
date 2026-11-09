@@ -7,8 +7,8 @@
 	<string name="preferences">Налаштування</string>
 	<string name="welcome">Ласкаво просимо!</string>
 	<string name="check_these_settings">Будь ласка, перевірте наступні налаштування:</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">Вимкніть оптимізацію батареї</font></big>\nЕкономить енергію та пришвидшує роботу програми запуску</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">Зробити програмою запуску за замовчування</font></big>\nУникає повернення до попередньої програми запуску</string>
+	<string name="disable_battery_optimization"><big><b>Вимкніть оптимізацію батареї</b></big>\nЕкономить енергію та пришвидшує роботу програми запуску</string>
+	<string name="make_default_launcher"><big><b>Зробити програмою запуску за замовчування</b></big>\nУникає повернення до попередньої програми запуску</string>
 	<string name="category_home">Початковий екран</string>
 	<string name="orientation">Орієнтація</string>
 	<string name="orientation_portrait">Портрет (за замовчуванням)</string>
@@ -110,7 +110,7 @@
 	<string name="category_advanced">Розширені налаштування</string>
 	<string name="icon_pack">Пакет іконок</string>
 	<string name="icon_pack_default">Системний (за замовчуванням)</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">Приховані програми</font></big>\nСписок прихованих програм</string>
+	<string name="show_hidden_apps"><big><b>Приховані програми</b></big>\nСписок прихованих програм</string>
 	<string name="haptic_feedback">Тактильний зворотний зв\'язок</string>
 	<string name="haptic_feedback_follow_system">Дотримуйтесь налаштувань системи (за замовчуванням)</string>
 	<string name="haptic_feedback_disable_launch">Вимкнути зворотній зв\'язок тільки при запуску</string>

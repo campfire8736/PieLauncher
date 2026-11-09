@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<attr name="colorUiBackground" format="color"/>
+	<attr name="colorSearchBar" format="color"/>
+	<attr name="colorSeparator" format="color"/>
+	<attr name="colorDropZone" format="color"/>
+</resources>

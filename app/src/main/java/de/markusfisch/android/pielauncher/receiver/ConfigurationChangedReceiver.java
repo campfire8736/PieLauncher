@@ -41,13 +41,9 @@ public class ConfigurationChangedReceiver extends BroadcastReceiver {
 	}
 
 	private int getPrimaryColor(Context context) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			TypedValue typedValue = new TypedValue();
-			context.getTheme().resolveAttribute(
-					android.R.attr.colorPrimary, typedValue, true);
-			return typedValue.data;
-		} else {
-			return 0;
-		}
+		TypedValue typedValue = new TypedValue();
+		context.getTheme().resolveAttribute(
+				android.R.attr.colorPrimary, typedValue, true);
+		return typedValue.data;
 	}
 }

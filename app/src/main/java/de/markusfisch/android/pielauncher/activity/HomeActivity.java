@@ -98,7 +98,7 @@ public class HomeActivity extends Activity {
 			PreferencesActivity.startWelcome(this);
 		}
 
-		toolbarBackground = new ToolbarBackground(getResources());
+		toolbarBackground = new ToolbarBackground(this);
 		pieView = findViewById(R.id.pie);
 		searchInput = findViewById(R.id.search);
 		prefsButton = findViewById(R.id.preferences);
@@ -484,9 +484,7 @@ public class HomeActivity extends Activity {
 	}
 
 	private void setAlpha(View view, float alpha) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			view.setAlpha(alpha);
-		}
+		view.setAlpha(alpha);
 	}
 
 	private void hideAllApps() {

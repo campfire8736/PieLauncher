@@ -1,6 +1,8 @@
 package de.markusfisch.android.pielauncher.graphics;
 
+import android.content.Context;
 import android.content.res.Resources;
+import android.util.TypedValue;
 
 import de.markusfisch.android.pielauncher.R;
 
@@ -10,8 +12,24 @@ public class ToolbarBackground {
 	private final float threshold;
 
 	public ToolbarBackground(Resources res) {
-		backgroundColor = res.getColor(R.color.bg_search_bar);
-		threshold = res.getDisplayMetrics().density * 48f;
+		this(res, res.getColor(R.color.bg_search_bar));
+	}
+
+	public ToolbarBackground(Context context) {
+		this(context.getResources(), resolveSearchBarColor(context));
+	}
+
+	public ToolbarBackground(Resources res, int backgroundColor) {
+		this.backgroundColor = backgroundColor;
+		this.threshold = res.getDisplayMetrics().density * 48f;
+	}
+
+	private static int resolveSearchBarColor(Context context) {
+		TypedValue tv = new TypedValue();
+		if (context.getTheme().resolveAttribute(R.attr.colorSearchBar, tv, true) && tv.data != 0) {
+			return tv.data;
+		}
+		return context.getResources().getColor(R.color.bg_search_bar);
 	}
 
 	public int getColorForY(int y) {

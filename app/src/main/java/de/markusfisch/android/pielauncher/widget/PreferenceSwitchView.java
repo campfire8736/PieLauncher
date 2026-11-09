@@ -8,6 +8,7 @@ import android.text.Html;
 import android.text.Spanned;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -25,7 +26,8 @@ public class PreferenceSwitchView extends LinearLayout {
 	private final Ripple ripple = Ripple.newPressRipple();
 
 	private Preferences prefs;
-	private TextView textView;
+	private TextView titleView;
+	private TextView descriptionView;
 	private Switch switchView;
 	private OnCheckedChangeListener listener;
 
@@ -88,15 +90,38 @@ public class PreferenceSwitchView extends LinearLayout {
 		setGravity(Gravity.CENTER_VERTICAL);
 		prefs = PieLauncherApp.getPrefs(context);
 
-		textView = new TextView(context);
-		textView.setTextColor(getResources().getColor(R.color.text_color_preference));
-		textView.setLineSpacing(getResources().getDisplayMetrics().density * 3, 1f);
+		LinearLayout textContainer = new LinearLayout(context);
+		textContainer.setOrientation(VERTICAL);
 		LayoutParams textLp = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
 		int marginEnd = (int) (getResources().getDisplayMetrics().density * 16);
 		textLp.setMarginEnd(marginEnd);
 		textLp.rightMargin = marginEnd;
-		textView.setLayoutParams(textLp);
-		addView(textView);
+		textContainer.setLayoutParams(textLp);
+
+		titleView = new TextView(context);
+		titleView.setTextColor(PreferenceSliderView.getColorFromAttribute(
+				context,
+				android.R.attr.textColorPrimary,
+				getResources().getColor(R.color.text_color)));
+		titleView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16);
+		titleView.setTypeface(null, android.graphics.Typeface.BOLD);
+		textContainer.addView(titleView);
+
+		descriptionView = new TextView(context);
+		descriptionView.setTextColor(PreferenceSliderView.getColorFromAttribute(
+				context,
+				android.R.attr.textColorSecondary,
+				getResources().getColor(R.color.text_color_preference)));
+		descriptionView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
+		descriptionView.setVisibility(View.GONE);
+		LayoutParams descLp = new LayoutParams(
+				LayoutParams.MATCH_PARENT,
+				LayoutParams.WRAP_CONTENT);
+		descLp.topMargin = (int) (getResources().getDisplayMetrics().density * 2);
+		descriptionView.setLayoutParams(descLp);
+		textContainer.addView(descriptionView);
+
+		addView(textContainer);
 
 		switchView = new Switch(context);
 		switchView.setFocusable(false);
@@ -119,7 +144,7 @@ public class PreferenceSwitchView extends LinearLayout {
 			});
 			CharSequence text = a.getText(0);
 			if (text != null) {
-				textView.setText(text);
+				titleView.setText(text);
 			}
 			a.recycle();
 		}
@@ -136,21 +161,14 @@ public class PreferenceSwitchView extends LinearLayout {
 
 	private void updateText() {
 		Context context = getContext();
-		if (titleResId == 0) {
-			return;
+		if (titleResId != 0) {
+			titleView.setText(context.getString(titleResId));
 		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("<big><font color=\"#ffffff\">")
-				.append(context.getString(titleResId))
-				.append("</font></big>");
 		if (descriptionResId > 0) {
-			sb.append("<br/><font color=\"#afff\"><small>")
-					.append(context.getString(descriptionResId))
-					.append("</small></font>");
+			descriptionView.setText(context.getString(descriptionResId));
+			descriptionView.setVisibility(VISIBLE);
+		} else {
+			descriptionView.setVisibility(GONE);
 		}
-		Spanned text = Build.VERSION.SDK_INT < Build.VERSION_CODES.N
-				? Html.fromHtml(sb.toString())
-				: Html.fromHtml(sb.toString(), 0);
-		textView.setText(text);
 	}
 }

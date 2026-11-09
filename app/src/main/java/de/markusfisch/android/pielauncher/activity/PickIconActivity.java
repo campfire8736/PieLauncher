@@ -102,7 +102,7 @@ public class PickIconActivity extends Activity {
 		BackgroundBlur.setBlurRadius(getWindow(),
 				PieLauncherApp.getPrefs(this).getBackgroundBlurRadius());
 		kb = new SoftKeyboard(this);
-		toolbarBackground = new ToolbarBackground(getResources());
+		toolbarBackground = new ToolbarBackground(this);
 		View toolbar = findViewById(R.id.toolbar);
 		progressView = findViewById(R.id.progress);
 

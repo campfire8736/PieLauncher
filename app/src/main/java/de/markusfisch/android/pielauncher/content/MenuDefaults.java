@@ -139,19 +139,11 @@ public class MenuDefaults {
 	}
 
 	private static Intent getCalendarIntent() {
-		Intent intent = new Intent(Intent.ACTION_EDIT)
-				.setType("vnd.android.cursor.item/event");
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			return intent
-					.putExtra("title", "dummy")
-					.putExtra("beginTime", 0)
-					.putExtra("endTime", 0);
-		} else {
-			return intent
-					.putExtra(CalendarContract.Events.TITLE, "dummy")
-					.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, 0)
-					.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, 0);
-		}
+		return new Intent(Intent.ACTION_EDIT)
+				.setType("vnd.android.cursor.item/event")
+				.putExtra(CalendarContract.Events.TITLE, "dummy")
+				.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, 0)
+				.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, 0);
 	}
 
 	private static Map.Entry<LauncherItemKey, AppIcon> findByPackageName(

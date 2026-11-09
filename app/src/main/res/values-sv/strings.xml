@@ -7,8 +7,8 @@
 	<string name="preferences">Inställningar</string>
 	<string name="welcome">Välkommen!</string>
 	<string name="check_these_settings">Vänligen kontrollera följande inställningar:</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">Inaktivera batterioptimering</font></big>\nSparar ström och gör att denna startskärmsapp arbetar snabbare</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">Gör till förvald startskärmsapp</font></big>\nUndvik att återgå till din tidigare startskärmsapp</string>
+	<string name="disable_battery_optimization"><big><b>Inaktivera batterioptimering</b></big>\nSparar ström och gör att denna startskärmsapp arbetar snabbare</string>
+	<string name="make_default_launcher"><big><b>Gör till förvald startskärmsapp</b></big>\nUndvik att återgå till din tidigare startskärmsapp</string>
 	<string name="category_home">Hem</string>
 	<string name="orientation">Orientering</string>
 	<string name="orientation_portrait">Stående (standard)</string>
@@ -110,7 +110,7 @@
 	<string name="category_advanced">Avancerat</string>
 	<string name="icon_pack">Ikonpaket</string>
 	<string name="icon_pack_default">System (standard)</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">Dolda appar</font></big>\nLista med dolda appar</string>
+	<string name="show_hidden_apps"><big><b>Dolda appar</b></big>\nLista med dolda appar</string>
 	<string name="haptic_feedback">Haptisk feedback</string>
 	<string name="haptic_feedback_follow_system">Följ systeminställningarna (standard)</string>
 	<string name="haptic_feedback_disable_launch">Inaktivera endast återkoppling av start</string>

@@ -24,8 +24,7 @@ import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.content.Apps.AppIcon;
 
 public class AppLauncher {
-	public static final boolean HAS_LAUNCHER_APP =
-			Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+	public static final boolean HAS_LAUNCHER_APP = true;
 
 	private static LauncherApps launcherApps;
 	private static UserManager userManager;
@@ -255,8 +254,7 @@ public class AppLauncher {
 	}
 
 	public static List<UserHandle> getProfiles(UserManager um) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-				um != null) {
+		if (um != null) {
 			List<UserHandle> profiles = um.getUserProfiles();
 			if (profiles != null) {
 				return profiles;

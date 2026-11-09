@@ -208,7 +208,6 @@
 	<TextView
 		style="@style/Toolbar"
 		android:id="@+id/toolbar"
-		android:background="@color/bg_search_bar"
 		android:drawableLeft="@drawable/ic_back"
 		android:drawableStart="@drawable/ic_back"
 		android:text="@string/preferences" />

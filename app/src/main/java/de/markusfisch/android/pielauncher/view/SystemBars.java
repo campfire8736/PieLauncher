@@ -22,8 +22,7 @@ public class SystemBars {
 	}
 
 	public static void setTransparentSystemBars(Window window, int immersive) {
-		if (window == null ||
-				Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+		if (window == null) {
 			return;
 		}
 		// This is important or subsequent (not the very first!) openings of
@@ -40,8 +39,7 @@ public class SystemBars {
 	}
 
 	public static void setSystemUIVisibility(Window window, int immersive) {
-		if (window == null ||
-				Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+		if (window == null) {
 			return;
 		}
 
@@ -77,8 +75,6 @@ public class SystemBars {
 
 	public static void setNavigationBarColor(Window window, int color) {
 		if (window == null ||
-				// setNavigationBarColor() was added in LOLLIPOP.
-				Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ||
 				// setNavigationBarColor() has no effect over UPSIDE_DOWN_CAKE.
 				Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 			return;
@@ -86,12 +82,47 @@ public class SystemBars {
 		window.setNavigationBarColor(color);
 	}
 
+	public static void setLightSystemBars(Window window, boolean isLight) {
+		if (window == null) {
+			return;
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			android.view.WindowInsetsController controller =
+					window.getInsetsController();
+			if (controller != null) {
+				int appearance = android.view.WindowInsetsController
+						.APPEARANCE_LIGHT_STATUS_BARS |
+						android.view.WindowInsetsController
+						.APPEARANCE_LIGHT_NAVIGATION_BARS;
+				if (isLight) {
+					controller.setSystemBarsAppearance(appearance, appearance);
+				} else {
+					controller.setSystemBarsAppearance(0, appearance);
+				}
+				return;
+			}
+		}
+		int flags = window.getDecorView().getSystemUiVisibility();
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			if (isLight) {
+				flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+			} else {
+				flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+			}
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			if (isLight) {
+				flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+			} else {
+				flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+			}
+		}
+		window.getDecorView().setSystemUiVisibility(flags);
+	}
+
 	public static void listenForWindowInsets(
 			View view,
 			OnInsetListener listener) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT_WATCH) {
-			return;
-		}
 		view.setOnApplyWindowInsetsListener((v, insets) -> {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 				Insets systemBarsInsets = insets.getInsets(
@@ -139,14 +170,6 @@ public class SystemBars {
 					toolbar.getPaddingTop(),
 					toolbar.getPaddingRight(),
 					toolbar.getPaddingBottom());
-		}
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT_WATCH) {
-			content.setPadding(
-					contentPadding.left,
-					contentPadding.top + toolbarHeight,
-					contentPadding.right,
-					contentPadding.bottom);
-			return;
 		}
 		SystemBars.listenForWindowInsets(
 				content,

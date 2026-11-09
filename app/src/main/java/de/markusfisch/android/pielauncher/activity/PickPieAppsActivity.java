@@ -53,7 +53,7 @@ public class PickPieAppsActivity extends Activity {
 
 		BackgroundBlur.setBlurRadius(getWindow(),
 				PieLauncherApp.getPrefs(this).getBackgroundBlurRadius());
-		toolbarBackground = new ToolbarBackground(getResources());
+		toolbarBackground = new ToolbarBackground(this);
 		View toolbar = findViewById(R.id.toolbar);
 		gridView = findViewById(R.id.apps);
 

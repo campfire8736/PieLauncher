@@ -7,8 +7,8 @@
 	<string name="preferences">Настройки</string>
 	<string name="welcome">Добро пожаловать!</string>
 	<string name="check_these_settings">Пожалуйста просмотрите эти настройки:</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">Отключить оптимизацию заряда</font></big>\nСохранить заряд и сделать Лаунчер шустрее</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">Сделать лаунчером по-умолчанию</font></big>\nЧтобы не возвращаться к предыдущему лаунчеру</string>
+	<string name="disable_battery_optimization"><big><b>Отключить оптимизацию заряда</b></big>\nСохранить заряд и сделать Лаунчер шустрее</string>
+	<string name="make_default_launcher"><big><b>Сделать лаунчером по-умолчанию</b></big>\nЧтобы не возвращаться к предыдущему лаунчеру</string>
 	<string name="category_home">Домашний экран</string>
 	<string name="orientation">Ориентация</string>
 	<string name="orientation_portrait">Портерная (Стандартно)</string>
@@ -110,7 +110,7 @@
 	<string name="category_advanced">Дополнительные настройки</string>
 	<string name="icon_pack">Набор иконок</string>
 	<string name="icon_pack_default">Системные (Стандартно)</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">Скрытые приложения</font></big>\nСписок скрытых приложений</string>
+	<string name="show_hidden_apps"><big><b>Скрытые приложения</b></big>\nСписок скрытых приложений</string>
 	<string name="haptic_feedback">Тактильная обратная связь</string>
 	<string name="haptic_feedback_follow_system">Следуйте системным настройкам (Стандартно)</string>
 	<string name="haptic_feedback_disable_launch">Отключить только обратную связь при запуске</string>

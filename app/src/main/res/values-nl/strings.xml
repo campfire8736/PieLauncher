@@ -7,8 +7,8 @@
 	<string name="preferences">Instellingen</string>
 	<string name="welcome">Welkom!</string>
 	<string name="check_these_settings">Controleer de volgende instellingen:</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">Batterijoptimalisatie uitschakelen</font></big>\nBespaart energie en laat deze launcher sneller werken</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">Instellen als standaardlauncher</font></big>\nVoorkomt het opstarten van je vorige launcher</string>
+	<string name="disable_battery_optimization"><big><b>Batterijoptimalisatie uitschakelen</b></big>\nBespaart energie en laat deze launcher sneller werken</string>
+	<string name="make_default_launcher"><big><b>Instellen als standaardlauncher</b></big>\nVoorkomt het opstarten van je vorige launcher</string>
 	<string name="category_home">Thuis</string>
 	<string name="orientation">Oriëntatie</string>
 	<string name="orientation_portrait">Staand (standaard)</string>
@@ -110,7 +110,7 @@
 	<string name="category_advanced">Geavanceerd</string>
 	<string name="icon_pack">Pictogrammenpakket</string>
 	<string name="icon_pack_default">Systeem (standaard)</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">Verborgen apps</font></big>\nLijst met verborgen apps</string>
+	<string name="show_hidden_apps"><big><b>Verborgen apps</b></big>\nLijst met verborgen apps</string>
 	<string name="haptic_feedback">Haptische feedback</string>
 	<string name="haptic_feedback_follow_system">Systeeminstellingen volgen (standaard)</string>
 	<string name="haptic_feedback_disable_launch">Alleen lanceringsfeedback uitschakelen</string>

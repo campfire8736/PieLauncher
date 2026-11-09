@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Html;
 import android.text.Spanned;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
@@ -73,8 +74,6 @@ public class PreferencesActivity extends Activity {
 				prefs.getBackgroundBlurRadius());
 
 		TextView toolbar = findViewById(R.id.toolbar);
-		toolbar.setBackgroundColor(
-				getResources().getColor(R.color.bg_search_bar));
 		View skipButton = findViewById(R.id.skip);
 
 		disableBatteryOptimizations = findViewById(
@@ -109,7 +108,9 @@ public class PreferencesActivity extends Activity {
 
 		Window window = getWindow();
 		ScrollWithListenerView scrollView = findViewById(R.id.content);
-		final int navigationBarColor =
+		TypedValue tv = new TypedValue();
+		getTheme().resolveAttribute(R.attr.colorSearchBar, tv, true);
+		final int navigationBarColor = tv.data != 0 ? tv.data :
 				getResources().getColor(R.color.bg_search_bar);
 		scrollView.setOnScrollPositionListener((int y, boolean scrollable) -> {
 			SystemBars.setNavigationBarColor(window,
@@ -521,8 +522,7 @@ public class PreferencesActivity extends Activity {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	private static <T> Spanned getLabelAndValue(
+	private static <T> CharSequence getLabelAndValue(
 			Context context,
 			int labelId,
 			int descriptionId,
@@ -535,22 +535,43 @@ public class PreferencesActivity extends Activity {
 		} else {
 			return null;
 		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("<big><font color=\"#ffffff\">")
-				.append(context.getString(labelId))
-				.append("</font></big>");
+		int primaryColor = PreferenceSliderView.getColorFromAttribute(
+				context,
+				android.R.attr.textColorPrimary,
+				context.getResources().getColor(R.color.text_color));
+		int secondaryColor = PreferenceSliderView.getColorFromAttribute(
+				context,
+				android.R.attr.textColorSecondary,
+				context.getResources().getColor(R.color.text_color_preference));
+
+		android.text.SpannableStringBuilder ssb = new android.text.SpannableStringBuilder();
+		String title = context.getString(labelId);
+		ssb.append(title);
+		ssb.setSpan(new android.text.style.RelativeSizeSpan(1.15f), 0, title.length(),
+				android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+		ssb.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, title.length(),
+				android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+		ssb.setSpan(new android.text.style.ForegroundColorSpan(primaryColor), 0, title.length(),
+				android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
 		if (descriptionId > 0) {
-			sb.append("<br/><font color=\"#afff\"><small>")
-					.append(context.getString(descriptionId))
-					.append("</small></font>");
+			ssb.append("\n");
+			int start = ssb.length();
+			String desc = context.getString(descriptionId);
+			ssb.append(desc);
+			ssb.setSpan(new android.text.style.RelativeSizeSpan(0.85f), start, start + desc.length(),
+					android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+			ssb.setSpan(new android.text.style.ForegroundColorSpan(secondaryColor), start, start + desc.length(),
+					android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 		}
-		sb.append("<br/>").append(valueString);
-		String html = sb.toString();
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-			return Html.fromHtml(html);
-		} else {
-			return Html.fromHtml(html, 0);
-		}
+
+		ssb.append("\n");
+		int start = ssb.length();
+		ssb.append(valueString);
+		ssb.setSpan(new android.text.style.ForegroundColorSpan(secondaryColor), start, start + valueString.length(),
+				android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+		return ssb;
 	}
 
 	private boolean updateDisableBatteryOptimizations() {

@@ -1508,11 +1508,7 @@ public class AppPieView extends View {
 
         private void update() {
             invalidate();
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                post(this);
-            } else {
-                postOnAnimation(this);
-            }
+            postOnAnimation(this);
         }
     }
 

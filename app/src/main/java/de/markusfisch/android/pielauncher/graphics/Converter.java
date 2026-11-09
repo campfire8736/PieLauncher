@@ -43,11 +43,6 @@ public class Converter {
 	}
 
 	public static Drawable getDrawable(Resources res, int resId) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			return res.getDrawable(resId, null);
-		} else {
-			//noinspection deprecation
-			return res.getDrawable(resId);
-		}
+		return res.getDrawable(resId, null);
 	}
 }

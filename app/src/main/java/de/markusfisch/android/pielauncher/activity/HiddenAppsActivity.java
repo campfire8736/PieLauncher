@@ -56,7 +56,7 @@ public class HiddenAppsActivity extends Activity {
 
 		BackgroundBlur.setBlurRadius(getWindow(),
 				PieLauncherApp.getPrefs(this).getBackgroundBlurRadius());
-		toolbarBackground = new ToolbarBackground(getResources());
+		toolbarBackground = new ToolbarBackground(this);
 		View toolbar = findViewById(R.id.toolbar);
 		toolbar.setOnClickListener(v -> finish());
 		progressView = findViewById(R.id.progress);
@@ -165,25 +165,14 @@ public class HiddenAppsActivity extends Activity {
 	private static Pair<String, Drawable> getAppNameAndIcon(
 			Context context,
 			String packageName) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			LauncherApps la = (LauncherApps) context.getSystemService(
-					Context.LAUNCHER_APPS_SERVICE);
+		LauncherApps la = (LauncherApps) context.getSystemService(
+				Context.LAUNCHER_APPS_SERVICE);
+		if (la != null) {
 			for (LauncherActivityInfo info :
 					la.getActivityList(packageName, Process.myUserHandle())) {
 				return new Pair<>(
 						info.getLabel().toString(),
 						info.getIcon(0));
-			}
-		} else {
-			PackageManager pm = context.getPackageManager();
-			Intent intent = new Intent(Intent.ACTION_MAIN, null);
-			intent.addCategory(Intent.CATEGORY_LAUNCHER);
-			intent.setPackage(packageName);
-			List<ResolveInfo> activities = pm.queryIntentActivities(intent, 0);
-			for (ResolveInfo info : activities) {
-				return new Pair<>(
-						info.loadLabel(pm).toString(),
-						info.loadIcon(pm));
 			}
 		}
 		return null;

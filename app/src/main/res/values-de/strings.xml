@@ -7,8 +7,8 @@
 	<string name="preferences">Einstellungen</string>
 	<string name="welcome">Willkommen!</string>
 	<string name="check_these_settings">Überprüfen Sie bitte die folgenden Einstellungen:</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">Akkuoptimierung deaktivieren</font></big>\nSpart Energie und sorgt dafür, dass der Launcher schneller arbeitet</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">Zum Standard machen</font></big>\nÖffnet Pie Launcher anstelle des Systemstartbildschirms</string>
+	<string name="disable_battery_optimization"><big><b>Akkuoptimierung deaktivieren</b></big>\nSpart Energie und sorgt dafür, dass der Launcher schneller arbeitet</string>
+	<string name="make_default_launcher"><big><b>Zum Standard machen</b></big>\nÖffnet Pie Launcher anstelle des Systemstartbildschirms</string>
 	<string name="category_home">Startbildschirm</string>
 	<string name="orientation">Ausrichtung</string>
 	<string name="orientation_portrait">Hochformat (Standard)</string>
@@ -110,7 +110,7 @@
 	<string name="category_advanced">Erweitert</string>
 	<string name="icon_pack">Icon Pack</string>
 	<string name="icon_pack_default">System (Standard)</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">Versteckte Apps</font></big>\nListe der nicht sichtbaren Apps</string>
+	<string name="show_hidden_apps"><big><b>Versteckte Apps</b></big>\nListe der nicht sichtbaren Apps</string>
 	<string name="haptic_feedback">Haptische Rückmeldung</string>
 	<string name="haptic_feedback_follow_system">Systemeinstellungen folgen (Standard)</string>
 	<string name="haptic_feedback_disable_launch">Nur Startrückmeldung deaktivieren</string>

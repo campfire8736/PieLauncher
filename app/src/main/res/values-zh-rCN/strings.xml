@@ -7,8 +7,8 @@
 	<string name="preferences">设置</string>
 	<string name="welcome">欢迎！</string>
 	<string name="check_these_settings"> 请检查以下设置：</string>
-	<string name="disable_battery_optimization"><big><font color="#ffffff">禁用电池优化</font></big>\n节省电量并使本启动器可以更迅速地运行</string>
-	<string name="make_default_launcher"><big><font color="#ffffff">设为默认主屏幕启动器</font></big>\n避免回到先前的启动器</string>
+	<string name="disable_battery_optimization"><big><b>禁用电池优化</b></big>\n节省电量并使本启动器可以更迅速地运行</string>
+	<string name="make_default_launcher"><big><b>设为默认主屏幕启动器</b></big>\n避免回到先前的启动器</string>
 	<string name="category_home">启动屏幕</string>
 	<string name="orientation">屏幕方向</string>
 	<string name="orientation_portrait">纵向 (默认)</string>
@@ -110,7 +110,7 @@
 	<string name="category_advanced">高级设置</string>
 	<string name="icon_pack">图标包</string>
 	<string name="icon_pack_default">系统（默认）</string>
-	<string name="show_hidden_apps"><big><font color="#ffffff">隐藏的应用程序</font></big>\n隐藏应用程序列表。</string>
+	<string name="show_hidden_apps"><big><b>隐藏的应用程序</b></big>\n隐藏应用程序列表。</string>
 	<string name="haptic_feedback">触觉反馈</string>
 	<string name="haptic_feedback_follow_system">遵循系统设置 (默认)</string>
 	<string name="haptic_feedback_disable_launch">仅禁用发射反馈</string>

@@ -232,6 +232,7 @@ public class AppPieView extends View {
     private final AppShortcutsController shortcutsController;
     private final AppActionHandler actionHandler;
     private int keyboardHeight = -1;
+    private int insetsTop = 0;
 
     public AppPieView(Context context, AttributeSet attr) {
         super(context, attr);
@@ -899,8 +900,18 @@ public class AppPieView extends View {
 
         shortcutsController.setTextSize(sp);
         listRenderer.layout(listPadding, searchInputHeight, iconSize, spaceBetween, iconTextPadding, listFadeHeight, sp);
+        editorRenderer.setInsetsTop(insetsTop);
         editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize);
         calculateMaxScrollY();
+    }
+
+    public void setInsets(int left, int top, int right, int bottom) {
+        this.insetsTop = top;
+        editorRenderer.setInsetsTop(top);
+        setPadding(left, 0, right, bottom);
+        if (viewWidth > 0 && viewHeight > 0) {
+            editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize);
+        }
     }
 
     public void addIconInteractively(Apps.AppIcon appIcon) {

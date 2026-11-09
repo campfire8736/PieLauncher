@@ -37,7 +37,6 @@ public class HomeActivity extends Activity {
 	private SoftKeyboard kb;
 	private GestureDetector gestureDetector;
 	private ToolbarBackground toolbarBackground;
-	private GradientDrawable toolbarBackgroundDrawable;
 	private AppPieView pieView;
 	private View toolbar;
 	private EditText searchInput;
@@ -112,27 +111,15 @@ public class HomeActivity extends Activity {
 		prefsButton = findViewById(R.id.preferences);
 		editButton = findViewById(R.id.edit);
 
-		float dp = getResources().getDisplayMetrics().density;
-		toolbarBackgroundDrawable = new GradientDrawable();
-		toolbarBackgroundDrawable.setShape(GradientDrawable.RECTANGLE);
-		toolbarBackgroundDrawable.setCornerRadius(dp * 24f);
-		toolbar.setBackground(toolbarBackgroundDrawable);
-
 		initPieView();
 		initActionButtons();
 		initSearchInput();
 
 		SystemBars.listenForWindowInsets(pieView,
 				(left, top, right, bottom) -> {
-					pieView.setPadding(left, 0, right, bottom);
-					if (toolbar != null && toolbar.getLayoutParams() instanceof FrameLayout.LayoutParams) {
-						FrameLayout.LayoutParams lp =
-								(FrameLayout.LayoutParams) toolbar.getLayoutParams();
-						float d = getResources().getDisplayMetrics().density;
-						lp.topMargin = top + Math.round(12f * d);
-						lp.leftMargin = left + Math.round(16f * d);
-						lp.rightMargin = right + Math.round(16f * d);
-						toolbar.setLayoutParams(lp);
+					pieView.setInsets(left, top, right, bottom);
+					if (toolbar != null) {
+						toolbar.setPadding(left, top, right, 0);
 					}
 				});
 
@@ -509,8 +496,8 @@ public class HomeActivity extends Activity {
 	}
 
 	private void setToolbarColor(int color) {
-		if (toolbarBackgroundDrawable != null) {
-			toolbarBackgroundDrawable.setColor(color);
+		if (toolbar != null) {
+			toolbar.setBackgroundColor(color);
 		}
 	}
 

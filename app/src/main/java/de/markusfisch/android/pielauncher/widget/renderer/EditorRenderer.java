@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 
@@ -38,13 +39,17 @@ public class EditorRenderer {
     private final Paint paintDropZone;
     private final Paint paintPressed;
     private final Paint paintAction;
-    private final Paint paintText;
+    final Paint paintText;
+    final Paint paintTitle;
     private final Paint paintSlotHighlight;
     private final int barColor;
     private final float dp;
     private final int alphaDropZone;
     private final int alphaPressed;
     private final int alphaText;
+    private final int alphaTitle;
+    final String editModeTitle;
+    private int insetsTop = 0;
 
     private final String dragToOrderTip;
     private final String removeIconTip;
@@ -103,6 +108,15 @@ public class EditorRenderer {
         paintText.setTextAlign(Paint.Align.CENTER);
         paintText.setTextSize(14f * res.getDisplayMetrics().scaledDensity);
         alphaText = paintText.getAlpha();
+
+        editModeTitle = context.getString(R.string.edit_pie_menu);
+        paintTitle = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paintTitle.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, android.R.attr.textColorPrimary, res.getColor(R.color.text_color)));
+        paintTitle.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        paintTitle.setTextAlign(Paint.Align.CENTER);
+        paintTitle.setTextSize(18f * res.getDisplayMetrics().scaledDensity);
+        alphaTitle = paintTitle.getAlpha();
 
         paintSlotHighlight = new Paint(Paint.ANTI_ALIAS_FLAG);
         paintSlotHighlight.setColor(0xffffffff);
@@ -186,6 +200,7 @@ public class EditorRenderer {
         paintPressed.setAlpha(Math.round(f * alphaPressed));
         paintAction.setAlpha(alpha);
         paintText.setAlpha(Math.round(f * alphaText));
+        paintTitle.setAlpha(Math.round(f * alphaTitle));
         paintSlotHighlight.setAlpha(alpha);
 
         boolean hasIcon = grabbedIcon != null;
@@ -195,28 +210,20 @@ public class EditorRenderer {
         paintBar.setColor((barAlpha << 24) | (barColor & 0xffffff));
 
         boolean portrait = canvas.getHeight() > canvas.getWidth();
-        float cornerRadiusTop = (portrait ? topBarRect.height() : topBarRect.width()) * 0.5f;
         float cornerRadiusBottom = (portrait ? bottomBarRect.height() : bottomBarRect.width()) * 0.5f;
 
+        canvas.drawRect(topBarRect, paintBar);
+
+        int topInset = insetsTop > 0 ? insetsTop : Math.round(24f * dp);
+        if (portrait) {
+            canvas.drawText(editModeTitle, canvas.getWidth() * 0.5f, topInset + 24f * dp, paintTitle);
+        } else {
+            canvas.drawText(editModeTitle, canvas.getWidth() * 0.5f, topInset + 20f * dp, paintTitle);
+        }
+
         if (!hasIcon) {
-            topBarRectF.set(topBarRect);
-            canvas.drawRoundRect(topBarRectF, cornerRadiusTop, cornerRadiusTop, paintBar);
             bottomBarRectF.set(bottomBarRect);
             canvas.drawRoundRect(bottomBarRectF, cornerRadiusBottom, cornerRadiusBottom, paintBar);
-        } else {
-            String tip = getTip(hasIcon, hasPacks);
-            if (tip != null && portrait) {
-                float tipWidth = paintText.measureText(tip);
-                float cx = canvas.getWidth() * 0.5f;
-                float cy = controlsPadding;
-                float tipH = Math.max(topBarRect.height(), 40f * dp);
-                tipBarRectF.set(
-                        cx - tipWidth * 0.5f - 16f * dp,
-                        cy - tipH * 0.5f,
-                        cx + tipWidth * 0.5f + 16f * dp,
-                        cy + tipH * 0.5f);
-                canvas.drawRoundRect(tipBarRectF, tipH * 0.5f, tipH * 0.5f, paintBar);
-            }
         }
 
         drawPlaceholders(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, isDisplacedOccupied);
@@ -299,8 +306,9 @@ public class EditorRenderer {
 
     private void drawTip(Canvas canvas, String tip) {
         if (tip != null) {
+            int topInset = insetsTop > 0 ? insetsTop : Math.round(24f * dp);
             canvas.drawText(tip, canvas.getWidth() >> 1,
-                    controlsPadding + textOffset, paintText);
+                    topInset + 52f * dp, paintText);
         }
     }
 
@@ -329,10 +337,19 @@ public class EditorRenderer {
         }
     }
 
+    public void setInsetsTop(int insetsTop) {
+        this.insetsTop = insetsTop;
+    }
+
+    public int getInsetsTop() {
+        return insetsTop;
+    }
+
     public void setTextDimensions(int controlsPadding, float textOffset, float sp) {
         this.controlsPadding = controlsPadding;
         this.textOffset = textOffset;
         paintText.setTextSize(14f * sp);
+        paintTitle.setTextSize(18f * sp);
     }
 
     public void setActionSize(int actionSize) {
@@ -365,51 +382,67 @@ public class EditorRenderer {
                 viewHeight,
                 portrait);
 
-        distributeButtons(
-                iconChangeTwist,
-                iconChangeIconScale,
-                iconChangeRadius,
-                iconChangeTwistRect,
-                iconChangeIconScaleRect,
-                iconChangeRadiusRect,
-                controlsPadding,
-                viewWidth,
-                viewHeight,
-                portrait);
-
-        setActionSize(Math.min(iconSize, max / 2 - spaceBetween));
-        setTextDimensions(controlsPadding, textOffset, sp);
-
+        int topInset = insetsTop > 0 ? insetsTop : Math.round(24f * dp);
         int hPad = Math.round(16f * dp);
         int vPad = Math.round(12f * dp);
 
         if (portrait) {
-            int topMinX = Math.min(iconChangeTwistRect.left, Math.min(iconChangeIconScaleRect.left, iconChangeRadiusRect.left));
-            int topMaxX = Math.max(iconChangeTwistRect.right, Math.max(iconChangeIconScaleRect.right, iconChangeRadiusRect.right));
-            int topMinY = Math.min(iconChangeTwistRect.top, Math.min(iconChangeIconScaleRect.top, iconChangeRadiusRect.top));
-            int topMaxY = Math.max(iconChangeTwistRect.bottom, Math.max(iconChangeIconScaleRect.bottom, iconChangeRadiusRect.bottom));
+            int topBarHeight = topInset + Math.round(76f * dp);
+            topBarRect.set(0, 0, viewWidth, topBarHeight);
+
+            int buttonY = topInset + Math.round(50f * dp);
+            int centerX = viewWidth / 2;
+            int spacing = Math.round(64f * dp);
+            int bSize = Math.round(36f * dp);
+
+            iconChangeIconScaleRect.set(
+                    centerX - bSize / 2,
+                    buttonY - bSize / 2,
+                    centerX + bSize / 2,
+                    buttonY + bSize / 2);
+            iconChangeTwistRect.set(
+                    centerX - spacing - bSize / 2,
+                    buttonY - bSize / 2,
+                    centerX - spacing + bSize / 2,
+                    buttonY + bSize / 2);
+            iconChangeRadiusRect.set(
+                    centerX + spacing - bSize / 2,
+                    buttonY - bSize / 2,
+                    centerX + spacing + bSize / 2,
+                    buttonY + bSize / 2);
 
             int botMinX = Math.min(iconStartRect.left, Math.min(iconCenterRect.left, iconEndRect.left));
             int botMaxX = Math.max(iconStartRect.right, Math.max(iconCenterRect.right, iconEndRect.right));
             int botMinY = Math.min(iconStartRect.top, Math.min(iconCenterRect.top, iconEndRect.top));
             int botMaxY = Math.max(iconStartRect.bottom, Math.max(iconCenterRect.bottom, iconEndRect.bottom));
 
-            topBarRect.set(topMinX - hPad, topMinY - vPad, topMaxX + hPad, topMaxY + vPad);
             bottomBarRect.set(botMinX - hPad, botMinY - vPad, botMaxX + hPad, botMaxY + vPad);
         } else {
-            int topMinX = Math.min(iconChangeTwistRect.left, Math.min(iconChangeIconScaleRect.left, iconChangeRadiusRect.left));
-            int topMaxX = Math.max(iconChangeTwistRect.right, Math.max(iconChangeIconScaleRect.right, iconChangeRadiusRect.right));
-            int topMinY = Math.min(iconChangeTwistRect.top, Math.min(iconChangeIconScaleRect.top, iconChangeRadiusRect.top));
-            int topMaxY = Math.max(iconChangeTwistRect.bottom, Math.max(iconChangeIconScaleRect.bottom, iconChangeRadiusRect.bottom));
+            int topBarHeight = topInset + Math.round(44f * dp);
+            topBarRect.set(0, 0, viewWidth, topBarHeight);
+
+            distributeButtons(
+                    iconChangeTwist,
+                    iconChangeIconScale,
+                    iconChangeRadius,
+                    iconChangeTwistRect,
+                    iconChangeIconScaleRect,
+                    iconChangeRadiusRect,
+                    controlsPadding,
+                    viewWidth,
+                    viewHeight,
+                    portrait);
 
             int botMinX = Math.min(iconStartRect.left, Math.min(iconCenterRect.left, iconEndRect.left));
             int botMaxX = Math.max(iconStartRect.right, Math.max(iconCenterRect.right, iconEndRect.right));
             int botMinY = Math.min(iconStartRect.top, Math.min(iconCenterRect.top, iconEndRect.top));
             int botMaxY = Math.max(iconStartRect.bottom, Math.max(iconCenterRect.bottom, iconEndRect.bottom));
 
-            topBarRect.set(topMinX - vPad, topMinY - hPad, topMaxX + vPad, topMaxY + hPad);
             bottomBarRect.set(botMinX - vPad, botMinY - hPad, botMaxX + vPad, botMaxY + hPad);
         }
+
+        setActionSize(Math.min(iconSize, max / 2 - spaceBetween));
+        setTextDimensions(controlsPadding, textOffset, sp);
     }
 
     private int distributeButtons(

@@ -72,9 +72,12 @@ public class HomeActivityTest {
     public void testActionButtonsExistAndInitialState() {
         View editButton = activity.findViewById(R.id.edit);
         View prefsButton = activity.findViewById(R.id.preferences);
+        android.widget.TextView toolbarTitle = activity.findViewById(R.id.toolbar_title);
 
         assertNotNull(editButton);
         assertNotNull(prefsButton);
+        assertNotNull(toolbarTitle);
+        assertEquals(activity.getString(R.string.category_app_drawer), toolbarTitle.getText().toString());
         assertEquals(View.GONE, editButton.getVisibility());
         assertEquals(View.GONE, prefsButton.getVisibility());
     }

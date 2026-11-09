@@ -120,17 +120,20 @@ public class EditorRendererTest {
 
         // Without a grabbed icon, 6 action icons are drawn (twist, scale, radius, add, preferences, done)
         verify(mockCanvas, times(6)).drawBitmap(any(Bitmap.class), nullable(Rect.class), any(Rect.class), any(Paint.class));
-        verify(mockCanvas, times(2)).drawRoundRect(any(RectF.class), anyFloat(), anyFloat(), any(Paint.class));
+        verify(mockCanvas, times(1)).drawRect(any(Rect.class), any(Paint.class));
+        verify(mockCanvas, times(1)).drawRoundRect(any(RectF.class), anyFloat(), anyFloat(), any(Paint.class));
+        verify(mockCanvas, atLeastOnce()).drawText(any(String.class), anyFloat(), anyFloat(), any(Paint.class));
     }
 
     @Test
     public void testLayoutCalculatesTopAndBottomBars() {
         editorRenderer.layout(1080, 1920, 100, 10f, 1f, 16, 48);
-        assertTrue(editorRenderer.topBarRect.left > 0);
-        assertTrue(editorRenderer.topBarRect.right < 1080);
+        assertEquals(0, editorRenderer.topBarRect.left);
+        assertEquals(1080, editorRenderer.topBarRect.right);
+        assertEquals(0, editorRenderer.topBarRect.top);
+        assertTrue(editorRenderer.topBarRect.bottom > 0);
         assertTrue(editorRenderer.bottomBarRect.left > 0);
         assertTrue(editorRenderer.bottomBarRect.right < 1080);
-        assertTrue(editorRenderer.topBarRect.bottom > editorRenderer.topBarRect.top);
         assertTrue(editorRenderer.bottomBarRect.bottom > editorRenderer.bottomBarRect.top);
     }
 
@@ -349,7 +352,12 @@ public class EditorRendererTest {
                 any(String.class),
                 anyFloat(),
                 anyFloat(),
-                any(Paint.class));
+                org.mockito.ArgumentMatchers.eq(editorRenderer.paintText));
+        verify(mockCanvas, atLeastOnce()).drawText(
+                org.mockito.ArgumentMatchers.eq(editorRenderer.editModeTitle),
+                anyFloat(),
+                anyFloat(),
+                org.mockito.ArgumentMatchers.eq(editorRenderer.paintTitle));
     }
 
     @Test

@@ -162,6 +162,52 @@ public class EditorRendererTest {
     }
 
     @Test
+    public void testDraw_RigidPie_WithGrabbedIcon_OnlyDrawsActualEmptySpacesAsGhosts() {
+        when(mockFaderEdit.isVisible()).thenReturn(true);
+        when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);
+
+        de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+                new de.markusfisch.android.pielauncher.graphics.CanvasPieMenu();
+        pieMenu.setRigid(true);
+        pieMenu.set(500, 500, 200, 0, 1f);
+        // Slot 0: ghost (sourceSlot, origin of grabbed icon) -> at (700, 500)
+        pieMenu.icons.add(Apps.AppIcon.createGhost());
+        // Slot 1: ghost (hoveredSlot, currently targeted) -> at (500, 700)
+        pieMenu.icons.add(Apps.AppIcon.createGhost());
+        // Slot 2: ghost (actual empty space!) -> at (300, 500)
+        pieMenu.icons.add(Apps.AppIcon.createGhost());
+        // Slot 3: ghost (actual empty space!) -> at (500, 300)
+        pieMenu.icons.add(Apps.AppIcon.createGhost());
+        pieMenu.calculate(500, 500);
+
+        Apps.AppIcon grabbedIcon = createTestAppIcon("Grabbed App");
+
+        editorRenderer.draw(
+                mockCanvas,
+                mockFaderEdit,
+                pieMenu,
+                grabbedIcon,
+                android.os.SystemClock.uptimeMillis() - 300L,
+                null,
+                300f,
+                false,
+                false,
+                1, // hoveredSlot
+                0, // sourceSlot
+                false);
+
+        // Slot 2 (300, 500) and Slot 3 (500, 300) MUST have circles drawn (actual empty spaces)
+        verify(mockCanvas).drawCircle(org.mockito.ArgumentMatchers.eq(300f), org.mockito.ArgumentMatchers.eq(500f), anyFloat(), any(Paint.class));
+        verify(mockCanvas).drawCircle(org.mockito.ArgumentMatchers.eq(500f), org.mockito.ArgumentMatchers.eq(300f), anyFloat(), any(Paint.class));
+
+        // Slot 1 (500, 700) is hoveredSlot, so it must NOT have any circle drawn
+        verify(mockCanvas, never()).drawCircle(org.mockito.ArgumentMatchers.eq(500f), org.mockito.ArgumentMatchers.eq(700f), anyFloat(), any(Paint.class));
+
+        // Slot 0 (700, 500) is sourceSlot, which has exactly ONE circle drawn (the white slot highlight, NOT a ghost circle)
+        verify(mockCanvas, times(1)).drawCircle(org.mockito.ArgumentMatchers.eq(700f), org.mockito.ArgumentMatchers.eq(500f), anyFloat(), any(Paint.class));
+    }
+
+    @Test
     public void testGetActionAt_WithGrabbedIcon() {
         // Assume default rect size of 100x100 for testing
         editorRenderer.iconStartRect.set(0, 0, 100, 100);

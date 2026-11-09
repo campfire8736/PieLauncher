@@ -461,10 +461,7 @@ public class EditorRenderer {
             PieMenu.Icon icon = (PieMenu.Icon) pieMenu.icons.get(i);
             if (icon != null && icon.isGhost) {
                 if (hasGrabbedIcon) {
-                    if (i == hoveredSlot) {
-                        continue;
-                    }
-                    if (i == sourceSlot && (hoveredSlot == sourceSlot || isDisplacedOccupied)) {
+                    if (i == hoveredSlot || i == sourceSlot) {
                         continue;
                     }
                 }

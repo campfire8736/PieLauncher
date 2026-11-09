@@ -34,6 +34,8 @@ public class PieEditor {
     private int grabbedSourceSlot = -1;
     private int lastHoveredSlot = -1;
     private Apps.AppIcon displacedHovered;
+    private Apps.AppIcon hoveredGhost;
+    private double hoveredGhostBaseSize;
     private double twist;
     private Point touch;
 
@@ -226,6 +228,10 @@ public class PieEditor {
             Apps.AppIcon targetIcon = pieMenu.icons.get(targetSlot);
             if (targetIcon != null && grabbedSourceSlot >= 0) {
                 displacedHovered = null;
+                if (hoveredGhost != null) {
+                    hoveredGhost.size = hoveredGhostBaseSize;
+                    hoveredGhost = null;
+                }
                 pieMenu.icons.set(grabbedSourceSlot, targetIcon);
                 pieMenu.icons.set(targetSlot, grabbedIcon);
             } else {
@@ -246,6 +252,10 @@ public class PieEditor {
         grabbedIcon = null;
         lastHoveredSlot = -1;
         displacedHovered = null;
+        if (hoveredGhost != null) {
+            hoveredGhost.size = hoveredGhostBaseSize;
+            hoveredGhost = null;
+        }
         int cx = lastCenterX > 0 ? lastCenterX : pieMenu.getCenterX();
         int cy = lastCenterY > 0 ? lastCenterY : pieMenu.getCenterY();
         pieMenu.calculate(cx, cy);
@@ -343,10 +353,16 @@ public class PieEditor {
             if (hoveredSlot >= 0 && hoveredSlot != grabbedSourceSlot && grabbedSourceSlot >= 0) {
                 Apps.AppIcon targetIcon = pieMenu.icons.get(hoveredSlot);
                 if (targetIcon != null) {
-                    double aSource = twist + grabbedSourceSlot * step;
-                    targetIcon.x = centerX + (int) Math.round(rad * Math.cos(aSource));
-                    targetIcon.y = centerY + (int) Math.round(rad * Math.sin(aSource));
-                    displacedHovered = targetIcon;
+                    if (Apps.isGhost(targetIcon)) {
+                        hoveredGhost = targetIcon;
+                        hoveredGhostBaseSize = targetIcon.size > 0 ? targetIcon.size : (grabbedIcon != null && grabbedIcon.size > 0 ? grabbedIcon.size : 100);
+                        targetIcon.size = 0;
+                    } else {
+                        double aSource = twist + grabbedSourceSlot * step;
+                        targetIcon.x = centerX + (int) Math.round(rad * Math.cos(aSource));
+                        targetIcon.y = centerY + (int) Math.round(rad * Math.sin(aSource));
+                        displacedHovered = targetIcon;
+                    }
                 }
             }
             pieMenu.updateSmoothing();
@@ -356,6 +372,10 @@ public class PieEditor {
     }
 
     private void resetDisplacedApp() {
+        if (hoveredGhost != null) {
+            hoveredGhost.size = hoveredGhostBaseSize;
+            hoveredGhost = null;
+        }
         if (displacedHovered != null && lastHoveredSlot >= 0 && lastHoveredSlot < pieMenu.icons.size()) {
             double step = PieMenu.TAU / pieMenu.icons.size();
             double aHovered = twist + lastHoveredSlot * step;

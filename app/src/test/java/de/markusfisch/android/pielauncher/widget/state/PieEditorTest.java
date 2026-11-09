@@ -378,7 +378,7 @@ public class PieEditorTest {
     }
 
     @Test
-    public void testRigidHoverOverEmptySlotSwapsGhost() {
+    public void testRigidHoverOverEmptySlotAnimatesGhostDisappearance() {
         pieMenu.setRigid(true);
         pieMenu.set(500, 500, 200, 0, 1f);
         Apps.AppIcon icon1 = createTestAppIcon("App 1");
@@ -387,16 +387,21 @@ public class PieEditorTest {
         pieMenu.icons.add(ghost1); // Slot 1 (angle PI -> 300, 500)
         pieMenu.calculate(500, 500);
 
+        double baseGhostSize = ghost1.size;
+        assertTrue(baseGhostSize > 0);
+
         pieEditor.editIcon(icon1); // Slot 0 now has ghost0
-        Apps.AppIcon ghost0 = pieMenu.icons.get(0);
 
         // Hover over Slot 1 (angle PI, x=200, y=500) which is ghost1
         pieEditor.setTouch(new Point(200, 500));
         pieEditor.calculateEditablePie(500, 500);
 
-        // Ghost 1 should swap to Slot 0 coordinates (700, 500)
-        assertEquals(700, ghost1.x);
+        // Ghost 1 does NOT swap coordinates to Slot 0; it stays at Slot 1 (300, 500)
+        assertEquals(300, ghost1.x);
         assertEquals(500, ghost1.y);
+        // Ghost 1 target size becomes 0 to animate disappearance
+        assertEquals(0.0, ghost1.size, 0.001);
+
         // Hovered slot is 1 (under the cursor)
         assertEquals(1, pieEditor.getLastHoveredSlot());
         assertEquals(0, pieEditor.getGrabbedSourceSlot());
@@ -406,7 +411,8 @@ public class PieEditorTest {
         pieEditor.setTouch(new Point(800, 500));
         pieEditor.calculateEditablePie(500, 500);
 
-        // Ghost 1 returns to Slot 1 coordinates (300, 500)
+        // Ghost 1 restores its base size to animate reappearance, staying at (300, 500)
+        assertEquals(baseGhostSize, ghost1.size, 0.001);
         assertEquals(300, ghost1.x);
         assertEquals(500, ghost1.y);
         assertEquals(0, pieEditor.getLastHoveredSlot());

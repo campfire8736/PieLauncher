@@ -457,11 +457,22 @@ public class EditorRenderer {
             return;
         }
         int numberOfSlots = pieMenu.icons.size();
+        int targetAlpha = paintDropZone.getAlpha();
+        double baseSize = actionSize;
+        for (int j = 0; j < numberOfSlots; ++j) {
+            PieMenu.Icon ic = (PieMenu.Icon) pieMenu.icons.get(j);
+            if (ic != null && ic.size > 0) {
+                baseSize = ic.size;
+                break;
+            }
+        }
+        float baseR = (float) (baseSize * 0.5);
+
         for (int i = 0; i < numberOfSlots; ++i) {
             PieMenu.Icon icon = (PieMenu.Icon) pieMenu.icons.get(i);
             if (icon != null && icon.isGhost) {
                 if (hasGrabbedIcon) {
-                    if (i == hoveredSlot || i == sourceSlot) {
+                    if (i == sourceSlot) {
                         continue;
                     }
                 }
@@ -478,7 +489,10 @@ public class EditorRenderer {
                     y = icon.y;
                 }
                 if (r > 1) {
+                    float ratio = baseR > 0 ? Math.min(1.0f, Math.max(0.0f, r / baseR)) : 1.0f;
+                    paintDropZone.setAlpha(Math.round(targetAlpha * ratio));
                     canvas.drawCircle(x, y, r, paintDropZone);
+                    paintDropZone.setAlpha(targetAlpha);
                 }
             }
         }

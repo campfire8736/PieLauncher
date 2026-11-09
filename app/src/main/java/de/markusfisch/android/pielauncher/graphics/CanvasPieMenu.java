@@ -47,7 +47,7 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 		}
 
 		public double getSmoothedSize() {
-			return smoothedInitialized && smoothedSize > 0 ? smoothedSize : size;
+			return smoothedInitialized ? smoothedSize : size;
 		}
 
 		public void draw(

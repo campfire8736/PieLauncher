@@ -172,13 +172,18 @@ public class EditorRendererTest {
         pieMenu.set(500, 500, 200, 0, 1f);
         // Slot 0: ghost (sourceSlot, origin of grabbed icon) -> at (700, 500)
         pieMenu.icons.add(Apps.AppIcon.createGhost());
-        // Slot 1: ghost (hoveredSlot, currently targeted) -> at (500, 700)
-        pieMenu.icons.add(Apps.AppIcon.createGhost());
+        // Slot 1: ghost (hoveredSlot, currently targeted and disappeared) -> at (500, 700)
+        Apps.AppIcon hoveredGhost = Apps.AppIcon.createGhost();
+        pieMenu.icons.add(hoveredGhost);
         // Slot 2: ghost (actual empty space!) -> at (300, 500)
         pieMenu.icons.add(Apps.AppIcon.createGhost());
         // Slot 3: ghost (actual empty space!) -> at (500, 300)
         pieMenu.icons.add(Apps.AppIcon.createGhost());
         pieMenu.calculate(500, 500);
+
+        // Hovered ghost has target size 0 and has animated to 0
+        hoveredGhost.size = 0;
+        hoveredGhost.initSmoothing();
 
         Apps.AppIcon grabbedIcon = createTestAppIcon("Grabbed App");
 

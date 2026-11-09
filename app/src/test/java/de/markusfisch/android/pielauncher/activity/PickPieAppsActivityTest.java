@@ -100,14 +100,19 @@ public class PickPieAppsActivityTest {
 		View view0 = adapter.getView(0, null, gridView);
 		CheckBox cb0 = view0.findViewById(R.id.selected);
 		assertTrue(cb0.isChecked()); // App A is in menuPrimary
+		assertEquals(0.5f, view0.findViewById(R.id.icon).getAlpha(), 0.01f);
+		android.widget.FrameLayout.LayoutParams lp0 = (android.widget.FrameLayout.LayoutParams) cb0.getLayoutParams();
+		assertEquals(android.view.Gravity.BOTTOM | android.view.Gravity.END, lp0.gravity);
 
 		View view1 = adapter.getView(1, null, gridView);
 		CheckBox cb1 = view1.findViewById(R.id.selected);
 		assertTrue(cb1.isChecked()); // App B is in menuPrimary
+		assertEquals(0.5f, view1.findViewById(R.id.icon).getAlpha(), 0.01f);
 
 		View view2 = adapter.getView(2, null, gridView);
 		CheckBox cb2 = view2.findViewById(R.id.selected);
 		assertFalse(cb2.isChecked()); // App C is not in menuPrimary
+		assertEquals(1.0f, view2.findViewById(R.id.icon).getAlpha(), 0.01f);
 	}
 
 	@Test
@@ -127,12 +132,14 @@ public class PickPieAppsActivityTest {
 		View view2 = adapter.getView(2, null, gridView);
 		CheckBox cb2 = view2.findViewById(R.id.selected);
 		assertTrue(cb2.isChecked());
+		assertEquals(0.5f, view2.findViewById(R.id.icon).getAlpha(), 0.01f);
 
 		// Click App A (position 0) -> should become unselected
 		gridView.performItemClick(null, 0, adapter.getItemId(0));
 		View view0 = adapter.getView(0, null, gridView);
 		CheckBox cb0 = view0.findViewById(R.id.selected);
 		assertFalse(cb0.isChecked());
+		assertEquals(1.0f, view0.findViewById(R.id.icon).getAlpha(), 0.01f);
 	}
 
 	@Test

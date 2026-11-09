@@ -11,8 +11,8 @@
 		<shape android:shape="rectangle">
 			<size android:width="52dp" android:height="32dp"/>
 			<corners android:radius="16dp"/>
-			<solid android:color="#26ffffff"/>
-			<stroke android:width="2dp" android:color="#4dffffff"/>
+			<solid android:color="?attr/colorSwitchTrackUnchecked"/>
+			<stroke android:width="2dp" android:color="?attr/colorSwitchTrackOutline"/>
 		</shape>
 	</item>
 </selector>

@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
+import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.graphics.Ripple;
 import de.markusfisch.android.pielauncher.preference.Preferences;
@@ -39,6 +40,8 @@ public class ActionButton extends ImageView {
 
 	private void init(Context context) {
 		prefs = PieLauncherApp.getPrefs(context);
+		ripple.setColor(PreferenceSliderView.getColorFromAttribute(
+				context, R.attr.colorSeparator, 0x22ffffff));
 		setOnTouchListener(ripple.getOnTouchListener());
 	}
 }

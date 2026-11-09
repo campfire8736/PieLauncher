@@ -28,6 +28,10 @@ public class Ripple {
 		paint.setStyle(Paint.Style.FILL);
 	}
 
+	public void setColor(int color) {
+		paint.setColor(color);
+	}
+
 	@SuppressLint("ClickableViewAccessibility")
 	public View.OnTouchListener getOnTouchListener() {
 		final long tapTimeout = ViewConfiguration.getTapTimeout();

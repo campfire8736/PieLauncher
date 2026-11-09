@@ -137,4 +137,23 @@ public class PreferencesActivityTest {
 		ForegroundColorSpan[] spans = spanned.getSpans(0, spanned.length(), ForegroundColorSpan.class);
 		assertTrue("Expected ForegroundColorSpan on title and subtitle", spans != null && spans.length > 0);
 	}
+
+	@Test
+	public void testDisplayThemeOptionsAndPreference() {
+		PreferenceView themeView = activity.findViewById(R.id.display_theme);
+		assertNotNull(themeView);
+		PreferenceSwitchView lightDialogsView = activity.findViewById(R.id.use_light_dialogs);
+		assertNotNull(lightDialogsView);
+
+		prefs.setDisplayTheme(Preferences.THEME_LIGHT);
+		assertEquals(Preferences.THEME_LIGHT, prefs.getDisplayTheme());
+		assertTrue(prefs.isLight(activity));
+
+		prefs.setDisplayTheme(Preferences.THEME_DARK);
+		assertEquals(Preferences.THEME_DARK, prefs.getDisplayTheme());
+		assertFalse(prefs.isLight(activity));
+
+		prefs.setDisplayTheme(Preferences.THEME_SYSTEM);
+		assertEquals(Preferences.THEME_SYSTEM, prefs.getDisplayTheme());
+	}
 }

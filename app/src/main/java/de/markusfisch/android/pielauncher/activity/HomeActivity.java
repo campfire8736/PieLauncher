@@ -42,6 +42,7 @@ public class HomeActivity extends Activity {
 	private boolean updateAfterTextChange = true;
 	private boolean showAllAppsOnResume = false;
 	private boolean showEditorOnResume = false;
+	private boolean isLight;
 	private int immersiveMode = Preferences.IMMERSIVE_MODE_DISABLED;
 	private long pausedAt = 0L;
 	private OnBackInvokedCallback onBackInvokedCallback = null;
@@ -81,13 +82,15 @@ public class HomeActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		prefs = PieLauncherApp.getPrefs(this);
+		isLight = prefs.isLight(this);
+		setTheme(isLight ? R.style.HomeTheme_Light : R.style.HomeTheme);
 		super.onCreate(state);
 
 		if (state != null) {
 			showEditorOnResume = state.getBoolean("show_editor_on_resume", false);
 		}
 
-		prefs = PieLauncherApp.getPrefs(this);
 		kb = new SoftKeyboard(this);
 		gestureDetector = new GestureDetector(this, new FlingListener(
 				ViewConfiguration.get(this).getScaledMinimumFlingVelocity()));
@@ -119,6 +122,7 @@ public class HomeActivity extends Activity {
 
 		immersiveMode = prefs.getImmersiveMode();
 		SystemBars.setTransparentSystemBars(getWindow(), immersiveMode);
+		SystemBars.setLightSystemBars(getWindow(), isLight);
 
 		// We may have been started with a request to pin a shortcut, e.g. when
 		// a browser adds a PWA to the home screen. No-op for regular launches.
@@ -220,6 +224,10 @@ public class HomeActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if (isLight != prefs.isLight(this)) {
+			recreate();
+			return;
+		}
 		updateSystemBars();
 		if (showEditorOnResume) {
 			showEditor();
@@ -436,6 +444,7 @@ public class HomeActivity extends Activity {
 		if (immersiveMode != newImmersiveMode) {
 			immersiveMode = newImmersiveMode;
 			SystemBars.setSystemUIVisibility(getWindow(), immersiveMode);
+			SystemBars.setLightSystemBars(getWindow(), isLight);
 		}
 	}
 

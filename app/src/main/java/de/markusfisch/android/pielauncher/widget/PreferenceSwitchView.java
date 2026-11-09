@@ -149,6 +149,8 @@ public class PreferenceSwitchView extends LinearLayout {
 			a.recycle();
 		}
 
+		ripple.setColor(PreferenceSliderView.getColorFromAttribute(
+				context, R.attr.colorSeparator, 0x22ffffff));
 		setOnTouchListener(ripple.getOnTouchListener());
 		setOnClickListener(v -> {
 			boolean newState = !switchView.isChecked();

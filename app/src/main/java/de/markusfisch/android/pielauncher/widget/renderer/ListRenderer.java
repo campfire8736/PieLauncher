@@ -21,6 +21,7 @@ import java.util.List;
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.graphics.Converter;
+import de.markusfisch.android.pielauncher.widget.PreferenceSliderView;
 import de.markusfisch.android.pielauncher.widget.state.Fader;
 
 public class ListRenderer {
@@ -44,7 +45,8 @@ public class ListRenderer {
     public ListRenderer(Context context) {
         Resources res = context.getResources();
 
-        paintText.setColor(res.getColor(R.color.text_color));
+        paintText.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, android.R.attr.textColorPrimary, res.getColor(R.color.text_color)));
         paintText.setTextAlign(Paint.Align.CENTER);
 
         ColorMatrix colorMatrix = new ColorMatrix();

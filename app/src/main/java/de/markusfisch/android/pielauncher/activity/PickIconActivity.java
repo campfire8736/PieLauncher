@@ -87,6 +87,8 @@ public class PickIconActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		boolean isLight = PieLauncherApp.getPrefs(this).isLight(this);
+		setTheme(isLight ? R.style.HomeTheme_Light : R.style.HomeTheme);
 		super.onCreate(state);
 
 		Intent intent = getIntent();
@@ -151,6 +153,7 @@ public class PickIconActivity extends Activity {
 		});
 		SystemBars.addPaddingFromWindowInsets(toolbar, gridView);
 		SystemBars.setTransparentSystemBars(window);
+		SystemBars.setLightSystemBars(window, isLight);
 		SystemBars.setNavigationBarColor(window,
 				toolbarBackground.backgroundColor);
 	}

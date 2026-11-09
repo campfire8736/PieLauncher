@@ -5,7 +5,7 @@
 		android:gravity="center_vertical">
 		<shape android:shape="rectangle">
 			<corners android:radius="4dp"/>
-			<solid android:color="#33ffffff"/>
+			<solid android:color="?attr/colorSeparator"/>
 			<size android:height="6dp"/>
 		</shape>
 	</item>

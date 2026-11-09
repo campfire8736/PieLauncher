@@ -4,4 +4,9 @@
 	<attr name="colorSearchBar" format="color"/>
 	<attr name="colorSeparator" format="color"/>
 	<attr name="colorDropZone" format="color"/>
+	<attr name="colorSwitchThumbChecked" format="color"/>
+	<attr name="colorSwitchThumbUnchecked" format="color"/>
+	<attr name="colorSwitchTrackUnchecked" format="color"/>
+	<attr name="colorSwitchTrackOutline" format="color"/>
+	<attr name="colorThumbOutline" format="color"/>
 </resources>

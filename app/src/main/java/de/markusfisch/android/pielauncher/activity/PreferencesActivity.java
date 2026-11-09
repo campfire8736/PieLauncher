@@ -82,11 +82,14 @@ public class PreferencesActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		prefs = PieLauncherApp.getPrefs(this);
+		setTheme(prefs.isLight(this)
+				? R.style.HomeTheme_Light
+				: R.style.HomeTheme);
 		super.onCreate(state);
 		registerBackCallback();
 		setContentView(R.layout.activity_preferences);
 
-		prefs = PieLauncherApp.getPrefs(this);
 		BackgroundBlur.setBlurRadius(getWindow(),
 				prefs.getBackgroundBlurRadius());
 
@@ -153,6 +156,7 @@ public class PreferencesActivity extends Activity {
 		});
 		SystemBars.addPaddingFromWindowInsets(toolbar, scrollView);
 		SystemBars.setTransparentSystemBars(window);
+		SystemBars.setLightSystemBars(window, prefs.isLight(this));
 
 		if (state != null) {
 			currentPage = state.getInt(CURRENT_PAGE, PAGE_MAIN);
@@ -496,6 +500,14 @@ public class PreferencesActivity extends Activity {
 				PreferencesActivity::getHapticFeedbackOptions,
 				() -> prefs.hapticFeedback(),
 				(value) -> prefs.setHapticFeedback(value));
+		initPreference(R.id.display_theme,
+				R.string.display_theme,
+				PreferencesActivity::getThemeOptions,
+				() -> prefs.getDisplayTheme(),
+				(value) -> {
+					prefs.setDisplayTheme(value);
+					recreate();
+				});
 		initSwitch(R.id.use_light_dialogs,
 				R.string.use_light_dialogs,
 				() -> prefs.useLightDialogs(),
@@ -883,6 +895,14 @@ public class PreferencesActivity extends Activity {
 		Map<String, String> map = new LinkedHashMap<>();
 		map.put(null, getString(R.string.icon_pack_default));
 		map.putAll(PieLauncherApp.iconPack.getIconPacks());
+		return map;
+	}
+
+	private static Map<Integer, Integer> getThemeOptions() {
+		Map<Integer, Integer> map = new LinkedHashMap<>();
+		map.put(Preferences.THEME_SYSTEM, R.string.display_theme_system);
+		map.put(Preferences.THEME_DARK, R.string.display_theme_dark);
+		map.put(Preferences.THEME_LIGHT, R.string.display_theme_light);
 		return map;
 	}
 

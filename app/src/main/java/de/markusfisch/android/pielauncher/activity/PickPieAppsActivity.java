@@ -45,6 +45,9 @@ public class PickPieAppsActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		Preferences prefs = PieLauncherApp.getPrefs(this);
+		boolean isLight = prefs.isLight(this);
+		setTheme(isLight ? R.style.HomeTheme_Light : R.style.HomeTheme);
 		super.onCreate(state);
 
 		setContentView(R.layout.activity_pick_pie_apps);
@@ -101,6 +104,7 @@ public class PickPieAppsActivity extends Activity {
 		Window window = getWindow();
 		SystemBars.addPaddingFromWindowInsets(toolbar, gridView);
 		SystemBars.setTransparentSystemBars(window);
+		SystemBars.setLightSystemBars(window, isLight);
 		SystemBars.setNavigationBarColor(window, toolbarBackground.backgroundColor);
 
 		loadApps();

@@ -22,6 +22,7 @@ import java.util.List;
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.widget.PreferenceSliderView;
 
 public class AppShortcutsController {
 
@@ -66,15 +67,18 @@ public class AppShortcutsController {
         spaceBetween = Math.round(4f * dp);
         maxBlurRadius = Math.round(48f * dp) * .35f;
 
-        paintAppShortcuts.setColor(res.getColor(R.color.bg_app_shortcuts));
+        paintAppShortcuts.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, R.attr.colorSearchBar, res.getColor(R.color.bg_app_shortcuts)));
         paintAppShortcuts.setStyle(Paint.Style.FILL);
         alphaAppShortcuts = paintAppShortcuts.getAlpha();
 
-        paintAppShortcutsThumb.setColor(res.getColor(R.color.separator));
+        paintAppShortcutsThumb.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, R.attr.colorSeparator, res.getColor(R.color.separator)));
         paintAppShortcutsThumb.setStyle(Paint.Style.FILL);
         alphaAppShortcutsThumb = paintAppShortcutsThumb.getAlpha();
 
-        paintAppShortcutText.setColor(res.getColor(R.color.text_color));
+        paintAppShortcutText.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, android.R.attr.textColorPrimary, res.getColor(R.color.text_color)));
         paintAppShortcutText.setTextAlign(Paint.Align.LEFT);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

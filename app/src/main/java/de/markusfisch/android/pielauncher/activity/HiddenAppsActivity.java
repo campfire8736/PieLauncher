@@ -50,6 +50,8 @@ public class HiddenAppsActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle state) {
+		boolean isLight = PieLauncherApp.getPrefs(this).isLight(this);
+		setTheme(isLight ? R.style.HomeTheme_Light : R.style.HomeTheme);
 		super.onCreate(state);
 
 		setContentView(R.layout.activity_hidden_apps);
@@ -85,6 +87,7 @@ public class HiddenAppsActivity extends Activity {
 		});
 		SystemBars.addPaddingFromWindowInsets(toolbar, listView);
 		SystemBars.setTransparentSystemBars(window);
+		SystemBars.setLightSystemBars(window, isLight);
 		SystemBars.setNavigationBarColor(window, toolbarBackground.backgroundColor);
 	}
 

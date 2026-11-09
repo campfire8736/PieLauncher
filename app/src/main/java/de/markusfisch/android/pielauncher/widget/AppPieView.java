@@ -263,7 +263,8 @@ public class AppPieView extends View {
 
         loadingTip = context.getString(R.string.tip_loading);
 
-        translucentBackgroundColor = res.getColor(R.color.bg_ui);
+        translucentBackgroundColor = PreferenceSliderView.getColorFromAttribute(
+                context, R.attr.colorUiBackground, res.getColor(R.color.bg_ui));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             pieRenderNode = new RenderNode("PieMenu");

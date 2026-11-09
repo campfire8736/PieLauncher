@@ -14,6 +14,11 @@
 		<item name="colorSearchBar">@color/bg_search_bar</item>
 		<item name="colorSeparator">@color/separator</item>
 		<item name="colorDropZone">@color/bg_drop_zone</item>
+		<item name="colorSwitchThumbChecked">#1c1b1f</item>
+		<item name="colorSwitchThumbUnchecked">#afffffff</item>
+		<item name="colorSwitchTrackUnchecked">#26ffffff</item>
+		<item name="colorSwitchTrackOutline">#4dffffff</item>
+		<item name="colorThumbOutline">#1c1b1f</item>
 	</style>
 	<style
 		name="HomeTheme.Light"
@@ -30,6 +35,11 @@
 		<item name="colorSearchBar">#e8ffffff</item>
 		<item name="colorSeparator">#1f000000</item>
 		<item name="colorDropZone">#60ffffff</item>
+		<item name="colorSwitchThumbChecked">#ffffff</item>
+		<item name="colorSwitchThumbUnchecked">#757575</item>
+		<item name="colorSwitchTrackUnchecked">#1f000000</item>
+		<item name="colorSwitchTrackOutline">#79747e</item>
+		<item name="colorThumbOutline">#d0ffffff</item>
 	</style>
 	<style name="DarkDialog" parent="android:Theme.DeviceDefault.Dialog.Alert">
 		<item name="android:colorAccent">@android:color/system_accent1_200</item>

@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -58,6 +59,9 @@ public class Preferences {
 	public static final int EXCLUDE_PIE_NONE = 0;
 	public static final int EXCLUDE_PIE_PRIMARY = 1;
 	public static final int EXCLUDE_PIE_ALL = 2;
+	public static final int THEME_SYSTEM = 0;
+	public static final int THEME_DARK = 1;
+	public static final int THEME_LIGHT = 2;
 
 	private static final String SKIP_SETUP = "skip_setup";
 	private static final String RADIUS = "radius";
@@ -88,6 +92,7 @@ public class Preferences {
 	private static final String ICON_PRESS = "icon_press";
 	private static final String EXCLUDE_PIE = "exclude_pie_icons";
 	private static final String ICON_PACK = "icon_pack";
+	private static final String DISPLAY_THEME = "display_theme";
 	private static final String HAPTIC_FEEDBACK = "haptic_feedback";
 	private static final String USE_LIGHT_DIALOGS = "use_light_dialogs";
 	private static final String FORCE_RELAUNCH = "force_relaunch";
@@ -127,6 +132,7 @@ public class Preferences {
 	private int excludePie = EXCLUDE_PIE_NONE;
 	private int iconPress = ICON_PRESS_DEFAULT;
 	private String iconPack;
+	private int displayTheme = THEME_SYSTEM;
 	private boolean useLightDialogs = false;
 	private boolean forceRelaunch = false;
 	private boolean showDrawerOnHome = true;
@@ -191,6 +197,8 @@ public class Preferences {
 		iconPress = preferences.getInt(ICON_PRESS, iconPress);
 		iconPack = preferences.getString(ICON_PACK, iconPack);
 		hapticFeedback = preferences.getInt(HAPTIC_FEEDBACK, hapticFeedback);
+		displayTheme = preferences.getInt(DISPLAY_THEME,
+				isEReader(appContext) ? THEME_LIGHT : THEME_SYSTEM);
 		useLightDialogs = preferences.getBoolean(USE_LIGHT_DIALOGS,
 				isEReader(appContext));
 		forceRelaunch = preferences.getBoolean(FORCE_RELAUNCH, forceRelaunch);
@@ -452,6 +460,32 @@ public class Preferences {
 	public void setHapticFeedback(int hapticFeedback) {
 		this.hapticFeedback = hapticFeedback;
 		put(HAPTIC_FEEDBACK, hapticFeedback).commit();
+	}
+
+	public int getDisplayTheme() {
+		return displayTheme;
+	}
+
+	public void setDisplayTheme(int displayTheme) {
+		this.displayTheme = displayTheme;
+		put(DISPLAY_THEME, displayTheme).apply();
+	}
+
+	public boolean isLight(Context context) {
+		switch (displayTheme) {
+			case THEME_DARK:
+				return false;
+			case THEME_LIGHT:
+				return true;
+			case THEME_SYSTEM:
+			default:
+				if (context == null) {
+					return false;
+				}
+				int uiMode = context.getResources().getConfiguration().uiMode;
+				return (uiMode & Configuration.UI_MODE_NIGHT_MASK) !=
+						Configuration.UI_MODE_NIGHT_YES;
+		}
 	}
 
 	public boolean useLightDialogs() {

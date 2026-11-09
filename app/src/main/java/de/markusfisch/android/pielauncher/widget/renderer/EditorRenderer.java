@@ -14,6 +14,7 @@ import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 import de.markusfisch.android.pielauncher.graphics.Converter;
 import de.markusfisch.android.pielauncher.graphics.PieMenu;
+import de.markusfisch.android.pielauncher.widget.PreferenceSliderView;
 import de.markusfisch.android.pielauncher.widget.state.Fader;
 import de.markusfisch.android.pielauncher.widget.state.EditorAction;
 
@@ -65,7 +66,8 @@ public class EditorRenderer {
         Resources res = context.getResources();
 
         paintDropZone = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintDropZone.setColor(res.getColor(R.color.bg_drop_zone));
+        paintDropZone.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, R.attr.colorDropZone, res.getColor(R.color.bg_drop_zone)));
         paintDropZone.setStyle(Paint.Style.FILL);
         alphaDropZone = paintDropZone.getAlpha();
 
@@ -78,7 +80,8 @@ public class EditorRenderer {
         paintAction.setFilterBitmap(true);
 
         paintText = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintText.setColor(res.getColor(R.color.text_color));
+        paintText.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, android.R.attr.textColorPrimary, res.getColor(R.color.text_color)));
         paintText.setTextAlign(Paint.Align.CENTER);
         paintText.setTextSize(14f * res.getDisplayMetrics().scaledDensity);
         alphaText = paintText.getAlpha();

@@ -118,6 +118,10 @@
 	<string name="haptic_feedback_follow_system">Suivre les paramètres du système (par défaut)</string>
 	<string name="haptic_feedback_disable_launch">Désactiver uniquement le retour d\'information sur le lancement</string>
 	<string name="haptic_feedback_disable_all">Désactiver</string>
+	<string name="display_theme">Mode sombre / Mode clair</string>
+	<string name="display_theme_system">Selon le système</string>
+	<string name="display_theme_dark">Sombre</string>
+	<string name="display_theme_light">Clair</string>
 	<string name="use_light_dialogs">Inverser les couleurs du dialogue</string>
 	<string name="use_light_dialogs_yes">Oui</string>
 	<string name="use_light_dialogs_no">Non (par défaut)</string>

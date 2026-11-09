@@ -72,12 +72,15 @@ public class HomeActivityTest {
     public void testActionButtonsExistAndInitialState() {
         View editButton = activity.findViewById(R.id.edit);
         View prefsButton = activity.findViewById(R.id.preferences);
-        android.widget.TextView toolbarTitle = activity.findViewById(R.id.toolbar_title);
+        android.widget.TextView toolbar = activity.findViewById(R.id.toolbar);
+        View floatingToolbar = activity.findViewById(R.id.floating_toolbar);
 
         assertNotNull(editButton);
         assertNotNull(prefsButton);
-        assertNotNull(toolbarTitle);
-        assertEquals(activity.getString(R.string.category_app_drawer), toolbarTitle.getText().toString());
+        assertNotNull(toolbar);
+        assertNotNull(floatingToolbar);
+        assertEquals(View.GONE, toolbar.getVisibility());
+        assertEquals(View.GONE, floatingToolbar.getVisibility());
         assertEquals(View.GONE, editButton.getVisibility());
         assertEquals(View.GONE, prefsButton.getVisibility());
     }
@@ -121,6 +124,8 @@ public class HomeActivityTest {
     public void testActionButtonsVisibilityWithDrawerAndSearch() throws Exception {
         View editButton = activity.findViewById(R.id.edit);
         View prefsButton = activity.findViewById(R.id.preferences);
+        android.widget.TextView toolbar = activity.findViewById(R.id.toolbar);
+        View floatingToolbar = activity.findViewById(R.id.floating_toolbar);
         android.widget.EditText searchInput = activity.findViewById(R.id.search);
 
         // Open drawer via showAllApps
@@ -128,13 +133,39 @@ public class HomeActivityTest {
         showAllApps.setAccessible(true);
         showAllApps.invoke(activity);
 
+        assertEquals(View.VISIBLE, toolbar.getVisibility());
+        assertEquals(activity.getString(R.string.category_app_drawer), toolbar.getText().toString());
+        assertEquals(View.VISIBLE, floatingToolbar.getVisibility());
         assertEquals(View.VISIBLE, editButton.getVisibility());
         assertEquals(View.VISIBLE, prefsButton.getVisibility());
 
-        // Type in search bar -> buttons should hide
+        // Type in search bar -> action buttons should hide, but floatingToolbar and toolbar remain
         searchInput.setText("test");
         assertEquals(View.GONE, editButton.getVisibility());
         assertEquals(View.GONE, prefsButton.getVisibility());
+        assertEquals(View.VISIBLE, floatingToolbar.getVisibility());
+        assertEquals(View.VISIBLE, toolbar.getVisibility());
+    }
+
+    @Test
+    public void testToolbarInEditModeAndBackClick() {
+        AppPieView pieView = activity.findViewById(R.id.pie);
+        android.widget.TextView toolbar = activity.findViewById(R.id.toolbar);
+        View floatingToolbar = activity.findViewById(R.id.floating_toolbar);
+        View editButton = activity.findViewById(R.id.edit);
+
+        assertFalse(pieView.inEditMode());
+
+        editButton.performClick();
+
+        assertTrue(pieView.inEditMode());
+        assertEquals(View.VISIBLE, toolbar.getVisibility());
+        assertEquals(activity.getString(R.string.edit_pie_menu), toolbar.getText().toString());
+        assertEquals(View.GONE, floatingToolbar.getVisibility());
+
+        // Clicking toolbar (back arrow) should handle back: exit edit mode
+        toolbar.performClick();
+        assertFalse(pieView.inEditMode());
     }
 
     @Test

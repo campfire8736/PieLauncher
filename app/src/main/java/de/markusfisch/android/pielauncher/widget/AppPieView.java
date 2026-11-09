@@ -100,10 +100,19 @@ public class AppPieView extends View {
         void onPickPieApps(boolean isPrimary);
     }
 
+    public interface EditorListener {
+        void onEditorStateChanged(boolean inEditMode);
+    }
+
     private EditListener editListener;
+    private EditorListener editorListener;
 
     public void setEditListener(EditListener listener) {
         editListener = listener;
+    }
+
+    public void setEditorListener(EditorListener listener) {
+        editorListener = listener;
     }
 
     private static final int HAPTIC_FEEDBACK_DOWN =
@@ -193,7 +202,7 @@ public class AppPieView extends View {
     private final Preferences prefs;
     private final long longPressTimeout;
     private final int listPadding;
-    private final int searchInputHeight;
+    private int searchInputHeight;
     private final int iconSize;
     private final int iconTextPadding;
     private final int spaceBetween;
@@ -339,6 +348,9 @@ public class AppPieView extends View {
     public void showEditor() {
         editIcon(null);
         stateManager.showEditor();
+        if (editorListener != null) {
+            editorListener.onEditorStateChanged(true);
+        }
     }
 
     public boolean isEmpty() {
@@ -403,6 +415,9 @@ public class AppPieView extends View {
         stateManager.endEditMode();
         if (prefs.excludePie() != Preferences.EXCLUDE_PIE_NONE) {
             PieLauncherApp.apps.propagateUpdate();
+        }
+        if (editorListener != null) {
+            editorListener.onEditorStateChanged(false);
         }
     }
 
@@ -907,9 +922,11 @@ public class AppPieView extends View {
 
     public void setInsets(int left, int top, int right, int bottom) {
         this.insetsTop = top;
+        this.searchInputHeight = top + Math.round(120f * dp);
         editorRenderer.setInsetsTop(top);
         setPadding(left, 0, right, bottom);
         if (viewWidth > 0 && viewHeight > 0) {
+            listRenderer.layout(listPadding, searchInputHeight, iconSize, spaceBetween, iconTextPadding, listFadeHeight, sp);
             editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize);
         }
     }
@@ -923,6 +940,9 @@ public class AppPieView extends View {
         editIcon(appIcon);
         resetScrollWithoutAnimation();
         invalidate();
+        if (editorListener != null) {
+            editorListener.onEditorStateChanged(true);
+        }
     }
 
     private void editIcon(Apps.AppIcon icon) {

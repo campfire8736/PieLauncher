@@ -3,6 +3,7 @@ package de.markusfisch.android.pielauncher.activity;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,10 +16,12 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
@@ -38,7 +41,8 @@ public class HomeActivity extends Activity {
 	private GestureDetector gestureDetector;
 	private ToolbarBackground toolbarBackground;
 	private AppPieView pieView;
-	private View toolbar;
+	private TextView toolbar;
+	private View floatingToolbar;
 	private EditText searchInput;
 	private ImageView prefsButton;
 	private ImageView editButton;
@@ -107,19 +111,48 @@ public class HomeActivity extends Activity {
 		toolbarBackground = new ToolbarBackground(this);
 		pieView = findViewById(R.id.pie);
 		toolbar = findViewById(R.id.toolbar);
+		floatingToolbar = findViewById(R.id.floating_toolbar);
 		searchInput = findViewById(R.id.search);
 		prefsButton = findViewById(R.id.preferences);
 		editButton = findViewById(R.id.edit);
+
+		toolbar.setOnClickListener(v -> handleBack());
+
+		int pillRadius = Math.round(24f * getResources().getDisplayMetrics().density);
+		GradientDrawable pillDrawable = new GradientDrawable();
+		pillDrawable.setColor(toolbarBackground.backgroundColor);
+		pillDrawable.setCornerRadius(pillRadius);
+		floatingToolbar.setBackground(pillDrawable);
+		floatingToolbar.setClipToOutline(true);
 
 		initPieView();
 		initActionButtons();
 		initSearchInput();
 
+		final Rect initialToolbarPadding = new Rect(
+				toolbar.getPaddingLeft(),
+				toolbar.getPaddingTop(),
+				toolbar.getPaddingRight(),
+				toolbar.getPaddingBottom());
+		final float density = getResources().getDisplayMetrics().density;
 		SystemBars.listenForWindowInsets(pieView,
 				(left, top, right, bottom) -> {
 					pieView.setInsets(left, top, right, bottom);
 					if (toolbar != null) {
-						toolbar.setPadding(left, top, right, 0);
+						toolbar.setPadding(
+								initialToolbarPadding.left + left,
+								initialToolbarPadding.top + top,
+								initialToolbarPadding.right + right,
+								initialToolbarPadding.bottom);
+					}
+					if (floatingToolbar != null) {
+						ViewGroup.MarginLayoutParams lp =
+								(ViewGroup.MarginLayoutParams) floatingToolbar.getLayoutParams();
+						if (lp != null) {
+							lp.leftMargin = left + Math.round(16f * density);
+							lp.rightMargin = right + Math.round(16f * density);
+							floatingToolbar.setLayoutParams(lp);
+						}
 					}
 				});
 
@@ -329,13 +362,32 @@ public class HomeActivity extends Activity {
 				if (isScrolling && y != 0) {
 					hideKeyboardAndActionButtons();
 				}
-				setToolbarColor(toolbarBackground.backgroundColor);
 			}
 
 			@Override
 			public void onDragDown(float alpha) {
 				hideKeyboardAndActionButtons();
 				setAlpha(toolbar, alpha);
+				setAlpha(floatingToolbar, alpha);
+			}
+		});
+		pieView.setEditorListener(inEditMode -> {
+			if (inEditMode) {
+				toolbar.setText(R.string.edit_pie_menu);
+				toolbar.setVisibility(View.VISIBLE);
+				setAlpha(toolbar, 1f);
+				floatingToolbar.setVisibility(View.GONE);
+			} else {
+				if (pieView.inListMode()) {
+					toolbar.setText(R.string.category_app_drawer);
+					toolbar.setVisibility(View.VISIBLE);
+					setAlpha(toolbar, 1f);
+					floatingToolbar.setVisibility(View.VISIBLE);
+					setAlpha(floatingToolbar, 1f);
+				} else {
+					toolbar.setVisibility(View.GONE);
+					floatingToolbar.setVisibility(View.GONE);
+				}
 			}
 		});
 		PieLauncherApp.apps.setUpdateListener(new Apps.UpdateListener() {
@@ -475,12 +527,14 @@ public class HomeActivity extends Activity {
 			return;
 		}
 
+		toolbar.setText(R.string.category_app_drawer);
 		toolbar.setVisibility(View.VISIBLE);
+		floatingToolbar.setVisibility(View.VISIBLE);
 		searchInput.setVisibility(View.VISIBLE);
 		prefsButton.setVisibility(View.VISIBLE);
 		editButton.setVisibility(View.VISIBLE);
 		setAlpha(toolbar, 1f);
-		setToolbarColor(toolbarBackground.backgroundColor);
+		setAlpha(floatingToolbar, 1f);
 		if (prefs.displayKeyboard()) {
 			kb.showFor(searchInput);
 		}
@@ -496,19 +550,21 @@ public class HomeActivity extends Activity {
 	}
 
 	private void setToolbarColor(int color) {
-		if (toolbar != null) {
-			toolbar.setBackgroundColor(color);
-		}
+		// Toolbar uses @style/Toolbar with ?attr/colorSearchBar
 	}
 
 	private void setAlpha(View view, float alpha) {
-		view.setAlpha(alpha);
+		if (view != null) {
+			view.setAlpha(alpha);
+		}
 	}
 
 	private void hideAllApps() {
 		if (isSearchVisible()) {
-			toolbar.setVisibility(View.GONE);
-			searchInput.setVisibility(View.GONE);
+			floatingToolbar.setVisibility(View.GONE);
+			if (pieView == null || !pieView.inEditMode()) {
+				toolbar.setVisibility(View.GONE);
+			}
 			hideKeyboardAndActionButtons();
 		}
 		// Ensure the pie menu is initially hidden because on some devices
@@ -531,7 +587,7 @@ public class HomeActivity extends Activity {
 	}
 
 	private boolean isSearchVisible() {
-		return toolbar != null && toolbar.getVisibility() == View.VISIBLE;
+		return floatingToolbar != null && floatingToolbar.getVisibility() == View.VISIBLE;
 	}
 
 	private boolean isGestureNavigationEnabled() {

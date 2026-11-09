@@ -100,6 +100,8 @@ public class PickPieAppsActivityTest {
 		View view0 = adapter.getView(0, null, gridView);
 		CheckBox cb0 = view0.findViewById(R.id.selected);
 		assertTrue(cb0.isChecked()); // App A is in menuPrimary
+		android.widget.FrameLayout.LayoutParams lp0 = (android.widget.FrameLayout.LayoutParams) cb0.getLayoutParams();
+		assertEquals(android.view.Gravity.BOTTOM | android.view.Gravity.END, lp0.gravity);
 
 		View view1 = adapter.getView(1, null, gridView);
 		CheckBox cb1 = view1.findViewById(R.id.selected);

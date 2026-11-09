@@ -1,6 +1,9 @@
 package de.markusfisch.android.pielauncher.activity;
 
 import android.content.Context;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -97,5 +100,41 @@ public class PreferencesActivityTest {
 		// Simulate stop tracking touch to commit
 		slider.setValue(Preferences.DARKEN_BACKGROUND_NONE);
 		assertEquals(Preferences.DARKEN_BACKGROUND_NONE, slider.getValue());
+	}
+
+	@Test
+	public void testCategoryNavigationAndBack() {
+		TextView toolbar = activity.findViewById(R.id.toolbar);
+		View categoriesPage = activity.findViewById(R.id.categories_page);
+		View pagePieMenu = activity.findViewById(R.id.page_pie_menu);
+		View categoryPieMenuButton = activity.findViewById(R.id.category_pie_menu);
+
+		// Initially on main categories page
+		assertEquals(View.VISIBLE, categoriesPage.getVisibility());
+		assertEquals(View.GONE, pagePieMenu.getVisibility());
+		assertEquals(activity.getString(R.string.preferences), toolbar.getText().toString());
+
+		// Click "Pie menu" category
+		categoryPieMenuButton.performClick();
+		assertEquals(View.GONE, categoriesPage.getVisibility());
+		assertEquals(View.VISIBLE, pagePieMenu.getVisibility());
+		assertEquals(activity.getString(R.string.category_pie_menu), toolbar.getText().toString());
+
+		// Back navigates to main categories page
+		activity.onBackPressed();
+		assertEquals(View.VISIBLE, categoriesPage.getVisibility());
+		assertEquals(View.GONE, pagePieMenu.getVisibility());
+		assertEquals(activity.getString(R.string.preferences), toolbar.getText().toString());
+	}
+
+	@Test
+	public void testPreferenceViewFormatsTitleWithForegroundColorSpan() {
+		PreferenceView hiddenAppsView = activity.findViewById(R.id.hidden_apps);
+		assertNotNull(hiddenAppsView);
+		CharSequence text = hiddenAppsView.getText();
+		assertTrue(text instanceof Spanned);
+		Spanned spanned = (Spanned) text;
+		ForegroundColorSpan[] spans = spanned.getSpans(0, spanned.length(), ForegroundColorSpan.class);
+		assertTrue("Expected ForegroundColorSpan on title and subtitle", spans != null && spans.length > 0);
 	}
 }

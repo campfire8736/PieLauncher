@@ -37,6 +37,13 @@ import de.markusfisch.android.pielauncher.widget.ScrollWithListenerView;
 
 public class PreferencesActivity extends Activity {
 	private static final String WELCOME = "welcome";
+	private static final String CURRENT_PAGE = "current_page";
+	private static final int PAGE_MAIN = 0;
+	private static final int PAGE_PIE_MENU = 1;
+	private static final int PAGE_APP_DRAWER = 2;
+	private static final int PAGE_SEARCH = 3;
+	private static final int PAGE_APPEARANCE = 4;
+	private static final int PAGE_ADVANCED = 5;
 
 	private final Handler handler = new Handler(Looper.getMainLooper());
 	private final ExecutorService executor =
@@ -47,6 +54,16 @@ public class PreferencesActivity extends Activity {
 	private Preferences prefs;
 	private View disableBatteryOptimizations;
 	private View defaultLauncherView;
+	private View setupGroup;
+	private View categoriesPage;
+	private View pagePieMenu;
+	private View pageAppDrawer;
+	private View pageSearch;
+	private View pageAppearance;
+	private View pageAdvanced;
+	private TextView toolbar;
+	private ScrollWithListenerView scrollView;
+	private int currentPage = PAGE_MAIN;
 	private boolean isWelcomeMode = false;
 
 	public static void startWelcome(Context context) {
@@ -73,12 +90,19 @@ public class PreferencesActivity extends Activity {
 		BackgroundBlur.setBlurRadius(getWindow(),
 				prefs.getBackgroundBlurRadius());
 
-		TextView toolbar = findViewById(R.id.toolbar);
+		toolbar = findViewById(R.id.toolbar);
 		View skipButton = findViewById(R.id.skip);
 
 		disableBatteryOptimizations = findViewById(
 				R.id.disable_battery_optimization);
 		defaultLauncherView = findViewById(R.id.make_default_launcher);
+		setupGroup = findViewById(R.id.setup_group);
+		categoriesPage = findViewById(R.id.categories_page);
+		pagePieMenu = findViewById(R.id.page_pie_menu);
+		pageAppDrawer = findViewById(R.id.page_app_drawer);
+		pageSearch = findViewById(R.id.page_search);
+		pageAppearance = findViewById(R.id.page_appearance);
+		pageAdvanced = findViewById(R.id.page_advanced);
 
 		Intent intent = getIntent();
 		isWelcomeMode = intent != null &&
@@ -95,7 +119,7 @@ public class PreferencesActivity extends Activity {
 
 			findViewById(R.id.hide_in_welcome_mode).setVisibility(View.GONE);
 		} else {
-			toolbar.setOnClickListener(v -> finish());
+			toolbar.setOnClickListener(v -> handleBack());
 			findViewById(R.id.welcome).setVisibility(View.GONE);
 
 			skipButton.setVisibility(View.GONE);
@@ -104,10 +128,21 @@ public class PreferencesActivity extends Activity {
 			findViewById(R.id.hidden_apps).setOnClickListener((view) -> {
 				HiddenAppsActivity.start(this);
 			});
+
+			findViewById(R.id.category_pie_menu).setOnClickListener(
+					v -> showPage(PAGE_PIE_MENU));
+			findViewById(R.id.category_app_drawer).setOnClickListener(
+					v -> showPage(PAGE_APP_DRAWER));
+			findViewById(R.id.category_search).setOnClickListener(
+					v -> showPage(PAGE_SEARCH));
+			findViewById(R.id.category_appearance).setOnClickListener(
+					v -> showPage(PAGE_APPEARANCE));
+			findViewById(R.id.category_advanced).setOnClickListener(
+					v -> showPage(PAGE_ADVANCED));
 		}
 
 		Window window = getWindow();
-		ScrollWithListenerView scrollView = findViewById(R.id.content);
+		scrollView = findViewById(R.id.content);
 		TypedValue tv = new TypedValue();
 		getTheme().resolveAttribute(R.attr.colorSearchBar, tv, true);
 		final int navigationBarColor = tv.data != 0 ? tv.data :
@@ -118,6 +153,13 @@ public class PreferencesActivity extends Activity {
 		});
 		SystemBars.addPaddingFromWindowInsets(toolbar, scrollView);
 		SystemBars.setTransparentSystemBars(window);
+
+		if (state != null) {
+			currentPage = state.getInt(CURRENT_PAGE, PAGE_MAIN);
+		}
+		if (!isWelcomeMode) {
+			showPage(currentPage);
+		}
 	}
 
 	@Override
@@ -141,9 +183,9 @@ public class PreferencesActivity extends Activity {
 			disableBatteryOptimizations.setBackgroundResource(0);
 		}
 
-		View setupGroup = findViewById(R.id.setup_group);
 		if (setupGroup != null && !isWelcomeMode) {
-			boolean showSetup = !disableBatteryVisible || !updateDefaultVisible;
+			boolean showSetup = (!disableBatteryVisible || !updateDefaultVisible)
+					&& currentPage == PAGE_MAIN;
 			setupGroup.setVisibility(showSetup ? View.VISIBLE : View.GONE);
 			View hideInWelcome = findViewById(R.id.hide_in_welcome_mode);
 			if (hideInWelcome != null) {
@@ -160,6 +202,98 @@ public class PreferencesActivity extends Activity {
 	}
 
 	@Override
+	public void onBackPressed() {
+		handleBack();
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putInt(CURRENT_PAGE, currentPage);
+	}
+
+	private void handleBack() {
+		if (currentPage != PAGE_MAIN && !isWelcomeMode) {
+			showPage(PAGE_MAIN);
+		} else {
+			finish();
+		}
+	}
+
+	private void showPage(int page) {
+		currentPage = page;
+		if (isWelcomeMode) {
+			return;
+		}
+		if (scrollView != null) {
+			scrollView.scrollTo(0, 0);
+		}
+
+		boolean isMain = page == PAGE_MAIN;
+		if (setupGroup != null) {
+			boolean showSetup = (!BatteryOptimization.isIgnoringBatteryOptimizations(this) ||
+					!DefaultLauncher.isDefault(this)) && isMain;
+			setupGroup.setVisibility(showSetup ? View.VISIBLE : View.GONE);
+			View hideInWelcome = findViewById(R.id.hide_in_welcome_mode);
+			if (hideInWelcome != null) {
+				android.view.ViewGroup.MarginLayoutParams lp =
+						(android.view.ViewGroup.MarginLayoutParams) hideInWelcome.getLayoutParams();
+				if (lp != null) {
+					lp.topMargin = showSetup
+							? 0
+							: (int) (getResources().getDisplayMetrics().density * 16f);
+					hideInWelcome.setLayoutParams(lp);
+				}
+			}
+		}
+
+		if (categoriesPage != null) {
+			categoriesPage.setVisibility(isMain ? View.VISIBLE : View.GONE);
+		}
+		if (pagePieMenu != null) {
+			pagePieMenu.setVisibility(page == PAGE_PIE_MENU ? View.VISIBLE : View.GONE);
+		}
+		if (pageAppDrawer != null) {
+			pageAppDrawer.setVisibility(page == PAGE_APP_DRAWER ? View.VISIBLE : View.GONE);
+		}
+		if (pageSearch != null) {
+			pageSearch.setVisibility(page == PAGE_SEARCH ? View.VISIBLE : View.GONE);
+		}
+		if (pageAppearance != null) {
+			pageAppearance.setVisibility(page == PAGE_APPEARANCE ? View.VISIBLE : View.GONE);
+		}
+		if (pageAdvanced != null) {
+			pageAdvanced.setVisibility(page == PAGE_ADVANCED ? View.VISIBLE : View.GONE);
+		}
+
+		int titleRes;
+		switch (page) {
+			case PAGE_PIE_MENU:
+				titleRes = R.string.category_pie_menu;
+				break;
+			case PAGE_APP_DRAWER:
+				titleRes = R.string.category_app_drawer;
+				break;
+			case PAGE_SEARCH:
+				titleRes = R.string.category_search;
+				break;
+			case PAGE_APPEARANCE:
+				titleRes = R.string.category_appearance;
+				break;
+			case PAGE_ADVANCED:
+				titleRes = R.string.category_advanced;
+				break;
+			case PAGE_MAIN:
+			default:
+				titleRes = R.string.preferences;
+				break;
+		}
+		if (toolbar != null) {
+			toolbar.setText(titleRes);
+		}
+	}
+
+	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		unregisterBackCallback();
@@ -172,7 +306,7 @@ public class PreferencesActivity extends Activity {
 			return;
 		}
 
-		onBackInvokedCallback = this::finish;
+		onBackInvokedCallback = this::handleBack;
 		getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
 				OnBackInvokedDispatcher.PRIORITY_DEFAULT,
 				onBackInvokedCallback);

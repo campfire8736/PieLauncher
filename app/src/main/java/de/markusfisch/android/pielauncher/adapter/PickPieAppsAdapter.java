@@ -41,7 +41,9 @@ public class PickPieAppsAdapter extends ArrayAdapter<Apps.AppIcon> {
 			holder.iconView.setImageBitmap(appIcon.bitmap);
 			LauncherItemKey key = new LauncherItemKey(
 					appIcon.componentName, appIcon.userHandle);
-			holder.checkBox.setChecked(selectedKeys.contains(key));
+			boolean isSelected = selectedKeys.contains(key);
+			holder.checkBox.setChecked(isSelected);
+			holder.iconView.setAlpha(isSelected ? .5f : 1f);
 		}
 		return convertView;
 	}

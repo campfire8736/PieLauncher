@@ -8,9 +8,9 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 
 public class Dialog {
 	public static AlertDialog.Builder newDialog(Context context) {
-		if (!PieLauncherApp.getPrefs(context).useLightDialogs()) {
-			return new AlertDialog.Builder(context);
-		}
-		return new AlertDialog.Builder(context, R.style.LightDialog);
+		int theme = PieLauncherApp.getPrefs(context).useLightDialogs()
+				? R.style.LightDialog
+				: R.style.DarkDialog;
+		return new AlertDialog.Builder(context, theme);
 	}
 }

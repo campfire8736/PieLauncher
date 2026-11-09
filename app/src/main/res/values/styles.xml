@@ -4,6 +4,7 @@
 		<item name="android:colorBackgroundCacheHint">@null</item>
 		<item name="android:windowShowWallpaper">true</item>
 		<item name="android:windowNoTitle">true</item>
+		<item name="android:alertDialogTheme">@style/DarkDialog</item>
 	</style>
 	<style name="Toolbar" parent="@android:style/Widget.TextView">
 		<item name="android:layout_width">match_parent</item>
@@ -52,5 +53,6 @@
 		<item name="android:textColor">@color/button_text</item>
 		<item name="android:textStyle">bold</item>
 	</style>
+	<style name="DarkDialog" parent="android:Theme.DeviceDefault.Dialog.Alert"/>
 	<style name="LightDialog" parent="android:Theme.DeviceDefault.Light.Dialog.Alert"/>
 </resources>

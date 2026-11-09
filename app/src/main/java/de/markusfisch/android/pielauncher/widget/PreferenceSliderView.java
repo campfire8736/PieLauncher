@@ -115,12 +115,11 @@ public class PreferenceSliderView extends LinearLayout {
 		headerRow.addView(titleView);
 
 		valueView = new TextView(context);
-		TypedValue accentValue = new TypedValue();
-		if (context.getTheme().resolveAttribute(android.R.attr.colorAccent, accentValue, true)) {
-			valueView.setTextColor(accentValue.data);
-		} else {
-			valueView.setTextColor(getResources().getColor(R.color.text_color_preference));
-		}
+		int accentColor = getColorFromAttribute(
+				context,
+				android.R.attr.colorAccent,
+				getResources().getColor(R.color.text_color_preference));
+		valueView.setTextColor(accentColor);
 		valueView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
 		valueView.setTypeface(null, android.graphics.Typeface.BOLD);
 		LayoutParams valueLp = new LayoutParams(
@@ -143,6 +142,10 @@ public class PreferenceSliderView extends LinearLayout {
 		addView(descriptionView);
 
 		seekBar = new SeekBar(context);
+		seekBar.setSplitTrack(false);
+		seekBar.setProgressDrawable(context.getDrawable(R.drawable.seekbar_track));
+		seekBar.setThumb(context.getDrawable(R.drawable.seekbar_thumb));
+		seekBar.setThumbOffset((int) (getResources().getDisplayMetrics().density * 10));
 		LayoutParams seekBarLp = new LayoutParams(
 				LayoutParams.MATCH_PARENT,
 				LayoutParams.WRAP_CONTENT);
@@ -198,5 +201,18 @@ public class PreferenceSliderView extends LinearLayout {
 
 	private static int clamp(int val, int min, int max) {
 		return Math.max(min, Math.min(max, val));
+	}
+
+	public static int getColorFromAttribute(Context context, int attr, int fallbackColor) {
+		TypedValue typedValue = new TypedValue();
+		if (context.getTheme().resolveAttribute(attr, typedValue, true)) {
+			if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT &&
+					typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
+				return typedValue.data;
+			} else if (typedValue.resourceId != 0) {
+				return context.getResources().getColor(typedValue.resourceId);
+			}
+		}
+		return fallbackColor;
 	}
 }

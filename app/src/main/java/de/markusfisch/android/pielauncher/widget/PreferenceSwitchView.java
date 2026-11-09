@@ -101,6 +101,12 @@ public class PreferenceSwitchView extends LinearLayout {
 		switchView = new Switch(context);
 		switchView.setFocusable(false);
 		switchView.setClickable(false);
+		switchView.setSplitTrack(false);
+		switchView.setShowText(false);
+		switchView.setThumbTextPadding(0);
+		switchView.setSwitchMinWidth((int) (getResources().getDisplayMetrics().density * 52));
+		switchView.setTrackDrawable(context.getDrawable(R.drawable.switch_track));
+		switchView.setThumbDrawable(context.getDrawable(R.drawable.switch_thumb));
 		LayoutParams switchLp = new LayoutParams(
 				LayoutParams.WRAP_CONTENT,
 				LayoutParams.WRAP_CONTENT);

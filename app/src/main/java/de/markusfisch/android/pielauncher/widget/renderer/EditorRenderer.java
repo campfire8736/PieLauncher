@@ -190,6 +190,8 @@ public class EditorRenderer {
         if (!hasIcon) {
             topBarRectF.set(topBarRect);
             canvas.drawRoundRect(topBarRectF, cornerRadiusTop, cornerRadiusTop, paintBar);
+            bottomBarRectF.set(bottomBarRect);
+            canvas.drawRoundRect(bottomBarRectF, cornerRadiusBottom, cornerRadiusBottom, paintBar);
         } else {
             String tip = getTip(hasIcon, hasPacks);
             if (tip != null && portrait) {
@@ -205,9 +207,6 @@ public class EditorRenderer {
                 canvas.drawRoundRect(tipBarRectF, tipH * 0.5f, tipH * 0.5f, paintBar);
             }
         }
-
-        bottomBarRectF.set(bottomBarRect);
-        canvas.drawRoundRect(bottomBarRectF, cornerRadiusBottom, cornerRadiusBottom, paintBar);
 
         drawPlaceholders(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, isDisplacedOccupied);
         drawSlotHighlights(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, grabbedIcon);

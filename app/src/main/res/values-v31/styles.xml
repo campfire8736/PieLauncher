@@ -13,7 +13,7 @@
 		<item name="colorUiBackground">@color/bg_ui</item>
 		<item name="colorSearchBar">@color/bg_search_bar</item>
 		<item name="colorSeparator">@color/separator</item>
-		<item name="colorDropZone">@color/bg_drop_zone</item>
+		<item name="colorDropZone">#60ffffff</item>
 		<item name="colorSwitchThumbChecked">#1c1b1f</item>
 		<item name="colorSwitchThumbUnchecked">#afffffff</item>
 		<item name="colorSwitchTrackUnchecked">#26ffffff</item>

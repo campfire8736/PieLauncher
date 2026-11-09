@@ -144,6 +144,19 @@ public class EditorRendererTest {
     }
 
     @Test
+    public void testDraw_WithGrabbedIcon_DoesNotDrawBottomBar() {
+        when(mockFaderEdit.isVisible()).thenReturn(true);
+        when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);
+
+        Apps.AppIcon grabbedIcon = createTestAppIcon("Grabbed App");
+        invokeDraw(mockFaderEdit, grabbedIcon);
+
+        verify(mockCanvas, never()).drawRoundRect(
+                org.mockito.ArgumentMatchers.eq(new RectF(editorRenderer.bottomBarRect)),
+                anyFloat(), anyFloat(), any(Paint.class));
+    }
+
+    @Test
     public void testDraw_RigidPie_WithGrabbedIcon_DrawsSlotHighlight() {
         when(mockFaderEdit.isVisible()).thenReturn(true);
         when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);

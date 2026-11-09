@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.SystemClock;
 
 import de.markusfisch.android.pielauncher.R;
@@ -28,6 +29,9 @@ public class EditorRenderer {
     public final Rect iconChangeRadiusRect = new Rect();
     public final Rect topBarRect = new Rect();
     public final Rect bottomBarRect = new Rect();
+    private final RectF topBarRectF = new RectF();
+    private final RectF bottomBarRectF = new RectF();
+    private final RectF tipBarRectF = new RectF();
 
     private final Paint paintBar;
     private final Paint paintDropZone;
@@ -178,8 +182,32 @@ public class EditorRenderer {
 
         int barAlpha = Math.round(f * ((barColor >>> 24) & 0xff));
         paintBar.setColor((barAlpha << 24) | (barColor & 0xffffff));
-        canvas.drawRect(topBarRect, paintBar);
-        canvas.drawRect(bottomBarRect, paintBar);
+
+        boolean portrait = canvas.getHeight() > canvas.getWidth();
+        float cornerRadiusTop = (portrait ? topBarRect.height() : topBarRect.width()) * 0.5f;
+        float cornerRadiusBottom = (portrait ? bottomBarRect.height() : bottomBarRect.width()) * 0.5f;
+
+        if (!hasIcon) {
+            topBarRectF.set(topBarRect);
+            canvas.drawRoundRect(topBarRectF, cornerRadiusTop, cornerRadiusTop, paintBar);
+        } else {
+            String tip = getTip(hasIcon, hasPacks);
+            if (tip != null && portrait) {
+                float tipWidth = paintText.measureText(tip);
+                float cx = canvas.getWidth() * 0.5f;
+                float cy = controlsPadding;
+                float tipH = Math.max(topBarRect.height(), 40f * dp);
+                tipBarRectF.set(
+                        cx - tipWidth * 0.5f - 16f * dp,
+                        cy - tipH * 0.5f,
+                        cx + tipWidth * 0.5f + 16f * dp,
+                        cy + tipH * 0.5f);
+                canvas.drawRoundRect(tipBarRectF, tipH * 0.5f, tipH * 0.5f, paintBar);
+            }
+        }
+
+        bottomBarRectF.set(bottomBarRect);
+        canvas.drawRoundRect(bottomBarRectF, cornerRadiusBottom, cornerRadiusBottom, paintBar);
 
         drawPlaceholders(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, isDisplacedOccupied);
         drawSlotHighlights(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, grabbedIcon);
@@ -272,7 +300,7 @@ public class EditorRenderer {
         if (radius > 0) {
             circlePaint = pressed ? paintPressed : paintDropZone;
         } else if (pressed) {
-            radius = actionSize;
+            radius = Math.min(actionSize, (Math.min(rect.width(), rect.height()) * 0.5f) + 8f * dp);
             circlePaint = paintPressed;
         }
         if (circlePaint != null) {
@@ -342,20 +370,35 @@ public class EditorRenderer {
         setActionSize(Math.min(iconSize, max / 2 - spaceBetween));
         setTextDimensions(controlsPadding, textOffset, sp);
 
+        int hPad = Math.round(16f * dp);
+        int vPad = Math.round(12f * dp);
+
         if (portrait) {
-            int topBarBottom = Math.max(
-                    iconChangeTwistRect.bottom + iconChangeTwistRect.top,
-                    Math.round(controlsPadding + textOffset + 16f * dp));
-            topBarRect.set(0, 0, viewWidth, topBarBottom);
+            int topMinX = Math.min(iconChangeTwistRect.left, Math.min(iconChangeIconScaleRect.left, iconChangeRadiusRect.left));
+            int topMaxX = Math.max(iconChangeTwistRect.right, Math.max(iconChangeIconScaleRect.right, iconChangeRadiusRect.right));
+            int topMinY = Math.min(iconChangeTwistRect.top, Math.min(iconChangeIconScaleRect.top, iconChangeRadiusRect.top));
+            int topMaxY = Math.max(iconChangeTwistRect.bottom, Math.max(iconChangeIconScaleRect.bottom, iconChangeRadiusRect.bottom));
 
-            int bottomBarTop = iconStartRect.top - (viewHeight - iconStartRect.bottom);
-            bottomBarRect.set(0, bottomBarTop, viewWidth, viewHeight);
+            int botMinX = Math.min(iconStartRect.left, Math.min(iconCenterRect.left, iconEndRect.left));
+            int botMaxX = Math.max(iconStartRect.right, Math.max(iconCenterRect.right, iconEndRect.right));
+            int botMinY = Math.min(iconStartRect.top, Math.min(iconCenterRect.top, iconEndRect.top));
+            int botMaxY = Math.max(iconStartRect.bottom, Math.max(iconCenterRect.bottom, iconEndRect.bottom));
+
+            topBarRect.set(topMinX - hPad, topMinY - vPad, topMaxX + hPad, topMaxY + vPad);
+            bottomBarRect.set(botMinX - hPad, botMinY - vPad, botMaxX + hPad, botMaxY + vPad);
         } else {
-            int leftBarRight = iconChangeTwistRect.right + iconChangeTwistRect.left;
-            topBarRect.set(0, 0, leftBarRight, viewHeight);
+            int topMinX = Math.min(iconChangeTwistRect.left, Math.min(iconChangeIconScaleRect.left, iconChangeRadiusRect.left));
+            int topMaxX = Math.max(iconChangeTwistRect.right, Math.max(iconChangeIconScaleRect.right, iconChangeRadiusRect.right));
+            int topMinY = Math.min(iconChangeTwistRect.top, Math.min(iconChangeIconScaleRect.top, iconChangeRadiusRect.top));
+            int topMaxY = Math.max(iconChangeTwistRect.bottom, Math.max(iconChangeIconScaleRect.bottom, iconChangeRadiusRect.bottom));
 
-            int rightBarLeft = iconStartRect.left - (viewWidth - iconStartRect.right);
-            bottomBarRect.set(rightBarLeft, 0, viewWidth, viewHeight);
+            int botMinX = Math.min(iconStartRect.left, Math.min(iconCenterRect.left, iconEndRect.left));
+            int botMaxX = Math.max(iconStartRect.right, Math.max(iconCenterRect.right, iconEndRect.right));
+            int botMinY = Math.min(iconStartRect.top, Math.min(iconCenterRect.top, iconEndRect.top));
+            int botMaxY = Math.max(iconStartRect.bottom, Math.max(iconCenterRect.bottom, iconEndRect.bottom));
+
+            topBarRect.set(topMinX - vPad, topMinY - hPad, topMaxX + vPad, topMaxY + hPad);
+            bottomBarRect.set(botMinX - vPad, botMinY - hPad, botMaxX + vPad, botMaxY + hPad);
         }
     }
 

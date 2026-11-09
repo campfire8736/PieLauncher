@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Process;
 
 import org.junit.Before;
@@ -114,19 +115,18 @@ public class EditorRendererTest {
 
         // Without a grabbed icon, 6 action icons are drawn (twist, scale, radius, add, preferences, done)
         verify(mockCanvas, times(6)).drawBitmap(any(Bitmap.class), nullable(Rect.class), any(Rect.class), any(Paint.class));
-        verify(mockCanvas, times(2)).drawRect(any(Rect.class), any(Paint.class));
+        verify(mockCanvas, times(2)).drawRoundRect(any(RectF.class), anyFloat(), anyFloat(), any(Paint.class));
     }
 
     @Test
     public void testLayoutCalculatesTopAndBottomBars() {
         editorRenderer.layout(1080, 1920, 100, 10f, 1f, 16, 48);
-        assertEquals(0, editorRenderer.topBarRect.left);
-        assertEquals(1080, editorRenderer.topBarRect.right);
-        assertEquals(0, editorRenderer.bottomBarRect.left);
-        assertEquals(1080, editorRenderer.bottomBarRect.right);
-        assertEquals(1920, editorRenderer.bottomBarRect.bottom);
-        assertTrue(editorRenderer.topBarRect.bottom > 0);
-        assertTrue(editorRenderer.bottomBarRect.top < 1920);
+        assertTrue(editorRenderer.topBarRect.left > 0);
+        assertTrue(editorRenderer.topBarRect.right < 1080);
+        assertTrue(editorRenderer.bottomBarRect.left > 0);
+        assertTrue(editorRenderer.bottomBarRect.right < 1080);
+        assertTrue(editorRenderer.topBarRect.bottom > editorRenderer.topBarRect.top);
+        assertTrue(editorRenderer.bottomBarRect.bottom > editorRenderer.bottomBarRect.top);
     }
 
     @Test

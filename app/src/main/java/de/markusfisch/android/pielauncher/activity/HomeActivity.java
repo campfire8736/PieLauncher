@@ -3,6 +3,7 @@ package de.markusfisch.android.pielauncher.activity;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
@@ -35,6 +37,7 @@ public class HomeActivity extends Activity {
 	private SoftKeyboard kb;
 	private GestureDetector gestureDetector;
 	private ToolbarBackground toolbarBackground;
+	private GradientDrawable toolbarBackgroundDrawable;
 	private AppPieView pieView;
 	private View toolbar;
 	private EditText searchInput;
@@ -109,18 +112,29 @@ public class HomeActivity extends Activity {
 		prefsButton = findViewById(R.id.preferences);
 		editButton = findViewById(R.id.edit);
 
+		float dp = getResources().getDisplayMetrics().density;
+		toolbarBackgroundDrawable = new GradientDrawable();
+		toolbarBackgroundDrawable.setShape(GradientDrawable.RECTANGLE);
+		toolbarBackgroundDrawable.setCornerRadius(dp * 24f);
+		toolbar.setBackground(toolbarBackgroundDrawable);
+
 		initPieView();
 		initActionButtons();
 		initSearchInput();
 
 		SystemBars.listenForWindowInsets(pieView,
-				(left, top, right, bottom) -> pieView.setPadding(
-						left,
-						// Never set a top padding because the list should
-						// appear under the status bar.
-						0,
-						right,
-						bottom));
+				(left, top, right, bottom) -> {
+					pieView.setPadding(left, 0, right, bottom);
+					if (toolbar != null && toolbar.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+						FrameLayout.LayoutParams lp =
+								(FrameLayout.LayoutParams) toolbar.getLayoutParams();
+						float d = getResources().getDisplayMetrics().density;
+						lp.topMargin = top + Math.round(12f * d);
+						lp.leftMargin = left + Math.round(16f * d);
+						lp.rightMargin = right + Math.round(16f * d);
+						toolbar.setLayoutParams(lp);
+					}
+				});
 
 		immersiveMode = prefs.getImmersiveMode();
 		SystemBars.setTransparentSystemBars(getWindow(), immersiveMode);
@@ -328,17 +342,12 @@ public class HomeActivity extends Activity {
 				if (isScrolling && y != 0) {
 					hideKeyboardAndActionButtons();
 				}
-				toolbar.setBackgroundColor(isLight
-						? toolbarBackground.backgroundColor
-						: toolbarBackground.getColorForY(y));
+				setToolbarColor(toolbarBackground.backgroundColor);
 			}
 
 			@Override
 			public void onDragDown(float alpha) {
 				hideKeyboardAndActionButtons();
-				toolbar.setBackgroundColor(isLight
-						? toolbarBackground.backgroundColor
-						: 0);
 				setAlpha(toolbar, alpha);
 			}
 		});
@@ -484,9 +493,7 @@ public class HomeActivity extends Activity {
 		prefsButton.setVisibility(View.VISIBLE);
 		editButton.setVisibility(View.VISIBLE);
 		setAlpha(toolbar, 1f);
-		toolbar.setBackgroundColor(isLight
-				? toolbarBackground.backgroundColor
-				: toolbarBackground.getColorForY(0));
+		setToolbarColor(toolbarBackground.backgroundColor);
 		if (prefs.displayKeyboard()) {
 			kb.showFor(searchInput);
 		}
@@ -499,6 +506,12 @@ public class HomeActivity extends Activity {
 
 		updateAppList(true);
 		pieView.showList();
+	}
+
+	private void setToolbarColor(int color) {
+		if (toolbarBackgroundDrawable != null) {
+			toolbarBackgroundDrawable.setColor(color);
+		}
 	}
 
 	private void setAlpha(View view, float alpha) {

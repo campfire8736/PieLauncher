@@ -439,12 +439,24 @@ public class AppPieView extends View {
     protected void onDraw(Canvas canvas) {
         long now = SystemClock.uptimeMillis();
         float ad = prefs.getAnimationDuration();
-        float fPie = stateManager.getFadePie().get(now,
+        float fPie = easeSlowerIn(stateManager.getFadePie().get(now,
                 // Prolong fade out to improve touch feedback.
-                stateManager.getFadePie().isFadingOut(now) ? ad * 3f : ad);
+                stateManager.getFadePie().isFadingOut(now) ? ad * 3f : ad));
         float fList = Math.min(stateManager.getFadeList().get(now, ad), stateManager.getDragProgress());
         float fEdit = stateManager.getFadeEdit().get(now, ad);
-        float fMax = easeSlowerIn(Math.max(fPie, Math.max(fList, fEdit)));
+        float fMax;
+        if (stateManager.inEditMode()) {
+            fMax = 1f;
+        } else if (stateManager.inListMode()) {
+            if (fEdit > 0f) {
+                // Seamless transition from EditMode to ListMode: keep background dark.
+                fMax = stateManager.getDragProgress();
+            } else {
+                fMax = fList;
+            }
+        } else {
+            fMax = Math.max(fPie, Math.max(fList, fEdit));
+        }
 
         int bbr = prefs.getBackgroundBlurRadius();
         if (bbr > 0) {
@@ -455,8 +467,9 @@ public class AppPieView extends View {
             }
         }
 
-        if (stateManager.getMode() != ViewStateManager.MODE_PIE || prefs.darkenBackground() !=
-                Preferences.DARKEN_BACKGROUND_NONE) {
+        if (stateManager.getMode() != ViewStateManager.MODE_PIE ||
+                prefs.darkenBackground() != Preferences.DARKEN_BACKGROUND_NONE ||
+                fList > 0f || fEdit > 0f || fMax > 0f) {
             darkenBackground(canvas, fMax);
         }
 

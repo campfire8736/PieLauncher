@@ -513,14 +513,18 @@ public class HomeActivity extends Activity {
 	}
 
 	private void showPreferences() {
-		// Hide searchInput to avoid inactive InputConnection.
-		hideAllApps();
+		// Hide keyboard to avoid lingering input connection, while keeping
+		// the darkened drawer surface visible until PreferencesActivity opens.
+		kb.hideFrom(searchInput);
 		PreferencesActivity.start(this);
 		showAllAppsOnResume = true;
 	}
 
 	private void showEditor() {
-		hideAllApps();
+		if (isSearchVisible()) {
+			floatingToolbar.setVisibility(View.GONE);
+			hideKeyboardAndActionButtons();
+		}
 		pieView.showEditor();
 	}
 

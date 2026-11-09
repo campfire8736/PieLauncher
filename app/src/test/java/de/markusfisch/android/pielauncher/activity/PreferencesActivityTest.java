@@ -166,4 +166,15 @@ public class PreferencesActivityTest {
 		assertTrue("Expected non-zero text color on slider title",
 				slider.getTitleView().getCurrentTextColor() != 0);
 	}
+
+	@Test
+	public void testPreferencesContentHasDarkenBackground() {
+		View content = activity.findViewById(R.id.content);
+		assertNotNull(content);
+		assertNotNull("Expected background on preferences content", content.getBackground());
+		if (content.getBackground() instanceof android.graphics.drawable.ColorDrawable) {
+			android.graphics.drawable.ColorDrawable cd = (android.graphics.drawable.ColorDrawable) content.getBackground();
+			assertEquals(activity.getResources().getColor(R.color.bg_ui), cd.getColor());
+		}
+	}
 }

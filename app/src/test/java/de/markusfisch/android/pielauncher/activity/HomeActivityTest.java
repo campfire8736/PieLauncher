@@ -212,4 +212,39 @@ public class HomeActivityTest {
         assertEquals(View.VISIBLE, toolbar.getVisibility());
         assertEquals(activity.getString(R.string.edit_pie_menu), toolbar.getText().toString());
     }
+
+    @Test
+    public void testTransitionFromAppDrawerToEditModeAndBack() throws Exception {
+        AppPieView pieView = activity.findViewById(R.id.pie);
+        android.widget.TextView toolbar = activity.findViewById(R.id.toolbar);
+        View floatingToolbar = activity.findViewById(R.id.floating_toolbar);
+        View editButton = activity.findViewById(R.id.edit);
+
+        // Open App Drawer
+        java.lang.reflect.Method showAllApps = HomeActivity.class.getDeclaredMethod("showAllApps");
+        showAllApps.setAccessible(true);
+        showAllApps.invoke(activity);
+
+        assertTrue(pieView.inListMode());
+        assertEquals(View.VISIBLE, floatingToolbar.getVisibility());
+        assertEquals(View.VISIBLE, toolbar.getVisibility());
+        assertEquals(activity.getString(R.string.category_app_drawer), toolbar.getText().toString());
+
+        // Click Edit button to enter Edit Mode directly from App Drawer
+        editButton.performClick();
+
+        assertTrue(pieView.inEditMode());
+        assertEquals(View.GONE, floatingToolbar.getVisibility());
+        assertEquals(View.VISIBLE, toolbar.getVisibility());
+        assertEquals(activity.getString(R.string.edit_pie_menu), toolbar.getText().toString());
+
+        // Click toolbar (back) to return to App Drawer
+        toolbar.performClick();
+
+        assertFalse(pieView.inEditMode());
+        assertTrue(pieView.inListMode());
+        assertEquals(View.VISIBLE, floatingToolbar.getVisibility());
+        assertEquals(View.VISIBLE, toolbar.getVisibility());
+        assertEquals(activity.getString(R.string.category_app_drawer), toolbar.getText().toString());
+    }
 }

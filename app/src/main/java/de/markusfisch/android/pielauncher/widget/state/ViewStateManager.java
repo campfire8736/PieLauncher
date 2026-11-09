@@ -106,6 +106,11 @@ public class ViewStateManager {
         if (mode == MODE_EDIT) {
             return;
         }
+        if (mode == MODE_LIST) {
+            fadeList.fadeOut();
+            listener.setVerticalScrollBarEnabled(false);
+            listener.resetScrollWithoutAnimation();
+        }
         mode = MODE_EDIT;
         listener.onModeChanged(mode);
         fadeEdit.fadeIn();

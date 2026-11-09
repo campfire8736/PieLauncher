@@ -54,7 +54,7 @@ public class ListRenderer {
         colorMatrix.setScale(dimAmount, dimAmount, dimAmount, 1);
         dimFilter = new ColorMatrixColorFilter(colorMatrix);
 
-        iconLaunchFirst = Converter.getBitmapFromDrawable(res, R.drawable.ic_launch_first);
+        iconLaunchFirst = Converter.getBitmapFromDrawable(context, R.drawable.ic_launch_first);
         iconLaunchFirstHalf = iconLaunchFirst.getWidth() >> 1;
     }
 

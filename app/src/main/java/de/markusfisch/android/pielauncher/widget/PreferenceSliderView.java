@@ -88,6 +88,14 @@ public class PreferenceSliderView extends LinearLayout {
 		return min + seekBar.getProgress() * step;
 	}
 
+	public TextView getTitleView() {
+		return titleView;
+	}
+
+	public TextView getDescriptionView() {
+		return descriptionView;
+	}
+
 	public SeekBar getSeekBar() {
 		return seekBar;
 	}
@@ -104,7 +112,11 @@ public class PreferenceSliderView extends LinearLayout {
 		headerRow.setLayoutParams(headerLp);
 
 		titleView = new TextView(context);
-		titleView.setTextColor(getResources().getColor(R.color.text_color));
+		int textColorPrimary = getColorFromAttribute(
+				context,
+				android.R.attr.textColorPrimary,
+				getResources().getColor(R.color.text_color));
+		titleView.setTextColor(textColorPrimary);
 		titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
 		titleView.setTypeface(null, android.graphics.Typeface.BOLD);
 		LayoutParams titleLp = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f);
@@ -131,7 +143,11 @@ public class PreferenceSliderView extends LinearLayout {
 		addView(headerRow);
 
 		descriptionView = new TextView(context);
-		descriptionView.setTextColor(getResources().getColor(R.color.text_color_preference));
+		int textColorSecondary = getColorFromAttribute(
+				context,
+				android.R.attr.textColorSecondary,
+				getResources().getColor(R.color.text_color_preference));
+		descriptionView.setTextColor(textColorSecondary);
 		descriptionView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
 		descriptionView.setVisibility(View.GONE);
 		LayoutParams descLp = new LayoutParams(

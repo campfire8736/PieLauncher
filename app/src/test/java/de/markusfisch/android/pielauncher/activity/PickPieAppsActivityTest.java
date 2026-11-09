@@ -34,6 +34,7 @@ import de.markusfisch.android.pielauncher.adapter.PickPieAppsAdapter;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
+import de.markusfisch.android.pielauncher.preference.Preferences;
 
 @RunWith(RobolectricTestRunner.class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -192,5 +193,26 @@ public class PickPieAppsActivityTest {
 		assertEquals(2, PieLauncherApp.apps.menuPrimary.size());
 		assertEquals(appB, PieLauncherApp.apps.menuPrimary.get(0));
 		assertEquals(appC, PieLauncherApp.apps.menuPrimary.get(1));
+	}
+
+	@Test
+	public void testToolbarBackgroundInLightMode() {
+		Context context = ApplicationProvider.getApplicationContext();
+		PieLauncherApp.getPrefs(context).setDisplayTheme(Preferences.THEME_LIGHT);
+
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		View toolbar = activity.findViewById(R.id.toolbar);
+		assertNotNull(toolbar);
+		android.graphics.drawable.ColorDrawable bg = (android.graphics.drawable.ColorDrawable) toolbar.getBackground();
+		assertNotNull(bg);
+		assertEquals(0xe8ffffff, bg.getColor());
+
+		controller.destroy();
 	}
 }

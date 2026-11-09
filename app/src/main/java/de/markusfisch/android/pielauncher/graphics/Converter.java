@@ -1,5 +1,6 @@
 package de.markusfisch.android.pielauncher.graphics;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -36,6 +37,14 @@ public class Converter {
 		drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
 		drawable.draw(canvas);
 		return bitmap;
+	}
+
+	public static Bitmap getBitmapFromDrawable(Context context, int resId) {
+		return getBitmapFromDrawable(getDrawable(context, resId));
+	}
+
+	public static Drawable getDrawable(Context context, int resId) {
+		return context.getDrawable(resId);
 	}
 
 	public static Bitmap getBitmapFromDrawable(Resources res, int resId) {

@@ -263,8 +263,7 @@ public class AppPieView extends View {
 
         loadingTip = context.getString(R.string.tip_loading);
 
-        translucentBackgroundColor = PreferenceSliderView.getColorFromAttribute(
-                context, R.attr.colorUiBackground, res.getColor(R.color.bg_ui));
+        translucentBackgroundColor = res.getColor(R.color.bg_ui);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             pieRenderNode = new RenderNode("PieMenu");
@@ -884,8 +883,8 @@ public class AppPieView extends View {
             pieRenderNode.setPosition(0, 0, viewWidth, viewHeight);
         }
 
-        pieConfig.updateChangeIcons(getResources(), editorRenderer);
-        pieConfig.updateSplitPieIcon(getResources(), editorRenderer, !isPrimaryMenu());
+        pieConfig.updateChangeIcons(getContext(), editorRenderer);
+        pieConfig.updateSplitPieIcon(getContext(), editorRenderer, !isPrimaryMenu());
 
         int pieBottom = viewMax / 2 + pieConfig.getMaxRadius();
         controlsPadding = (viewMax - pieBottom) / 2;
@@ -1004,19 +1003,19 @@ public class AppPieView extends View {
                 pieConfig.cycleTwist();
                 pieConfig.applyTo(pieMenu);
                 pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
-                pieConfig.updateChangeTwistIcon(getResources(), editorRenderer);
+                pieConfig.updateChangeTwistIcon(context, editorRenderer);
                 return true;
             case CHANGE_ICON_SCALE:
                 pieConfig.cycleIconScale();
                 pieConfig.applyTo(pieMenu);
                 pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
-                pieConfig.updateChangeIconScaleIcon(getResources(), editorRenderer);
+                pieConfig.updateChangeIconScaleIcon(context, editorRenderer);
                 return true;
             case CHANGE_RADIUS:
                 pieConfig.cycleRadius();
                 pieConfig.applyTo(pieMenu);
                 pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
-                pieConfig.updateChangeRadiusIcon(getResources(), editorRenderer);
+                pieConfig.updateChangeRadiusIcon(context, editorRenderer);
                 return true;
             case BACK_OR_REMOVE_ICON:
                 if (!pieEditor.hasGrabbedIcon()) {
@@ -1038,8 +1037,8 @@ public class AppPieView extends View {
                         setMenu(isPrimaryMenu() ? menuSecondary : menuPrimary);
                         centerSmoothCoordinatesAt(pieMenu.icons,
                                 viewWidth >> 1, viewHeight >> 1);
-                        pieConfig.updateSplitPieIcon(getResources(), editorRenderer, !isPrimaryMenu());
-                        pieConfig.updateChangeIcons(getResources(), editorRenderer);
+                        pieConfig.updateSplitPieIcon(context, editorRenderer, !isPrimaryMenu());
+                        pieConfig.updateChangeIcons(context, editorRenderer);
                         invalidate();
                     } else {
                         PreferencesActivity.start(context);

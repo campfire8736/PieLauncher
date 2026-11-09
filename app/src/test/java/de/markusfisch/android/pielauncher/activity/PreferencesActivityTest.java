@@ -156,4 +156,14 @@ public class PreferencesActivityTest {
 		prefs.setDisplayTheme(Preferences.THEME_SYSTEM);
 		assertEquals(Preferences.THEME_SYSTEM, prefs.getDisplayTheme());
 	}
+
+	@Test
+	public void testSliderViewTextColorIsThemed() {
+		PreferenceSliderView slider = activity.findViewById(R.id.darken_background);
+		assertNotNull(slider);
+		assertNotNull(slider.getTitleView());
+		assertNotNull(slider.getDescriptionView());
+		assertTrue("Expected non-zero text color on slider title",
+				slider.getTitleView().getCurrentTextColor() != 0);
+	}
 }

@@ -1,5 +1,6 @@
 package de.markusfisch.android.pielauncher.widget.state;
 
+import android.content.Context;
 import android.content.res.Resources;
 
 import de.markusfisch.android.pielauncher.R;
@@ -172,6 +173,32 @@ public class PieConfiguration {
         return isSecondary
                 ? R.drawable.ic_screen_upper
                 : R.drawable.ic_screen_lower;
+    }
+
+    public void updateChangeIcons(Context context, EditorRenderer editorRenderer) {
+        updateChangeTwistIcon(context, editorRenderer);
+        updateChangeIconScaleIcon(context, editorRenderer);
+        updateChangeRadiusIcon(context, editorRenderer);
+    }
+
+    public void updateChangeTwistIcon(Context context, EditorRenderer editorRenderer) {
+        editorRenderer.iconChangeTwist = Converter.getBitmapFromDrawable(context,
+                getDrawableForTwist(twist));
+    }
+
+    public void updateChangeIconScaleIcon(Context context, EditorRenderer editorRenderer) {
+        editorRenderer.iconChangeIconScale = Converter.getBitmapFromDrawable(context,
+                getDrawableForIconScale(iconScale));
+    }
+
+    public void updateChangeRadiusIcon(Context context, EditorRenderer editorRenderer) {
+        editorRenderer.iconChangeRadius = Converter.getBitmapFromDrawable(context,
+                getDrawableForRadius(radius));
+    }
+
+    public void updateSplitPieIcon(Context context, EditorRenderer editorRenderer, boolean isSecondary) {
+        editorRenderer.iconSplitPie = Converter.getBitmapFromDrawable(context,
+                getDrawableForSplitPie(isSecondary));
     }
 
     public void updateChangeIcons(Resources res, EditorRenderer editorRenderer) {

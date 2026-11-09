@@ -26,12 +26,17 @@ public class EditorRenderer {
     public final Rect iconChangeTwistRect = new Rect();
     public final Rect iconChangeIconScaleRect = new Rect();
     public final Rect iconChangeRadiusRect = new Rect();
+    public final Rect topBarRect = new Rect();
+    public final Rect bottomBarRect = new Rect();
 
+    private final Paint paintBar;
     private final Paint paintDropZone;
     private final Paint paintPressed;
     private final Paint paintAction;
     private final Paint paintText;
     private final Paint paintSlotHighlight;
+    private final int barColor;
+    private final float dp;
     private final int alphaDropZone;
     private final int alphaPressed;
     private final int alphaText;
@@ -64,6 +69,13 @@ public class EditorRenderer {
 
     public EditorRenderer(Context context) {
         Resources res = context.getResources();
+        dp = res.getDisplayMetrics().density;
+
+        barColor = PreferenceSliderView.getColorFromAttribute(
+                context, R.attr.colorSearchBar, res.getColor(R.color.bg_search_bar));
+        paintBar = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paintBar.setColor(barColor);
+        paintBar.setStyle(Paint.Style.FILL);
 
         paintDropZone = new Paint(Paint.ANTI_ALIAS_FLAG);
         paintDropZone.setColor(PreferenceSliderView.getColorFromAttribute(
@@ -72,7 +84,8 @@ public class EditorRenderer {
         alphaDropZone = paintDropZone.getAlpha();
 
         paintPressed = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintPressed.setColor(res.getColor(R.color.bg_action_pressed));
+        paintPressed.setColor(PreferenceSliderView.getColorFromAttribute(
+                context, R.attr.colorSeparator, res.getColor(R.color.bg_action_pressed)));
         paintPressed.setStyle(Paint.Style.FILL);
         alphaPressed = paintPressed.getAlpha();
 
@@ -97,13 +110,13 @@ public class EditorRenderer {
         hideAppTip = context.getString(R.string.hide_app);
         removeAppTip = context.getString(R.string.tip_remove_app);
 
-        iconAdd = Converter.getBitmapFromDrawable(res, R.drawable.ic_add);
-        iconEdit = Converter.getBitmapFromDrawable(res, R.drawable.ic_edit);
-        iconHide = Converter.getBitmapFromDrawable(res, R.drawable.ic_hide);
-        iconRemove = Converter.getBitmapFromDrawable(res, R.drawable.ic_remove);
-        iconDetails = Converter.getBitmapFromDrawable(res, R.drawable.ic_details);
-        iconDone = Converter.getBitmapFromDrawable(res, R.drawable.ic_done);
-        iconPreferences = Converter.getBitmapFromDrawable(res, R.drawable.ic_preferences);
+        iconAdd = Converter.getBitmapFromDrawable(context, R.drawable.ic_add);
+        iconEdit = Converter.getBitmapFromDrawable(context, R.drawable.ic_edit);
+        iconHide = Converter.getBitmapFromDrawable(context, R.drawable.ic_hide);
+        iconRemove = Converter.getBitmapFromDrawable(context, R.drawable.ic_remove);
+        iconDetails = Converter.getBitmapFromDrawable(context, R.drawable.ic_details);
+        iconDone = Converter.getBitmapFromDrawable(context, R.drawable.ic_done);
+        iconPreferences = Converter.getBitmapFromDrawable(context, R.drawable.ic_preferences);
     }
 
 
@@ -162,6 +175,11 @@ public class EditorRenderer {
 
         boolean hasIcon = grabbedIcon != null;
         boolean invalidate = f < 1f;
+
+        int barAlpha = Math.round(f * ((barColor >>> 24) & 0xff));
+        paintBar.setColor((barAlpha << 24) | (barColor & 0xffffff));
+        canvas.drawRect(topBarRect, paintBar);
+        canvas.drawRect(bottomBarRect, paintBar);
 
         drawPlaceholders(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, isDisplacedOccupied);
         drawSlotHighlights(canvas, pieMenu, hasIcon, hoveredSlot, sourceSlot, grabbedIcon);
@@ -323,6 +341,22 @@ public class EditorRenderer {
 
         setActionSize(Math.min(iconSize, max / 2 - spaceBetween));
         setTextDimensions(controlsPadding, textOffset, sp);
+
+        if (portrait) {
+            int topBarBottom = Math.max(
+                    iconChangeTwistRect.bottom + iconChangeTwistRect.top,
+                    Math.round(controlsPadding + textOffset + 16f * dp));
+            topBarRect.set(0, 0, viewWidth, topBarBottom);
+
+            int bottomBarTop = iconStartRect.top - (viewHeight - iconStartRect.bottom);
+            bottomBarRect.set(0, bottomBarTop, viewWidth, viewHeight);
+        } else {
+            int leftBarRight = iconChangeTwistRect.right + iconChangeTwistRect.left;
+            topBarRect.set(0, 0, leftBarRight, viewHeight);
+
+            int rightBarLeft = iconStartRect.left - (viewWidth - iconStartRect.right);
+            bottomBarRect.set(rightBarLeft, 0, viewWidth, viewHeight);
+        }
     }
 
     private int distributeButtons(

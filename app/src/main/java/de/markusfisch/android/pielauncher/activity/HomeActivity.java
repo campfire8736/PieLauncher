@@ -36,6 +36,7 @@ public class HomeActivity extends Activity {
 	private GestureDetector gestureDetector;
 	private ToolbarBackground toolbarBackground;
 	private AppPieView pieView;
+	private View toolbar;
 	private EditText searchInput;
 	private ImageView prefsButton;
 	private ImageView editButton;
@@ -103,6 +104,7 @@ public class HomeActivity extends Activity {
 
 		toolbarBackground = new ToolbarBackground(this);
 		pieView = findViewById(R.id.pie);
+		toolbar = findViewById(R.id.toolbar);
 		searchInput = findViewById(R.id.search);
 		prefsButton = findViewById(R.id.preferences);
 		editButton = findViewById(R.id.edit);
@@ -326,15 +328,18 @@ public class HomeActivity extends Activity {
 				if (isScrolling && y != 0) {
 					hideKeyboardAndActionButtons();
 				}
-				searchInput.setBackgroundColor(
-						toolbarBackground.getColorForY(y));
+				toolbar.setBackgroundColor(isLight
+						? toolbarBackground.backgroundColor
+						: toolbarBackground.getColorForY(y));
 			}
 
 			@Override
 			public void onDragDown(float alpha) {
 				hideKeyboardAndActionButtons();
-				searchInput.setBackgroundColor(0);
-				setAlpha(searchInput, alpha);
+				toolbar.setBackgroundColor(isLight
+						? toolbarBackground.backgroundColor
+						: 0);
+				setAlpha(toolbar, alpha);
 			}
 		});
 		PieLauncherApp.apps.setUpdateListener(new Apps.UpdateListener() {
@@ -474,10 +479,14 @@ public class HomeActivity extends Activity {
 			return;
 		}
 
+		toolbar.setVisibility(View.VISIBLE);
 		searchInput.setVisibility(View.VISIBLE);
 		prefsButton.setVisibility(View.VISIBLE);
 		editButton.setVisibility(View.VISIBLE);
-		setAlpha(searchInput, 1f);
+		setAlpha(toolbar, 1f);
+		toolbar.setBackgroundColor(isLight
+				? toolbarBackground.backgroundColor
+				: toolbarBackground.getColorForY(0));
 		if (prefs.displayKeyboard()) {
 			kb.showFor(searchInput);
 		}
@@ -498,6 +507,7 @@ public class HomeActivity extends Activity {
 
 	private void hideAllApps() {
 		if (isSearchVisible()) {
+			toolbar.setVisibility(View.GONE);
 			searchInput.setVisibility(View.GONE);
 			hideKeyboardAndActionButtons();
 		}
@@ -521,7 +531,7 @@ public class HomeActivity extends Activity {
 	}
 
 	private boolean isSearchVisible() {
-		return searchInput.getVisibility() == View.VISIBLE;
+		return toolbar != null && toolbar.getVisibility() == View.VISIBLE;
 	}
 
 	private boolean isGestureNavigationEnabled() {

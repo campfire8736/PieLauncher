@@ -58,6 +58,9 @@ public class PickPieAppsActivity extends Activity {
 				PieLauncherApp.getPrefs(this).getBackgroundBlurRadius());
 		toolbarBackground = new ToolbarBackground(this);
 		View toolbar = findViewById(R.id.toolbar);
+		toolbar.setBackgroundColor(isLight
+				? toolbarBackground.backgroundColor
+				: toolbarBackground.getColorForY(0));
 		gridView = findViewById(R.id.apps);
 
 		findViewById(R.id.back).setOnClickListener(v -> finish());
@@ -83,7 +86,9 @@ public class PickPieAppsActivity extends Activity {
 						y = child.getTop() - view.getPaddingTop();
 					}
 				}
-				toolbar.setBackgroundColor(toolbarBackground.getColorForY(y));
+				toolbar.setBackgroundColor(isLight
+						? toolbarBackground.backgroundColor
+						: toolbarBackground.getColorForY(y));
 			}
 		});
 

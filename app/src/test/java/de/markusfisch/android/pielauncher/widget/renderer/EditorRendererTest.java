@@ -1,6 +1,7 @@
 package de.markusfisch.android.pielauncher.widget.renderer;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -9,6 +10,14 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Process;
 import android.view.ContextThemeWrapper;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import de.markusfisch.android.pielauncher.content.DeleteFolderAction;
+import de.markusfisch.android.pielauncher.content.PieItemAction;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -195,6 +204,48 @@ public class EditorRendererTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void testLayoutGrabbedActions_DoesNotCorruptToolbarRectsAndLaysOutEditIcon() {
+        Context context = ApplicationProvider.getApplicationContext();
+        int width = 1080;
+        int height = 1920;
+        int controlsPadding = 80;
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, false);
+
+        Rect startCopy = new Rect(editorRenderer.iconStartRect);
+        Rect folderCopy = new Rect(editorRenderer.iconFolderRect);
+        Rect endCopy = new Rect(editorRenderer.iconEndRect);
+
+        // Grab folder (1 action)
+        List<PieItemAction> folderActions = new ArrayList<>();
+        folderActions.add(new DeleteFolderAction());
+        editorRenderer.layoutGrabbedActions(folderActions, width, height, true);
+
+        // Toolbar rects must NOT be mutated
+        assertEquals(startCopy, editorRenderer.iconStartRect);
+        assertEquals(folderCopy, editorRenderer.iconFolderRect);
+        assertEquals(endCopy, editorRenderer.iconEndRect);
+        assertEquals(1, editorRenderer.grabbedActionRects.size());
+        assertTrue(editorRenderer.grabbedActionRects.get(0).width() > 0);
+
+        // Now grab an App (3 actions: remove, edit, details)
+        Apps.AppIcon appIcon = createTestAppIcon("Regular App");
+        List<PieItemAction> appActions = appIcon.getEditActions(context, false);
+        assertEquals(3, appActions.size());
+        editorRenderer.layoutGrabbedActions(appActions, width, height, true);
+
+        assertEquals(3, editorRenderer.grabbedActionRects.size());
+        Rect action0 = editorRenderer.grabbedActionRects.get(0);
+        Rect action1 = editorRenderer.grabbedActionRects.get(1);
+        Rect action2 = editorRenderer.grabbedActionRects.get(2);
+
+        assertTrue("Action 0 must have positive width", action0.width() > 0);
+        assertTrue("Action 1 (Edit Icon) must have positive width", action1.width() > 0);
+        assertTrue("Action 2 must have positive width", action2.width() > 0);
+        assertTrue("Action 0 left < Action 1 left", action0.left < action1.left);
+        assertTrue("Action 1 left < Action 2 left", action1.left < action2.left);
     }
 
     @Test

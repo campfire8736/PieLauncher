@@ -329,18 +329,8 @@ public class EditorRenderer {
                         return activeGrabbedActions.get(i).getTip(context);
                     }
                 }
-                if (contains(iconStartRect, touch)) {
-                    return !activeGrabbedActions.isEmpty()
-                            ? activeGrabbedActions.get(0).getTip(context)
-                            : removeIconTip;
-                } else if (contains(iconCenterRect, touch)) {
-                    return activeGrabbedActions.size() >= 3
-                            ? activeGrabbedActions.get(1).getTip(context)
-                            : (hasPacks ? editAppTip : hideAppTip);
-                } else if (contains(iconEndRect, touch)) {
-                    return !activeGrabbedActions.isEmpty()
-                            ? activeGrabbedActions.get(activeGrabbedActions.size() - 1).getTip(context)
-                            : removeAppTip;
+                if (contains(iconStartRect, touch) && !activeGrabbedActions.isEmpty()) {
+                    return activeGrabbedActions.get(0).getTip(context);
                 }
             }
             return dragToOrderTip;
@@ -364,13 +354,6 @@ public class EditorRenderer {
         }
         while (grabbedActionRects.size() > count) {
             grabbedActionRects.remove(grabbedActionRects.size() - 1);
-        }
-
-        if (count == 3) {
-            grabbedActionRects.get(0).set(iconStartRect);
-            grabbedActionRects.get(1).set(iconCenterRect);
-            grabbedActionRects.get(2).set(iconEndRect);
-            return;
         }
 
         int w = iconRemove != null ? iconRemove.getWidth() : 0;
@@ -400,16 +383,6 @@ public class EditorRenderer {
                 y += step + h;
             }
         }
-
-        if (count == 2) {
-            iconStartRect.set(grabbedActionRects.get(0));
-            iconCenterRect.set(0, 0, 0, 0);
-            iconEndRect.set(grabbedActionRects.get(1));
-        } else if (count == 1) {
-            iconStartRect.set(grabbedActionRects.get(0));
-            iconCenterRect.set(0, 0, 0, 0);
-            iconEndRect.set(0, 0, 0, 0);
-        }
     }
 
     public PieItemAction getGrabbedActionAt(Point touch) {
@@ -430,12 +403,6 @@ public class EditorRenderer {
         }
         if (contains(iconStartRect, touch) && !activeGrabbedActions.isEmpty()) {
             return activeGrabbedActions.get(0);
-        }
-        if (contains(iconEndRect, touch) && !activeGrabbedActions.isEmpty()) {
-            return activeGrabbedActions.get(activeGrabbedActions.size() - 1);
-        }
-        if (contains(iconCenterRect, touch) && activeGrabbedActions.size() >= 3) {
-            return activeGrabbedActions.get(1);
         }
         return null;
     }

@@ -4,6 +4,7 @@
 	<string name="tip_drag_to_order">Umkreisen um Reihenfolge zu ändern</string>
 	<string name="tip_remove_icon">Icon aus Menu entfernen</string>
 	<string name="tip_remove_app">App deinstallieren</string>
+	<string name="delete_shortcut">Verknüpfung löschen</string>
 	<string name="preferences">Einstellungen</string>
 	<string name="welcome">Willkommen!</string>
 	<string name="check_these_settings">Überprüfen Sie bitte die folgenden Einstellungen:</string>

@@ -145,7 +145,7 @@ public class PieItemTest {
 		java.util.List<PieItemAction> actions = testApp.getEditActions(context, true);
 		assertEquals(2, actions.size());
 		assertEquals(RemoveFromPieAction.ID, actions.get(0).getId());
-		assertEquals(AppInfoAction.ID_APP_INFO, actions.get(1).getId());
-		assertEquals("Show app info", actions.get(1).getTip(context));
+		assertEquals(DeleteShortcutAction.ID, actions.get(1).getId());
+		assertEquals("Delete shortcut", actions.get(1).getTip(context));
 	}
 }

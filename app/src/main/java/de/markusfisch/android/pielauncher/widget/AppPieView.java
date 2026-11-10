@@ -283,6 +283,14 @@ public class AppPieView extends View {
         }
 
         @Override
+        public void removePinnedShortcut(Apps.AppIcon item) {
+            pieEditor.rollback(pieMenu.icons);
+            fadeOutMode();
+            PieLauncherApp.apps.removePinnedShortcut(getContext(), item);
+            endEditMode();
+        }
+
+        @Override
         public void endEditMode() {
             AppPieView.this.endEditMode();
         }

@@ -4,6 +4,7 @@
 	<string name="tip_drag_to_order">Drag to arrange, circle to change order</string>
 	<string name="tip_remove_icon">Remove icon from pie menu</string>
 	<string name="tip_remove_app">Uninstall app</string>
+	<string name="delete_shortcut">Delete shortcut</string>
 	<string name="preferences">Settings</string>
 	<string name="welcome">Welcome!</string>
 	<string name="check_these_settings">Please check the following settings:</string>

@@ -118,7 +118,7 @@ public class Apps {
 				return actions;
 			}
 			if (Apps.isShortcut(this)) {
-				actions.add(new AppInfoAction(true));
+				actions.add(new DeleteShortcutAction());
 				return actions;
 			}
 			actions.add(new ChangeIconOrHideAppAction(hasPacks));

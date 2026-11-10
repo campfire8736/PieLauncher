@@ -4,6 +4,7 @@
 	<string name="tip_drag_to_order">Entourer pour changer l\'ordre</string>
 	<string name="tip_remove_icon">Supprimer l\'icône de Pie</string>
 	<string name="tip_remove_app">Désinstaller l\'application</string>
+	<string name="delete_shortcut">Supprimer le raccourci</string>
 	<string name="preferences">Paramètres</string>
 	<string name="welcome">Bienvenue!</string>
 	<string name="check_these_settings">Veuillez vérifier les paramètres suivants :</string>

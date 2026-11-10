@@ -160,11 +160,11 @@ public class EditorRendererTest {
 
         invokeDraw(mockFaderEdit, shortcutIcon);
 
-        // With a grabbed shortcut, 2 action icons are drawn (remove, show app info) plus the grabbed icon = 3 bitmaps
+        // With a grabbed shortcut, 2 action icons are drawn (remove, delete shortcut) plus the grabbed icon = 3 bitmaps
         verify(mockCanvas, times(3)).drawBitmap(any(Bitmap.class), nullable(Rect.class), any(Rect.class), any(Paint.class));
         assertEquals(2, editorRenderer.getActiveGrabbedActions().size());
         assertEquals("remove_from_pie", editorRenderer.getActiveGrabbedActions().get(0).getId());
-        assertEquals("app_info", editorRenderer.getActiveGrabbedActions().get(1).getId());
+        assertEquals("delete_shortcut", editorRenderer.getActiveGrabbedActions().get(1).getId());
     }
 
     @Test

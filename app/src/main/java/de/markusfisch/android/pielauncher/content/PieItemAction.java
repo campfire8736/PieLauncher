@@ -21,6 +21,8 @@ public interface PieItemAction {
 
 		void requestAppInfo(Apps.AppIcon item);
 
+		void removePinnedShortcut(Apps.AppIcon item);
+
 		void endEditMode();
 	}
 }

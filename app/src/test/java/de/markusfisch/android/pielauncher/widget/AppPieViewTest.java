@@ -751,21 +751,7 @@ public class AppPieViewTest {
     }
 
     @Test
-    public void testGrabbedShortcutReleasedOnAppInfoRequestsAppInfo() {
-        final Apps.AppIcon[] requestedIcon = new Apps.AppIcon[1];
-        appPieView.setActionCallback(new AppPieView.ActionCallback() {
-            @Override
-            public void onAppTapped(Apps.AppIcon icon) {}
-
-            @Override
-            public void onAppInfoRequested(Apps.AppIcon icon) {
-                requestedIcon[0] = icon;
-            }
-
-            @Override
-            public void onEditOptionsRequested(Apps.AppIcon icon) {}
-        });
-
+    public void testGrabbedShortcutReleasedOnDeleteShortcutActionRemovesShortcut() {
         // Create a shortcut icon on the pie menu
         Apps.AppIcon shortcutIcon = null;
         try {
@@ -799,13 +785,13 @@ public class AppPieViewTest {
             de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer renderer =
                     (de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) editorRendererField.get(appPieView);
 
-            // Verify shortcut has 2 actions: remove and app_info
+            // Verify shortcut has 2 actions: remove and delete_shortcut
             org.junit.Assert.assertEquals(2, renderer.getActiveGrabbedActions().size());
             org.junit.Assert.assertEquals("remove_from_pie", renderer.getActiveGrabbedActions().get(0).getId());
-            org.junit.Assert.assertEquals("app_info", renderer.getActiveGrabbedActions().get(1).getId());
-            org.junit.Assert.assertEquals("Show app info", renderer.getActiveGrabbedActions().get(1).getTip(appPieView.getContext()));
+            org.junit.Assert.assertEquals("delete_shortcut", renderer.getActiveGrabbedActions().get(1).getId());
+            org.junit.Assert.assertEquals("Delete shortcut", renderer.getActiveGrabbedActions().get(1).getTip(appPieView.getContext()));
 
-            // Release over the app_info action (index 1 / iconEndRect)
+            // Release over the delete_shortcut action (index 1 / iconEndRect)
             java.lang.reflect.Field touchField = AppPieView.class.getDeclaredField("touch");
             touchField.setAccessible(true);
             android.graphics.Point touchPoint = (android.graphics.Point) touchField.get(appPieView);
@@ -820,6 +806,6 @@ public class AppPieViewTest {
             throw new RuntimeException(e);
         }
 
-        org.junit.Assert.assertEquals("App info should be requested for grabbed shortcut", shortcutIcon, requestedIcon[0]);
+        org.junit.Assert.assertFalse("Shortcut should be removed from menuPrimary", PieLauncherApp.apps.menuPrimary.contains(shortcutIcon));
     }
 }

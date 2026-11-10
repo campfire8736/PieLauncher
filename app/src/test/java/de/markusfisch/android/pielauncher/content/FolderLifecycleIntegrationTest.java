@@ -197,6 +197,60 @@ public class FolderLifecycleIntegrationTest {
 		assertFalse(FolderManager.getAllFolders().contains(folder));
 	}
 
+	@Test
+	public void testSplitPieMenu_OverFolders_OpensAlternateOrFolderContent() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		// Enable split top/bottom pie menu with secondary menu
+		prefs.setSplitPieMenu(Preferences.ALTERNATE_MENU_SECONDARY);
+		List<PieItem> secondaryItems = new ArrayList<>();
+		Apps.AppIcon secondaryApp = createAppIcon("com.pkg.secondary", "Secondary App");
+		secondaryItems.add(secondaryApp);
+		PieLauncherApp.apps.menuSecondary.addAll(secondaryItems);
+
+		List<PieItem> folderItems = new ArrayList<>();
+		Apps.AppIcon folderApp = createAppIcon("com.pkg.folderapp", "Folder App");
+		folderItems.add(folderApp);
+
+		FolderItem folder = new FolderItem("folder1", "Folder 1", null, folderItems);
+		pieView.setActiveFolder(folder);
+		assertTrue(pieView.isInFolder());
+
+		java.lang.reflect.Field pieMenuField = AppPieView.class.getDeclaredField("pieMenu");
+		pieMenuField.setAccessible(true);
+		de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+				(de.markusfisch.android.pielauncher.graphics.CanvasPieMenu) pieMenuField.get(pieView);
+
+		// 1. Touch bottom half (e.g. y = 1600f) -> should open folder's items
+		long time = android.os.SystemClock.uptimeMillis();
+		pieView.dispatchTouchEvent(android.view.MotionEvent.obtain(
+				time, time, android.view.MotionEvent.ACTION_DOWN, 540f, 1600f, 0));
+		assertEquals(folderItems, pieMenu.icons);
+
+		// Cancel touch 1
+		pieView.dispatchTouchEvent(android.view.MotionEvent.obtain(
+				time, time + 50, android.view.MotionEvent.ACTION_CANCEL, 540f, 1600f, 0));
+
+		// 2. Touch top half (e.g. y = 500f) -> should open secondary menu
+		time += 100;
+		pieView.dispatchTouchEvent(android.view.MotionEvent.obtain(
+				time, time, android.view.MotionEvent.ACTION_DOWN, 540f, 500f, 0));
+		assertEquals(PieLauncherApp.apps.menuSecondary, pieMenu.icons);
+
+		// Cancel touch 2
+		pieView.dispatchTouchEvent(android.view.MotionEvent.obtain(
+				time, time + 50, android.view.MotionEvent.ACTION_CANCEL, 540f, 500f, 0));
+
+		// 3. Folder remains active, so touching bottom half again still opens folder items
+		time += 100;
+		pieView.dispatchTouchEvent(android.view.MotionEvent.obtain(
+				time, time, android.view.MotionEvent.ACTION_DOWN, 540f, 1600f, 0));
+		assertEquals(folderItems, pieMenu.icons);
+	}
+
 	private Apps.AppIcon createAppIcon(String pkg, String label) {
 		try {
 			Constructor<Apps.AppIcon> constructor =

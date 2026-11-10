@@ -729,11 +729,11 @@ public class AppPieView extends View {
     private class AppPieTouchListener implements PieTouchListener {
         @Override
         public void openMenu(long eventTime) {
-            if (activeFolder != null) {
-                setMenu(activeFolder.items);
-                setCenter(touch.x, touch.y);
-            } else if (prefs.splitPieMenu() != Preferences.ALTERNATE_MENU_NONE) {
+            if (prefs.splitPieMenu() != Preferences.ALTERNATE_MENU_NONE) {
                 selectMenu(touch.x, touch.y);
+                setCenter(touch.x, touch.y);
+            } else if (activeFolder != null) {
+                setMenu(activeFolder.items);
                 setCenter(touch.x, touch.y);
             } else {
                 if (prefs.circleSwapsMenus() != Preferences.ALTERNATE_MENU_NONE && !isPrimaryMenu()) {
@@ -1377,11 +1377,12 @@ public class AppPieView extends View {
         boolean alternate = viewWidth > viewHeight
                 ? x < viewWidth >> 1
                 : y < viewHeight >> 1;
+        List<PieItem> primary = activeFolder != null ? activeFolder.items : menuPrimary;
         List<PieItem> icons = alternate
                 ? getAlternateMenu(prefs.splitPieMenu())
-                : menuPrimary;
+                : primary;
         setMenu(icons == null || icons.isEmpty()
-                ? menuPrimary
+                ? primary
                 : icons);
     }
 

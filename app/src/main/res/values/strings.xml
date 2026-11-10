@@ -51,6 +51,8 @@
 	<string name="haptic_feedback_disable_launch">Disable launch feedback only</string>
 	<string name="haptic_feedback_disable_all">Disable</string>
 	<string name="category_app_drawer">App Drawer</string>
+	<string name="drawer_section_apps">Android Apps</string>
+	<string name="drawer_section_app_shortcuts">App shortcuts</string>
 	<string name="home_button_opens_drawer">Home button opens app drawer</string>
 	<string name="home_button_opens_drawer_yes">Yes (Default)</string>
 	<string name="home_button_opens_drawer_no">No</string>

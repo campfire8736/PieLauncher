@@ -46,6 +46,8 @@
 	<string name="animate_in_out_yes">Oui (par défaut)</string>
 	<string name="animate_in_out_no">Non</string>
 	<string name="category_app_drawer">Liste d\'apps</string>
+	<string name="drawer_section_apps">Applications Android</string>
+	<string name="drawer_section_app_shortcuts">Raccourcis d’applications</string>
 	<string name="home_button_opens_drawer">Le bouton Accueil ouvre la liste d\'apps</string>
 	<string name="home_button_opens_drawer_yes">Oui (Par défaut)</string>
 	<string name="home_button_opens_drawer_no">Non</string>

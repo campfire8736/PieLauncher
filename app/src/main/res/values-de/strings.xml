@@ -43,6 +43,8 @@
 	<string name="animate_in_out_yes">Ja (Standard)</string>
 	<string name="animate_in_out_no">Nein</string>
 	<string name="category_app_drawer">App Liste</string>
+	<string name="drawer_section_apps">Android-Apps</string>
+	<string name="drawer_section_app_shortcuts">App-Shortcuts</string>
 	<string name="home_button_opens_drawer">Home-Taste öffnet App Liste</string>
 	<string name="home_button_opens_drawer_yes">Ja (Standard)</string>
 	<string name="home_button_opens_drawer_no">Nein</string>

@@ -1068,6 +1068,7 @@ public class AppPieView extends View {
     }
 
     public void addIconInteractively(PieItem appIcon) {
+        stateManager.showEditor();
         if (listListener != null) {
             listListener.onHideList();
         }
@@ -1082,11 +1083,13 @@ public class AppPieView extends View {
     }
 
     private void editIcon(PieItem icon) {
-        if (pieMenu.icons != menuPrimary &&
+        if (activeFolder != null) {
+            setMenu(activeFolder.items);
+        } else if (pieMenu.icons != menuPrimary &&
                 pieMenu.icons != menuSecondary) {
             setMenu(menuPrimary);
         }
-        editorRenderer.setAddFolderEnabled(isPrimaryMenu());
+        editorRenderer.setAddFolderEnabled(isPrimaryMenu() && activeFolder == null);
         pieConfig.updateSplitPieIcon(getResources(), editorRenderer, !isPrimaryMenu());
         setCenter(viewWidth >> 1, viewHeight >> 1);
         layoutEditorRenderer();
@@ -1220,7 +1223,12 @@ public class AppPieView extends View {
             case EDIT_SETTINGS_OR_UNDO:
                 if (hasSecondaryMenu()) {
                     storeMenu();
-                    setMenu(isPrimaryMenu() ? menuSecondary : menuPrimary);
+                    if (activeFolder != null) {
+                        activeFolder = null;
+                        setMenu(menuPrimary);
+                    } else {
+                        setMenu(isPrimaryMenu() ? menuSecondary : menuPrimary);
+                    }
                     centerSmoothCoordinatesAt(pieMenu.icons,
                             viewWidth >> 1, viewHeight >> 1);
                     pieConfig.updateSplitPieIcon(context, editorRenderer, !isPrimaryMenu());

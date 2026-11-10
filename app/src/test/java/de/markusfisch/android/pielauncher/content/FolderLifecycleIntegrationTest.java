@@ -300,6 +300,51 @@ public class FolderLifecycleIntegrationTest {
 		assertTrue(editorRenderer.isAddFolderEnabled());
 	}
 
+	@Test
+	public void testOpeningAppDrawerFromFolder_ThenEnteringEditMode_DisplaysFolderContent() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		List<PieItem> folderItems = new ArrayList<>();
+		Apps.AppIcon folderApp = createAppIcon("com.pkg.folderapp", "Folder App");
+		folderItems.add(folderApp);
+
+		FolderItem folder = new FolderItem("folder1", "Folder 1", null, folderItems);
+		pieView.setActiveFolder(folder);
+		assertTrue(pieView.isInFolder());
+
+		// Open AppDrawer from folder
+		Method showAllAppsMethod = HomeActivity.class.getDeclaredMethod("showAllApps");
+		showAllAppsMethod.setAccessible(true);
+		showAllAppsMethod.invoke(activity);
+		assertTrue(pieView.inListMode());
+		assertTrue(pieView.isInFolder());
+
+		// Go to EditMode from AppDrawer (e.g. clicking edit button)
+		Method showEditorMethod = HomeActivity.class.getDeclaredMethod("showEditor");
+		showEditorMethod.setAccessible(true);
+		showEditorMethod.invoke(activity);
+		assertTrue(pieView.inEditMode());
+
+		java.lang.reflect.Field pieMenuField = AppPieView.class.getDeclaredField("pieMenu");
+		pieMenuField.setAccessible(true);
+		de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+				(de.markusfisch.android.pielauncher.graphics.CanvasPieMenu) pieMenuField.get(pieView);
+
+		// EditMode must display the folder's items, not the main pie menu
+		assertEquals(folderItems, pieMenu.icons);
+
+		java.lang.reflect.Field rendererField = AppPieView.class.getDeclaredField("editorRenderer");
+		rendererField.setAccessible(true);
+		de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer editorRenderer =
+				(de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) rendererField.get(pieView);
+
+		// Add Folder must be disabled when editing a folder
+		assertFalse(editorRenderer.isAddFolderEnabled());
+	}
+
 	private Apps.AppIcon createAppIcon(String pkg, String label) {
 		try {
 			Constructor<Apps.AppIcon> constructor =

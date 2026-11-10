@@ -397,10 +397,13 @@ public class HomeActivity extends Activity {
 		});
 		pieView.setEditorListener(inEditMode -> {
 			if (inEditMode) {
-				toolbar.setText(R.string.edit_pie_menu);
+				toolbar.setText(pieView.isInFolder() && pieView.getActiveFolder() != null
+						? pieView.getActiveFolder().getLabel()
+						: getString(R.string.edit_pie_menu));
 				toolbar.setVisibility(View.VISIBLE);
 				setAlpha(toolbar, 1f);
 				floatingToolbar.setVisibility(View.GONE);
+				hideKeyboardAndActionButtons();
 			} else {
 				if (pieView.inListMode()) {
 					toolbar.setText(R.string.category_app_drawer);
@@ -610,7 +613,7 @@ public class HomeActivity extends Activity {
 		if (pieView == null || !pieView.inEditMode()) {
 			toolbar.setVisibility(View.GONE);
 		}
-		if (pieView != null && pieView.isInFolder()) {
+		if (pieView != null && !pieView.inEditMode() && pieView.isInFolder()) {
 			pieView.exitFolder();
 		}
 		// Ensure the pie menu is initially hidden because on some devices

@@ -156,4 +156,5 @@
 	<string name="discard_changes">Änderungen verwerfen?</string>
 	<string name="discard_changes_message">Möchten Sie Ihre Änderungen verwerfen?</string>
 	<string name="discard">Verwerfen</string>
+	<string name="warning_pie_too_many_items">Mehr als 8 Elemente ausgewählt (aus Gründen der Benutzerfreundlichkeit nicht empfohlen).</string>
 </resources>

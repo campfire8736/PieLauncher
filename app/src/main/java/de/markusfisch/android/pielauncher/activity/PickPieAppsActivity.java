@@ -47,6 +47,7 @@ public class PickPieAppsActivity extends Activity {
 	private boolean isPrimary = true;
 	private ToolbarBackground toolbarBackground;
 	private ScrollWithListenerView scrollListenerView;
+	private View warningContainer;
 	private LinearLayout sectionsContainer;
 	private GridView gridView;
 	private PickPieAppsAdapter adapter;
@@ -76,12 +77,14 @@ public class PickPieAppsActivity extends Activity {
 				? toolbarBackground.backgroundColor
 				: toolbarBackground.getColorForY(0));
 		scrollListenerView = findViewById(R.id.scroll_view);
+		warningContainer = findViewById(R.id.warning_container);
 		sectionsContainer = findViewById(R.id.sections_container);
 
 		findViewById(R.id.back).setOnClickListener(v -> confirmDiscardChanges());
 		findViewById(R.id.apply).setOnClickListener(v -> confirmApplySelection());
 
 		initSelection();
+		updateWarning();
 
 		scrollListenerView.setOnScrollPositionListener((y, scrollable) ->
 				toolbar.setBackgroundColor(isLight
@@ -166,7 +169,13 @@ public class PickPieAppsActivity extends Activity {
 		Collections.sort(removed, String.CASE_INSENSITIVE_ORDER);
 
 		StringBuilder sb = new StringBuilder();
+		if (getSelectedCount() > 8) {
+			sb.append(getString(R.string.warning_pie_too_many_items));
+		}
 		if (!added.isEmpty()) {
+			if (sb.length() > 0) {
+				sb.append("\n\n");
+			}
 			sb.append(getString(R.string.changes_added));
 			for (String name : added) {
 				sb.append("\n• ").append(name);
@@ -200,6 +209,26 @@ public class PickPieAppsActivity extends Activity {
 				: "";
 	}
 
+	private int getSelectedCount() {
+		List<PieItem> targetMenu = isPrimary
+				? PieLauncherApp.apps.menuPrimary
+				: PieLauncherApp.apps.menuSecondary;
+		int count = selectedKeys.size();
+		for (PieItem item : targetMenu) {
+			if (item != null && !item.isGhost && !(item instanceof Apps.AppIcon)) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private void updateWarning() {
+		if (warningContainer != null) {
+			warningContainer.setVisibility(
+					getSelectedCount() > 8 ? View.VISIBLE : View.GONE);
+		}
+	}
+
 	private void toggleSelection(Apps.AppIcon icon) {
 		if (icon == null) {
 			return;
@@ -214,6 +243,7 @@ public class PickPieAppsActivity extends Activity {
 		for (PickPieAppsAdapter a : adapters) {
 			a.notifyDataSetChanged();
 		}
+		updateWarning();
 	}
 
 	private void loadApps() {

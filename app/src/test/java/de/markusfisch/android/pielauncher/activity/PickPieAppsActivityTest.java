@@ -24,6 +24,8 @@ import org.robolectric.annotation.Config;
 import org.robolectric.annotation.GraphicsMode;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -435,5 +437,71 @@ public class PickPieAppsActivityTest {
 		} finally {
 			de.markusfisch.android.pielauncher.content.DrawerSectionRegistry.resetToDefaults();
 		}
+	}
+
+	@Test
+	public void testWarningVisibilityBasedOnSelectionCount() throws Exception {
+		Bitmap bitmap = Bitmap.createBitmap(48, 48, Bitmap.Config.ARGB_8888);
+		java.lang.reflect.Constructor<Apps.AppIcon> constructor = Apps.AppIcon.class.getDeclaredConstructor(
+				ComponentName.class, String.class, Bitmap.class, UserHandle.class);
+		constructor.setAccessible(true);
+
+		// Add 10 apps to apps map
+		PieLauncherApp.apps.apps.clear();
+		PieLauncherApp.apps.menuPrimary.clear();
+		List<Apps.AppIcon> createdApps = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Apps.AppIcon icon = constructor.newInstance(
+					new ComponentName("com.test.app" + i, "Activity" + i),
+					"App " + i, bitmap, Process.myUserHandle());
+			PieLauncherApp.apps.apps.put(new LauncherItemKey(icon.componentName, icon.userHandle), icon);
+			createdApps.add(icon);
+		}
+
+		// Initially select 8 apps
+		for (int i = 0; i < 8; i++) {
+			PieLauncherApp.apps.menuPrimary.add(createdApps.get(i));
+		}
+
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		View warningContainer = activity.findViewById(R.id.warning_container);
+		assertNotNull(warningContainer);
+		// 8 items selected -> warning should be GONE
+		assertEquals(View.GONE, warningContainer.getVisibility());
+
+		GridView gridView = activity.findViewById(R.id.apps);
+		assertNotNull(gridView);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+
+		// Find an unselected app (e.g. index 8) and click it -> 9 items selected
+		gridView.performItemClick(null, 8, adapter.getItemId(8));
+
+		// Warning should now be VISIBLE
+		assertEquals(View.VISIBLE, warningContainer.getVisibility());
+
+		// Clicking Apply should show the warning in the dialog message
+		activity.findViewById(R.id.apply).performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		android.widget.TextView messageView = dialog.findViewById(android.R.id.message);
+		assertNotNull(messageView);
+		assertTrue(messageView.getText().toString().contains(
+				activity.getString(R.string.warning_pie_too_many_items)));
+
+		// Dismiss dialog
+		dialog.dismiss();
+
+		// Deselect an app (e.g. index 8) -> back to 8 items
+		gridView.performItemClick(null, 8, adapter.getItemId(8));
+
+		// Warning should be GONE again
+		assertEquals(View.GONE, warningContainer.getVisibility());
 	}
 }

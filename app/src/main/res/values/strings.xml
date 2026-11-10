@@ -160,4 +160,5 @@
 	<string name="discard_changes">Discard changes?</string>
 	<string name="discard_changes_message">Do you want to discard your changes?</string>
 	<string name="discard">Discard</string>
+	<string name="warning_pie_too_many_items">More than 8 items selected (not recommended for usability).</string>
 </resources>

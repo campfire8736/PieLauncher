@@ -147,4 +147,10 @@
 	<string name="removed_from_home_screen">%1$s entfernt</string>
 	<string name="back">Zurück</string>
 	<string name="apply">Anwenden</string>
+	<string name="apply_changes">Änderungen anwenden?</string>
+	<string name="changes_added">Hinzugefügt:</string>
+	<string name="changes_removed">Entfernt:</string>
+	<string name="discard_changes">Änderungen verwerfen?</string>
+	<string name="discard_changes_message">Möchten Sie Ihre Änderungen verwerfen?</string>
+	<string name="discard">Verwerfen</string>
 </resources>

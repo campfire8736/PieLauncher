@@ -26,11 +26,13 @@ import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
 import de.markusfisch.android.pielauncher.graphics.ToolbarBackground;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.view.SystemBars;
+import de.markusfisch.android.pielauncher.widget.Dialog;
 
 public class PickPieAppsActivity extends Activity {
 	public static final String EXTRA_IS_PRIMARY = "is_primary";
 
 	private final Set<LauncherItemKey> selectedKeys = new HashSet<>();
+	private final Set<LauncherItemKey> initialKeys = new HashSet<>();
 
 	private boolean isPrimary = true;
 	private ToolbarBackground toolbarBackground;
@@ -63,8 +65,8 @@ public class PickPieAppsActivity extends Activity {
 				: toolbarBackground.getColorForY(0));
 		gridView = findViewById(R.id.apps);
 
-		findViewById(R.id.back).setOnClickListener(v -> finish());
-		findViewById(R.id.apply).setOnClickListener(v -> applySelection());
+		findViewById(R.id.back).setOnClickListener(v -> confirmDiscardChanges());
+		findViewById(R.id.apply).setOnClickListener(v -> confirmApplySelection());
 
 		initSelection();
 
@@ -126,6 +128,99 @@ public class PickPieAppsActivity extends Activity {
 						icon.componentName, icon.userHandle));
 			}
 		}
+		initialKeys.clear();
+		initialKeys.addAll(selectedKeys);
+	}
+
+	@Override
+	public void onBackPressed() {
+		confirmDiscardChanges();
+	}
+
+	private boolean hasModifications() {
+		return !selectedKeys.equals(initialKeys);
+	}
+
+	private void confirmDiscardChanges() {
+		if (!hasModifications()) {
+			finish();
+			return;
+		}
+		Dialog.newDialog(this)
+				.setTitle(R.string.discard_changes)
+				.setMessage(R.string.discard_changes_message)
+				.setPositiveButton(R.string.discard, (dialog, which) -> finish())
+				.setNegativeButton(android.R.string.cancel, null)
+				.show();
+	}
+
+	private void confirmApplySelection() {
+		if (!hasModifications()) {
+			finish();
+			return;
+		}
+		Dialog.newDialog(this)
+				.setTitle(R.string.apply_changes)
+				.setMessage(buildChangesSummary())
+				.setPositiveButton(R.string.apply, (dialog, which) -> applySelection())
+				.setNegativeButton(android.R.string.cancel, null)
+				.show();
+	}
+
+	private CharSequence buildChangesSummary() {
+		List<String> added = new ArrayList<>();
+		for (LauncherItemKey key : selectedKeys) {
+			if (!initialKeys.contains(key)) {
+				added.add(getAppLabel(key));
+			}
+		}
+		Collections.sort(added, String.CASE_INSENSITIVE_ORDER);
+
+		List<String> removed = new ArrayList<>();
+		for (LauncherItemKey key : initialKeys) {
+			if (!selectedKeys.contains(key)) {
+				removed.add(getAppLabel(key));
+			}
+		}
+		Collections.sort(removed, String.CASE_INSENSITIVE_ORDER);
+
+		StringBuilder sb = new StringBuilder();
+		if (!added.isEmpty()) {
+			sb.append(getString(R.string.changes_added));
+			for (String name : added) {
+				sb.append("\n• ").append(name);
+			}
+		}
+		if (!removed.isEmpty()) {
+			if (sb.length() > 0) {
+				sb.append("\n\n");
+			}
+			sb.append(getString(R.string.changes_removed));
+			for (String name : removed) {
+				sb.append("\n• ").append(name);
+			}
+		}
+		return sb.toString();
+	}
+
+	private String getAppLabel(LauncherItemKey key) {
+		Apps.AppIcon icon = PieLauncherApp.apps.apps.get(key);
+		if (icon != null && icon.label != null) {
+			return icon.label;
+		}
+		if (adapter != null) {
+			int count = adapter.getCount();
+			for (int i = 0; i < count; ++i) {
+				Apps.AppIcon item = adapter.getItem(i);
+				if (item != null && key.equals(new LauncherItemKey(
+						item.componentName, item.userHandle))) {
+					return item.label;
+				}
+			}
+		}
+		return key.componentName != null
+				? key.componentName.flattenToShortString()
+				: "";
 	}
 
 	private void loadApps() {

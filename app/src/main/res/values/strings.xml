@@ -151,4 +151,10 @@
 	<string name="removed_from_home_screen">Removed %1$s</string>
 	<string name="back">Back</string>
 	<string name="apply">Apply</string>
+	<string name="apply_changes">Apply changes?</string>
+	<string name="changes_added">Added:</string>
+	<string name="changes_removed">Removed:</string>
+	<string name="discard_changes">Discard changes?</string>
+	<string name="discard_changes_message">Do you want to discard your changes?</string>
+	<string name="discard">Discard</string>
 </resources>

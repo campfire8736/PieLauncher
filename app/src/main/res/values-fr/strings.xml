@@ -150,4 +150,10 @@
 	<string name="removed_from_home_screen">%1$s supprimé</string>
 	<string name="back">Retour</string>
 	<string name="apply">Appliquer</string>
+	<string name="apply_changes">Appliquer les modifications ?</string>
+	<string name="changes_added">Ajoutées :</string>
+	<string name="changes_removed">Supprimées :</string>
+	<string name="discard_changes">Ignorer les modifications ?</string>
+	<string name="discard_changes_message">Voulez-vous ignorer vos modifications ?</string>
+	<string name="discard">Ignorer</string>
 </resources>

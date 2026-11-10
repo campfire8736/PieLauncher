@@ -147,4 +147,10 @@
 	<string name="removed_from_home_screen">%1$s verwijderd</string>
 	<string name="back">Terug</string>
 	<string name="apply">Toepassen</string>
+	<string name="apply_changes">Wijzigingen toepassen?</string>
+	<string name="changes_added">Toegevoegd:</string>
+	<string name="changes_removed">Verwijderd:</string>
+	<string name="discard_changes">Wijzigingen negeren?</string>
+	<string name="discard_changes_message">Wilt u uw wijzigingen negeren?</string>
+	<string name="discard">Negeren</string>
 </resources>

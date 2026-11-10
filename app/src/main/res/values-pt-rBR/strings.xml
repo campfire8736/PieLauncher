@@ -147,4 +147,10 @@
 	<string name="removed_from_home_screen">%1$s removido</string>
 	<string name="back">Voltar</string>
 	<string name="apply">Aplicar</string>
+	<string name="apply_changes">Aplicar alterações?</string>
+	<string name="changes_added">Adicionadas:</string>
+	<string name="changes_removed">Removidas:</string>
+	<string name="discard_changes">Descartar alterações?</string>
+	<string name="discard_changes_message">Deseja descartar suas alterações?</string>
+	<string name="discard">Descartar</string>
 </resources>

@@ -147,4 +147,10 @@
 	<string name="removed_from_home_screen">已移除 %1$s</string>
 	<string name="back">返回</string>
 	<string name="apply">应用</string>
+	<string name="apply_changes">应用更改？</string>
+	<string name="changes_added">新增：</string>
+	<string name="changes_removed">移除：</string>
+	<string name="discard_changes">放弃更改？</string>
+	<string name="discard_changes_message">是否要放弃您所做的更改？</string>
+	<string name="discard">放弃</string>
 </resources>

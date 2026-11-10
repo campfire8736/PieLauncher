@@ -147,4 +147,10 @@
 	<string name="removed_from_home_screen">%1$s удалено</string>
 	<string name="back">Назад</string>
 	<string name="apply">Применить</string>
+	<string name="apply_changes">Применить изменения?</string>
+	<string name="changes_added">Добавлено:</string>
+	<string name="changes_removed">Удалено:</string>
+	<string name="discard_changes">Отменить изменения?</string>
+	<string name="discard_changes_message">Вы хотите отменить внесенные изменения?</string>
+	<string name="discard">Отменить</string>
 </resources>

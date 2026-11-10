@@ -2,6 +2,7 @@ package de.markusfisch.android.pielauncher.activity;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Process;
@@ -146,7 +147,7 @@ public class PickPieAppsActivityTest {
 	}
 
 	@Test
-	public void testBackButtonDoesNotApply() {
+	public void testBackButtonShowsDiscardDialogWhenModified() {
 		Intent intent = new Intent();
 		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
 
@@ -163,6 +164,24 @@ public class PickPieAppsActivityTest {
 		// Click Back
 		activity.findViewById(R.id.back).performClick();
 
+		// Dialog should be shown asking to discard changes
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		assertFalse(activity.isFinishing());
+
+		// Cancel -> stays open
+		dialog.getButton(DialogInterface.BUTTON_NEGATIVE).performClick();
+		assertFalse(activity.isFinishing());
+
+		// Click Back again and confirm discard
+		activity.findViewById(R.id.back).performClick();
+		dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
 		assertTrue(activity.isFinishing());
 		// Pie menu should remain untouched: [App A, App B]
 		assertEquals(2, PieLauncherApp.apps.menuPrimary.size());
@@ -171,7 +190,7 @@ public class PickPieAppsActivityTest {
 	}
 
 	@Test
-	public void testApplyButtonUpdatesPieMenu() {
+	public void testApplyButtonShowsSummaryDialogWhenModified() {
 		Intent intent = new Intent();
 		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
 
@@ -187,14 +206,96 @@ public class PickPieAppsActivityTest {
 		// Select App C (position 2)
 		gridView.performItemClick(null, 2, adapter.getItemId(2));
 
-		// Click Apply
+		// Click Apply -> should show summary dialog
 		activity.findViewById(R.id.apply).performClick();
+
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		assertFalse(activity.isFinishing());
+
+		// Verify summary lists added (App C) and removed (App A)
+		android.widget.TextView messageView = dialog.findViewById(android.R.id.message);
+		assertNotNull(messageView);
+		String message = messageView.getText().toString();
+		assertTrue(message.contains(appC.label));
+		assertTrue(message.contains(appA.label));
+
+		// Click Cancel -> stays open
+		dialog.getButton(DialogInterface.BUTTON_NEGATIVE).performClick();
+		assertFalse(activity.isFinishing());
+
+		// Click Apply again and confirm
+		activity.findViewById(R.id.apply).performClick();
+		dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
 		assertTrue(activity.isFinishing());
 		// Pie menu should have App B (kept, position preserved) and App C (appended)
 		assertEquals(2, PieLauncherApp.apps.menuPrimary.size());
 		assertEquals(appB, PieLauncherApp.apps.menuPrimary.get(0));
 		assertEquals(appC, PieLauncherApp.apps.menuPrimary.get(1));
+	}
+
+	@Test
+	public void testBackWithoutModificationsFinishesImmediately() {
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		// Click Back without changes
+		activity.findViewById(R.id.back).performClick();
+
+		assertTrue(activity.isFinishing());
+	}
+
+	@Test
+	public void testApplyWithoutModificationsFinishesImmediately() {
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		// Click Apply without changes
+		activity.findViewById(R.id.apply).performClick();
+
+		assertTrue(activity.isFinishing());
+	}
+
+	@Test
+	public void testOnBackPressedShowsDiscardDialogWhenModified() {
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		GridView gridView = activity.findViewById(R.id.apps);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+
+		// Toggle App C (add)
+		gridView.performItemClick(null, 2, adapter.getItemId(2));
+
+		// Press back
+		activity.onBackPressed();
+
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		assertFalse(activity.isFinishing());
+
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+		assertTrue(activity.isFinishing());
 	}
 
 	@Test

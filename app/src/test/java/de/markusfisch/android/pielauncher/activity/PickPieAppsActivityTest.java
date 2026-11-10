@@ -104,6 +104,8 @@ public class PickPieAppsActivityTest {
 		assertEquals(0.5f, view0.findViewById(R.id.icon).getAlpha(), 0.01f);
 		android.widget.FrameLayout.LayoutParams lp0 = (android.widget.FrameLayout.LayoutParams) cb0.getLayoutParams();
 		assertEquals(android.view.Gravity.BOTTOM | android.view.Gravity.END, lp0.gravity);
+		assertTrue(lp0.bottomMargin < 0);
+		assertTrue(lp0.rightMargin < 0 || lp0.getMarginEnd() < 0);
 
 		View view1 = adapter.getView(1, null, gridView);
 		CheckBox cb1 = view1.findViewById(R.id.selected);

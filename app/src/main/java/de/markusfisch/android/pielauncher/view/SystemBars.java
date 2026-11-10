@@ -1,20 +1,33 @@
 package de.markusfisch.android.pielauncher.view;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.app.WallpaperColors;
+import android.app.WallpaperManager;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Insets;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 
+import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 
 public class SystemBars {
 	public interface OnInsetListener {
 		void onApplyInsets(int left, int top, int right, int bottom);
+	}
+
+	public interface OnWallpaperColorsChangedListener {
+		void onWallpaperColorsChanged(boolean isWallpaperLight);
 	}
 
 	public static void setTransparentSystemBars(Window window) {
@@ -118,6 +131,133 @@ public class SystemBars {
 			}
 		}
 		window.getDecorView().setSystemUiVisibility(flags);
+	}
+
+	public static boolean isWallpaperLight(Context context) {
+		if (context == null) {
+			return false;
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+			try {
+				WallpaperManager wm = WallpaperManager.getInstance(context);
+				if (wm != null) {
+					WallpaperColors colors = wm.getWallpaperColors(
+							WallpaperManager.FLAG_SYSTEM);
+					if (colors != null) {
+						return (colors.getColorHints() &
+								WallpaperColors.HINT_SUPPORTS_DARK_TEXT) != 0;
+					}
+				}
+			} catch (Throwable t) {
+				// Fall through
+			}
+		}
+		try {
+			WallpaperManager wm = WallpaperManager.getInstance(context);
+			if (wm != null) {
+				Drawable drawable = wm.getDrawable();
+				if (drawable instanceof BitmapDrawable) {
+					Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+					if (bitmap != null) {
+						return isBitmapLight(bitmap);
+					}
+				}
+			}
+		} catch (Throwable t) {
+			// Fall through
+		}
+		try {
+			return PieLauncherApp.getPrefs(context).isLight(context);
+		} catch (Throwable t) {
+			return false;
+		}
+	}
+
+	private static boolean isBitmapLight(Bitmap bitmap) {
+		int width = bitmap.getWidth();
+		int height = bitmap.getHeight();
+		if (width <= 0 || height <= 0) {
+			return false;
+		}
+		long totalLuminance = 0;
+		int samples = 0;
+		int stepX = Math.max(1, width / 4);
+		int maxY = Math.min(height, Math.max(1, height / 4));
+		int stepY = Math.max(1, maxY / 4);
+		for (int y = 0; y < maxY; y += stepY) {
+			for (int x = 0; x < width; x += stepX) {
+				int pixel = bitmap.getPixel(x, y);
+				int r = (pixel >> 16) & 0xff;
+				int g = (pixel >> 8) & 0xff;
+				int b = pixel & 0xff;
+				totalLuminance += (r * 299L + g * 587L + b * 114L) / 1000L;
+				samples++;
+			}
+		}
+		return samples > 0 && (totalLuminance / samples) > 128;
+	}
+
+	public static Object registerWallpaperColorsListener(
+			Context context,
+			OnWallpaperColorsChangedListener listener) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 &&
+				context != null && listener != null) {
+			return Api27Impl.registerWallpaperColorsListener(context, listener);
+		}
+		return null;
+	}
+
+	public static void unregisterWallpaperColorsListener(
+			Context context,
+			Object registration) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 &&
+				context != null && registration != null) {
+			Api27Impl.unregisterWallpaperColorsListener(context, registration);
+		}
+	}
+
+	@TargetApi(Build.VERSION_CODES.O_MR1)
+	private static class Api27Impl {
+		static Object registerWallpaperColorsListener(
+				Context context,
+				OnWallpaperColorsChangedListener listener) {
+			try {
+				WallpaperManager wm = WallpaperManager.getInstance(context);
+				if (wm == null) {
+					return null;
+				}
+				WallpaperManager.OnColorsChangedListener osListener =
+						(colors, which) -> {
+							if ((which & WallpaperManager.FLAG_SYSTEM) != 0) {
+								boolean isLight = colors != null &&
+										(colors.getColorHints() &
+												WallpaperColors.HINT_SUPPORTS_DARK_TEXT) != 0;
+								listener.onWallpaperColorsChanged(isLight);
+							}
+						};
+				wm.addOnColorsChangedListener(osListener,
+						new Handler(Looper.getMainLooper()));
+				return osListener;
+			} catch (Throwable t) {
+				return null;
+			}
+		}
+
+		static void unregisterWallpaperColorsListener(
+				Context context,
+				Object registration) {
+			try {
+				if (registration instanceof WallpaperManager.OnColorsChangedListener) {
+					WallpaperManager wm = WallpaperManager.getInstance(context);
+					if (wm != null) {
+						wm.removeOnColorsChangedListener(
+								(WallpaperManager.OnColorsChangedListener) registration);
+					}
+				}
+			} catch (Throwable t) {
+				// Ignore
+			}
+		}
 	}
 
 	public static void listenForWindowInsets(

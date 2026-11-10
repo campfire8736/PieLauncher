@@ -247,4 +247,44 @@ public class HomeActivityTest {
         assertEquals(View.VISIBLE, toolbar.getVisibility());
         assertEquals(activity.getString(R.string.category_app_drawer), toolbar.getText().toString());
     }
+
+    @Test
+    public void testIsPieMenuScreenChangesAcrossModes() throws Exception {
+        java.lang.reflect.Method isPieMenuScreenMethod = HomeActivity.class.getDeclaredMethod("isPieMenuScreen");
+        isPieMenuScreenMethod.setAccessible(true);
+
+        // Initially in PieMenu
+        assertTrue((Boolean) isPieMenuScreenMethod.invoke(activity));
+
+        // Open App Drawer
+        java.lang.reflect.Method showAllApps = HomeActivity.class.getDeclaredMethod("showAllApps");
+        showAllApps.setAccessible(true);
+        showAllApps.invoke(activity);
+
+        assertFalse((Boolean) isPieMenuScreenMethod.invoke(activity));
+
+        // Close App Drawer
+        java.lang.reflect.Method hideAllApps = HomeActivity.class.getDeclaredMethod("hideAllApps");
+        hideAllApps.setAccessible(true);
+        hideAllApps.invoke(activity);
+
+        assertTrue((Boolean) isPieMenuScreenMethod.invoke(activity));
+
+        // Open Edit Mode
+        View editButton = activity.findViewById(R.id.edit);
+        editButton.performClick();
+
+        assertFalse((Boolean) isPieMenuScreenMethod.invoke(activity));
+
+        // Exit Edit Mode via toolbar back
+        View toolbar = activity.findViewById(R.id.toolbar);
+        toolbar.performClick();
+
+        // Returning to App Drawer -> not PieMenu yet
+        assertFalse((Boolean) isPieMenuScreenMethod.invoke(activity));
+
+        // Close App Drawer to PieMenu
+        hideAllApps.invoke(activity);
+        assertTrue((Boolean) isPieMenuScreenMethod.invoke(activity));
+    }
 }

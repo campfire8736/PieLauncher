@@ -53,6 +53,11 @@ public class HomeActivity extends Activity {
 	private int immersiveMode = Preferences.IMMERSIVE_MODE_DISABLED;
 	private long pausedAt = 0L;
 	private OnBackInvokedCallback onBackInvokedCallback = null;
+	private Object wallpaperColorListenerToken = null;
+
+	private boolean isPieMenuScreen() {
+		return !isSearchVisible() && (pieView == null || !pieView.inEditMode());
+	}
 
 	@SuppressLint("GestureBackNavigation")
 	@Override
@@ -158,7 +163,7 @@ public class HomeActivity extends Activity {
 
 		immersiveMode = prefs.getImmersiveMode();
 		SystemBars.setTransparentSystemBars(getWindow(), immersiveMode);
-		SystemBars.setLightSystemBars(getWindow(), isLight);
+		updateSystemBars();
 
 		// We may have been started with a request to pin a shortcut, e.g. when
 		// a browser adds a PWA to the home screen. No-op for regular launches.
@@ -248,6 +253,19 @@ public class HomeActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 		setRequestedOrientation(prefs.getOrientation());
+		if (wallpaperColorListenerToken == null) {
+			wallpaperColorListenerToken = SystemBars.registerWallpaperColorsListener(
+					this, isWallpaperLight -> updateSystemBars());
+		}
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (wallpaperColorListenerToken != null) {
+			SystemBars.unregisterWallpaperColorsListener(this, wallpaperColorListenerToken);
+			wallpaperColorListenerToken = null;
+		}
 	}
 
 	@Override
@@ -391,6 +409,7 @@ public class HomeActivity extends Activity {
 					floatingToolbar.setVisibility(View.GONE);
 				}
 			}
+			updateSystemBars();
 		});
 		PieLauncherApp.apps.setUpdateListener(new Apps.UpdateListener() {
 			@Override
@@ -508,8 +527,11 @@ public class HomeActivity extends Activity {
 		if (immersiveMode != newImmersiveMode) {
 			immersiveMode = newImmersiveMode;
 			SystemBars.setSystemUIVisibility(getWindow(), immersiveMode);
-			SystemBars.setLightSystemBars(getWindow(), isLight);
 		}
+		boolean lightBars = isPieMenuScreen()
+				? SystemBars.isWallpaperLight(this)
+				: isLight;
+		SystemBars.setLightSystemBars(getWindow(), lightBars);
 	}
 
 	private void showPreferences() {
@@ -526,6 +548,7 @@ public class HomeActivity extends Activity {
 			hideKeyboardAndActionButtons();
 		}
 		pieView.showEditor();
+		updateSystemBars();
 	}
 
 	private void hideActionButtons() {
@@ -562,6 +585,7 @@ public class HomeActivity extends Activity {
 
 		updateAppList(true);
 		pieView.showList();
+		updateSystemBars();
 	}
 
 	private void setToolbarColor(int color) {
@@ -586,6 +610,7 @@ public class HomeActivity extends Activity {
 		// there's not always a matching ACTION_UP/_CANCEL event for every
 		// ACTION_DOWN event.
 		pieView.hideList();
+		updateSystemBars();
 	}
 
 	private void resetHomeState() {

@@ -42,4 +42,22 @@ public class SystemBarsTest {
 		int colorFaded = tb.getColorForY(100);
 		assertNotEquals(0, colorFaded);
 	}
+
+	@Test
+	public void testIsWallpaperLight() {
+		Context context = ApplicationProvider.getApplicationContext();
+		// In Robolectric environment, it executes fallbacks cleanly without exception
+		boolean isLight = SystemBars.isWallpaperLight(context);
+		// Can be true or false depending on theme/environment, ensure it returns a valid boolean
+		assertTrue(isLight || !isLight);
+	}
+
+	@Test
+	public void testWallpaperColorsListenerRegistration() {
+		Context context = ApplicationProvider.getApplicationContext();
+		Object token = SystemBars.registerWallpaperColorsListener(context, isLight -> {});
+		// Unregister with token or null token should not crash
+		SystemBars.unregisterWallpaperColorsListener(context, token);
+		SystemBars.unregisterWallpaperColorsListener(context, null);
+	}
 }

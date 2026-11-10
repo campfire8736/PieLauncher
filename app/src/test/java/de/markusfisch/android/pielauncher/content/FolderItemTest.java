@@ -1,0 +1,91 @@
+package de.markusfisch.android.pielauncher.content;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import de.markusfisch.android.pielauncher.app.PieLauncherApp;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(RobolectricTestRunner.class)
+@Config(sdk = 34)
+public class FolderItemTest {
+
+	private Context context;
+
+	@Before
+	public void setUp() {
+		context = ApplicationProvider.getApplicationContext();
+		FolderManager.clearCache();
+	}
+
+	@After
+	public void tearDown() {
+		FolderManager.clearCache();
+	}
+
+	@Test
+	public void testFolderItemBasics() {
+		Bitmap bitmap = Bitmap.createBitmap(24, 24, Bitmap.Config.ARGB_8888);
+		FolderItem folder = new FolderItem("f1", "My Folder", bitmap);
+
+		assertEquals("folder:f1", folder.getItemKey(context));
+		assertEquals("My Folder", folder.getLabel());
+		assertTrue(folder.launch(context));
+
+		List<PieItemAction> actions = folder.getEditActions(context, false);
+		assertEquals(2, actions.size());
+		assertEquals(RemoveFromPieAction.ID, actions.get(0).getId());
+		assertEquals(DeleteFolderAction.ID, actions.get(1).getId());
+		assertEquals("Delete folder", actions.get(1).getTip(context));
+	}
+
+	@Test
+	public void testFolderManagerCreateAndResolve() {
+		FolderItem folder = FolderManager.createNewFolder(context, new HashMap<>());
+		assertNotNull(folder);
+		assertNotNull(folder.id);
+		assertEquals("folder:" + folder.id, folder.getItemKey(context));
+
+		// Resolve via PieItemRegistry
+		PieItem restored = PieItemRegistry.restoreItem(context, "folder:" + folder.id, new HashMap<>());
+		assertNotNull(restored);
+		assertTrue(restored instanceof FolderItem);
+		assertEquals(folder, restored);
+	}
+
+	@Test
+	public void testDeleteFolderActionDelegatesToListener() {
+		FolderItem folder = new FolderItem("f2", "Folder 2", null);
+		DeleteFolderAction action = new DeleteFolderAction();
+
+		final FolderItem[] deleted = new FolderItem[1];
+		PieItemAction.ActionListener listener = new PieItemAction.ActionListener() {
+			@Override public void removeFromPie(PieItem item) {}
+			@Override public void changeIcon(PieItem item) {}
+			@Override public void hideApp(Apps.AppIcon item) {}
+			@Override public void requestAppInfo(Apps.AppIcon item) {}
+			@Override public void removePinnedShortcut(Apps.AppIcon item) {}
+			@Override public void deleteFolder(FolderItem f) { deleted[0] = f; }
+			@Override public void endEditMode() {}
+		};
+
+		action.perform(context, folder, listener);
+		assertEquals(folder, deleted[0]);
+	}
+}

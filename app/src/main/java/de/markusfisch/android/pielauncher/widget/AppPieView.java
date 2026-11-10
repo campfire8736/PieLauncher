@@ -48,6 +48,8 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppSearch;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.DrawerSectionRegistry;
+import de.markusfisch.android.pielauncher.content.FolderItem;
+import de.markusfisch.android.pielauncher.content.FolderManager;
 import de.markusfisch.android.pielauncher.content.PieItemAction;
 import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
@@ -287,6 +289,15 @@ public class AppPieView extends View {
             PieLauncherApp.apps.removeItemFromPie(getContext(), item);
             pieEditor.removeGrabbedIcon();
             PieLauncherApp.apps.removePinnedShortcut(getContext(), item);
+            fadeOutMode();
+            endEditMode();
+        }
+
+        @Override
+        public void deleteFolder(FolderItem folder) {
+            PieLauncherApp.apps.removeItemFromPie(getContext(), folder);
+            pieEditor.removeGrabbedIcon();
+            FolderManager.deleteFolder(getContext(), folder.id);
             fadeOutMode();
             endEditMode();
         }

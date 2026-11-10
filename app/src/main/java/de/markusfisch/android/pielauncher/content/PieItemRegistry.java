@@ -21,6 +21,9 @@ public class PieItemRegistry {
 			LauncherItemKey key = LauncherItemKey.unflattenFromString(context, subKey);
 			return allApps != null ? allApps.get(key) : null;
 		});
+		// Built-in resolver for "folder:" prefix
+		registerResolver("folder", (context, subKey, allApps) ->
+				FolderManager.getOrCreateFolder(context, subKey, allApps));
 	}
 
 	public static synchronized void registerResolver(

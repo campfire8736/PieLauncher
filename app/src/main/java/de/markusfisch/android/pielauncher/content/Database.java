@@ -165,6 +165,15 @@ public class Database {
 		storeMenuEntries(name, snapshot);
 	}
 
+	public void deleteMenu(String name) {
+		SQLiteDatabase db = openHelper.getWritableDatabase();
+		db.delete(MENU_ITEMS, MENU_NAME + "=?", new String[]{name});
+	}
+
+	public void deleteMenuAsync(String name) {
+		execute(() -> deleteMenu(name));
+	}
+
 	private void storeMenuEntries(String name, List<Pair<Integer, String>> entries) {
 		SQLiteDatabase db = openHelper.getWritableDatabase();
 		db.beginTransaction();

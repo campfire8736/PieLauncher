@@ -23,6 +23,8 @@ public interface PieItemAction {
 
 		void removePinnedShortcut(Apps.AppIcon item);
 
+		void deleteFolder(FolderItem folder);
+
 		void endEditMode();
 	}
 }

@@ -1,20 +1,23 @@
 <merge
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools">
-	<GridView
-		android:id="@+id/apps"
+	<de.markusfisch.android.pielauncher.widget.ScrollWithListenerView
+		android:id="@+id/scroll_view"
 		android:background="@color/bg_ui"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:columnWidth="72dp"
-		android:gravity="center"
-		android:horizontalSpacing="8dp"
-		android:numColumns="auto_fit"
-		android:padding="16dp"
-		android:scrollbarStyle="outsideOverlay"
 		android:clipToPadding="false"
-		android:stretchMode="columnWidth"
-		android:verticalSpacing="8dp"/>
+		android:fillViewport="true">
+		<LinearLayout
+			android:id="@+id/sections_container"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical"
+			android:paddingLeft="16dp"
+			android:paddingRight="16dp"
+			android:paddingTop="8dp"
+			android:paddingBottom="16dp"/>
+	</de.markusfisch.android.pielauncher.widget.ScrollWithListenerView>
 	<FrameLayout
 		android:id="@+id/progress"
 		android:layout_width="match_parent"

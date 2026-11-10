@@ -318,4 +318,122 @@ public class PickPieAppsActivityTest {
 
 		controller.destroy();
 	}
+
+	private Apps.AppIcon createAppIcon(String name, String pkg) {
+		try {
+			Bitmap bitmap = Bitmap.createBitmap(48, 48, Bitmap.Config.ARGB_8888);
+			Constructor<Apps.AppIcon> constructor = Apps.AppIcon.class.getDeclaredConstructor(
+					ComponentName.class, String.class, Bitmap.class, UserHandle.class);
+			constructor.setAccessible(true);
+			return constructor.newInstance(
+					new ComponentName(pkg, "Activity"),
+					name, bitmap, Process.myUserHandle());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Test
+	public void testSectionsSeparatedForAppsAndShortcuts() {
+		Apps.AppIcon shortcut = createAppIcon("Search Shortcut", "com.test.sc");
+		shortcut.shortcutId = "sc_1";
+		shortcut.shortcutPackage = "com.test.sc";
+		PieLauncherApp.apps.apps.put(new LauncherItemKey(shortcut.componentName, shortcut.userHandle), shortcut);
+
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		android.widget.LinearLayout sectionsContainer = activity.findViewById(R.id.sections_container);
+		assertNotNull(sectionsContainer);
+
+		// With 2 sections, sectionsContainer should contain 4 views:
+		// child 0: Header "Android Apps"
+		// child 1: GridView for Android Apps (App A, App B, App C)
+		// child 2: Header "App shortcuts"
+		// child 3: GridView for App shortcuts (Search Shortcut)
+		assertEquals(4, sectionsContainer.getChildCount());
+
+		android.widget.TextView header0 = (android.widget.TextView) sectionsContainer.getChildAt(0);
+		assertEquals("Android Apps", header0.getText().toString());
+
+		GridView grid0 = (GridView) sectionsContainer.getChildAt(1);
+		assertEquals(3, grid0.getAdapter().getCount());
+
+		android.widget.TextView header1 = (android.widget.TextView) sectionsContainer.getChildAt(2);
+		assertEquals("App shortcuts", header1.getText().toString());
+
+		GridView grid1 = (GridView) sectionsContainer.getChildAt(3);
+		assertEquals(1, grid1.getAdapter().getCount());
+		assertEquals(shortcut, grid1.getAdapter().getItem(0));
+
+		// Click the shortcut in section 1 to select it
+		grid1.performItemClick(null, 0, grid1.getAdapter().getItemId(0));
+
+		// Click Apply
+		activity.findViewById(R.id.apply).performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		// Confirm apply
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+		assertTrue(activity.isFinishing());
+		// Target menu should now have App A, App B, and the shortcut!
+		assertTrue(PieLauncherApp.apps.menuPrimary.contains(shortcut));
+	}
+
+	@Test
+	public void testModularCustomSectionInSelectionScreen() {
+		de.markusfisch.android.pielauncher.content.DrawerSection customSection =
+				new de.markusfisch.android.pielauncher.content.DrawerSection() {
+					@Override
+					public String getId() {
+						return "custom_section";
+					}
+
+					@Override
+					public CharSequence getTitle(Context context) {
+						return "Custom Items";
+					}
+
+					@Override
+					public boolean matches(Apps.AppIcon item) {
+						return item != null && "App C".equals(item.label);
+					}
+				};
+
+		de.markusfisch.android.pielauncher.content.DrawerSectionRegistry.registerSection(0, customSection);
+
+		try {
+			Intent intent = new Intent();
+			intent.putExtra(PickPieAppsActivity.EXTRA_IS_PRIMARY, true);
+
+			ActivityController<PickPieAppsActivity> controller =
+					Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+			PickPieAppsActivity activity = controller.get();
+
+			android.widget.LinearLayout sectionsContainer = activity.findViewById(R.id.sections_container);
+			assertNotNull(sectionsContainer);
+
+			// Section 0 is "Custom Items" (App C)
+			android.widget.TextView header0 = (android.widget.TextView) sectionsContainer.getChildAt(0);
+			assertEquals("Custom Items", header0.getText().toString());
+			GridView grid0 = (GridView) sectionsContainer.getChildAt(1);
+			assertEquals(1, grid0.getAdapter().getCount());
+			assertEquals(appC, grid0.getAdapter().getItem(0));
+
+			// Section 1 is "Android Apps" (App A, App B)
+			android.widget.TextView header1 = (android.widget.TextView) sectionsContainer.getChildAt(2);
+			assertEquals("Android Apps", header1.getText().toString());
+			GridView grid1 = (GridView) sectionsContainer.getChildAt(3);
+			assertEquals(2, grid1.getAdapter().getCount());
+		} finally {
+			de.markusfisch.android.pielauncher.content.DrawerSectionRegistry.resetToDefaults();
+		}
+	}
 }

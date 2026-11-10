@@ -3,12 +3,15 @@ package de.markusfisch.android.pielauncher.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.UserHandle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
-import android.widget.AbsListView;
 import android.widget.GridView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +24,7 @@ import de.markusfisch.android.pielauncher.adapter.PickPieAppsAdapter;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppLauncher;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.DrawerSectionRegistry;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
 import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
@@ -28,15 +32,22 @@ import de.markusfisch.android.pielauncher.graphics.ToolbarBackground;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.view.SystemBars;
 import de.markusfisch.android.pielauncher.widget.Dialog;
+import de.markusfisch.android.pielauncher.widget.NestedGridView;
+import de.markusfisch.android.pielauncher.widget.PreferenceSliderView;
+import de.markusfisch.android.pielauncher.widget.ScrollWithListenerView;
 
 public class PickPieAppsActivity extends Activity {
 	public static final String EXTRA_IS_PRIMARY = "is_primary";
 
 	private final Set<LauncherItemKey> selectedKeys = new HashSet<>();
 	private final Set<LauncherItemKey> initialKeys = new HashSet<>();
+	private final List<PickPieAppsAdapter> adapters = new ArrayList<>();
+	private final List<Apps.AppIcon> allApps = new ArrayList<>();
 
 	private boolean isPrimary = true;
 	private ToolbarBackground toolbarBackground;
+	private ScrollWithListenerView scrollListenerView;
+	private LinearLayout sectionsContainer;
 	private GridView gridView;
 	private PickPieAppsAdapter adapter;
 
@@ -64,53 +75,21 @@ public class PickPieAppsActivity extends Activity {
 		toolbar.setBackgroundColor(isLight
 				? toolbarBackground.backgroundColor
 				: toolbarBackground.getColorForY(0));
-		gridView = findViewById(R.id.apps);
+		scrollListenerView = findViewById(R.id.scroll_view);
+		sectionsContainer = findViewById(R.id.sections_container);
 
 		findViewById(R.id.back).setOnClickListener(v -> confirmDiscardChanges());
 		findViewById(R.id.apply).setOnClickListener(v -> confirmApplySelection());
 
 		initSelection();
 
-		gridView.setOnScrollListener(new AbsListView.OnScrollListener() {
-			@Override
-			public void onScrollStateChanged(AbsListView view, int scrollState) {
-			}
-
-			@Override
-			public void onScroll(AbsListView view, int firstVisibleItem,
-					int visibleItemCount, int totalItemCount) {
-				if (visibleItemCount < 1) {
-					return;
-				}
-				int y = 0xffff;
-				if (firstVisibleItem == 0) {
-					View child = view.getChildAt(0);
-					if (child != null) {
-						y = child.getTop() - view.getPaddingTop();
-					}
-				}
+		scrollListenerView.setOnScrollPositionListener((y, scrollable) ->
 				toolbar.setBackgroundColor(isLight
 						? toolbarBackground.backgroundColor
-						: toolbarBackground.getColorForY(y));
-			}
-		});
-
-		gridView.setOnItemClickListener((parent, view, position, id) -> {
-			Apps.AppIcon icon = adapter.getItem(position);
-			if (icon != null) {
-				LauncherItemKey key = new LauncherItemKey(
-						icon.componentName, icon.userHandle);
-				if (selectedKeys.contains(key)) {
-					selectedKeys.remove(key);
-				} else {
-					selectedKeys.add(key);
-				}
-				adapter.notifyDataSetChanged();
-			}
-		});
+						: toolbarBackground.getColorForY(y)));
 
 		Window window = getWindow();
-		SystemBars.addPaddingFromWindowInsets(toolbar, gridView);
+		SystemBars.addPaddingFromWindowInsets(toolbar, scrollListenerView);
 		SystemBars.setTransparentSystemBars(window);
 		SystemBars.setLightSystemBars(window, isLight);
 		SystemBars.setNavigationBarColor(window, toolbarBackground.backgroundColor);
@@ -210,19 +189,31 @@ public class PickPieAppsActivity extends Activity {
 		if (icon != null && icon.label != null) {
 			return icon.label;
 		}
-		if (adapter != null) {
-			int count = adapter.getCount();
-			for (int i = 0; i < count; ++i) {
-				Apps.AppIcon item = adapter.getItem(i);
-				if (item != null && key.equals(new LauncherItemKey(
-						item.componentName, item.userHandle))) {
-					return item.label;
-				}
+		for (Apps.AppIcon item : allApps) {
+			if (item != null && key.equals(new LauncherItemKey(
+					item.componentName, item.userHandle))) {
+				return item.label;
 			}
 		}
 		return key.componentName != null
 				? key.componentName.flattenToShortString()
 				: "";
+	}
+
+	private void toggleSelection(Apps.AppIcon icon) {
+		if (icon == null) {
+			return;
+		}
+		LauncherItemKey key = new LauncherItemKey(
+				icon.componentName, icon.userHandle);
+		if (selectedKeys.contains(key)) {
+			selectedKeys.remove(key);
+		} else {
+			selectedKeys.add(key);
+		}
+		for (PickPieAppsAdapter a : adapters) {
+			a.notifyDataSetChanged();
+		}
 	}
 
 	private void loadApps() {
@@ -241,8 +232,68 @@ public class PickPieAppsActivity extends Activity {
 		Collections.sort(all, (a, b) ->
 				a.label.compareToIgnoreCase(b.label));
 
-		adapter = new PickPieAppsAdapter(this, all, selectedKeys);
-		gridView.setAdapter(adapter);
+		List<DrawerSectionRegistry.SectionGroup> sectionGroups =
+				DrawerSectionRegistry.group(all);
+
+		allApps.clear();
+		allApps.addAll(DrawerSectionRegistry.flatten(sectionGroups));
+
+		sectionsContainer.removeAllViews();
+		adapters.clear();
+
+		float dp = getResources().getDisplayMetrics().density;
+		int textColorSecondary = PreferenceSliderView.getColorFromAttribute(
+				this, android.R.attr.textColorSecondary,
+				getResources().getColor(R.color.text_color_preference));
+
+		NestedGridView primaryGrid = null;
+
+		for (DrawerSectionRegistry.SectionGroup group : sectionGroups) {
+			if (group.items.isEmpty()) {
+				continue;
+			}
+
+			TextView header = new TextView(this);
+			header.setText(group.section.getTitle(this));
+			header.setTextSize(14f);
+			header.setTypeface(Typeface.DEFAULT_BOLD);
+			header.setTextColor(textColorSecondary);
+			int topPadding = Math.round((sectionsContainer.getChildCount() == 0 ? 8f : 16f) * dp);
+			int bottomPadding = Math.round(8f * dp);
+			header.setPadding(Math.round(4f * dp), topPadding, Math.round(4f * dp), bottomPadding);
+			sectionsContainer.addView(header);
+
+			NestedGridView grid = new NestedGridView(this);
+			grid.setColumnWidth(Math.round(72f * dp));
+			grid.setHorizontalSpacing(Math.round(8f * dp));
+			grid.setVerticalSpacing(Math.round(8f * dp));
+			grid.setNumColumns(GridView.AUTO_FIT);
+			grid.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
+			grid.setGravity(Gravity.CENTER);
+			grid.setClipToPadding(false);
+
+			if (primaryGrid == null || DrawerSectionRegistry.SECTION_ID_APPS.equals(group.section.getId())) {
+				grid.setId(R.id.apps);
+				primaryGrid = grid;
+			}
+
+			PickPieAppsAdapter sectionAdapter = new PickPieAppsAdapter(
+					this, group.items, selectedKeys);
+			grid.setAdapter(sectionAdapter);
+			adapters.add(sectionAdapter);
+
+			grid.setOnItemClickListener((parent, view, position, id) -> {
+				Apps.AppIcon clickedIcon = sectionAdapter.getItem(position);
+				toggleSelection(clickedIcon);
+			});
+
+			sectionsContainer.addView(grid);
+		}
+
+		gridView = primaryGrid;
+		if (primaryGrid != null) {
+			adapter = (PickPieAppsAdapter) primaryGrid.getAdapter();
+		}
 	}
 
 	private void applySelection() {
@@ -269,16 +320,12 @@ public class PickPieAppsActivity extends Activity {
 				}
 			}
 			// 2. Append newly selected icons.
-			if (adapter != null) {
-				int count = adapter.getCount();
-				for (int i = 0; i < count; ++i) {
-					Apps.AppIcon icon = adapter.getItem(i);
-					if (icon != null) {
-						LauncherItemKey key = new LauncherItemKey(
-								icon.componentName, icon.userHandle);
-						if (selectedKeys.contains(key) && !newMenu.contains(icon)) {
-							newMenu.add(icon);
-						}
+			for (Apps.AppIcon icon : allApps) {
+				if (icon != null) {
+					LauncherItemKey key = new LauncherItemKey(
+							icon.componentName, icon.userHandle);
+					if (selectedKeys.contains(key) && !newMenu.contains(icon)) {
+						newMenu.add(icon);
 					}
 				}
 			}
@@ -286,17 +333,7 @@ public class PickPieAppsActivity extends Activity {
 			targetMenu.clear();
 			targetMenu.addAll(newMenu);
 		} else {
-			List<Apps.AppIcon> allAvailable = new ArrayList<>();
-			if (adapter != null) {
-				int count = adapter.getCount();
-				for (int i = 0; i < count; ++i) {
-					Apps.AppIcon icon = adapter.getItem(i);
-					if (icon != null) {
-						allAvailable.add(icon);
-					}
-				}
-			}
-			Apps.updateSelectionInRigidMenu(targetMenu, selectedKeys, allAvailable);
+			Apps.updateSelectionInRigidMenu(targetMenu, selectedKeys, allApps);
 		}
 		PieLauncherApp.apps.store(this);
 		if (PieLauncherApp.getPrefs(this).excludePie() !=

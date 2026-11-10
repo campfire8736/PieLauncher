@@ -706,4 +706,47 @@ public class AppPieViewTest {
         appPieView.showList();
         org.junit.Assert.assertEquals("Scroll offset should be restored to lastScrollY when reopening list", 350, appPieView.getScrollY());
     }
+
+    @Test
+    public void testGrabbedAppReleasedOnEndEditActionRequestsAppInfo() {
+        final Apps.AppIcon[] requestedIcon = new Apps.AppIcon[1];
+        appPieView.setActionCallback(new AppPieView.ActionCallback() {
+            @Override
+            public void onAppTapped(Apps.AppIcon icon) {}
+
+            @Override
+            public void onAppInfoRequested(Apps.AppIcon icon) {
+                requestedIcon[0] = icon;
+            }
+
+            @Override
+            public void onEditOptionsRequested(Apps.AppIcon icon) {}
+        });
+
+        // Enter edit mode and grab redIcon
+        appPieView.showEditor();
+        try {
+            java.lang.reflect.Method editIconMethod = AppPieView.class.getDeclaredMethod("editIcon", de.markusfisch.android.pielauncher.content.PieItem.class);
+            editIconMethod.setAccessible(true);
+            editIconMethod.invoke(appPieView, redIcon);
+
+            java.lang.reflect.Field editorRendererField = AppPieView.class.getDeclaredField("editorRenderer");
+            editorRendererField.setAccessible(true);
+            de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer renderer =
+                    (de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) editorRendererField.get(appPieView);
+
+            java.lang.reflect.Field touchField = AppPieView.class.getDeclaredField("touch");
+            touchField.setAccessible(true);
+            android.graphics.Point touchPoint = (android.graphics.Point) touchField.get(appPieView);
+            touchPoint.set(renderer.iconEndRect.centerX(), renderer.iconEndRect.centerY());
+
+            java.lang.reflect.Method performEditActionMethod = AppPieView.class.getDeclaredMethod("performEditAction", android.content.Context.class);
+            performEditActionMethod.setAccessible(true);
+            performEditActionMethod.invoke(appPieView, appPieView.getContext());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        org.junit.Assert.assertEquals("App info should be requested for grabbed redIcon", redIcon, requestedIcon[0]);
+    }
 }

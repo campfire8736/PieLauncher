@@ -1114,6 +1114,7 @@ public class AppPieView extends View {
                         }
                     }
                 } else {
+                    PieItem grabbed = pieEditor.getGrabbedIcon();
                     pieEditor.rollback(pieMenu.icons);
                     if (pieEditor.isNeverDropped()) {
                         fadeOutMode();
@@ -1121,16 +1122,16 @@ public class AppPieView extends View {
                     }
                     if (PieLauncherApp.iconPack.hasPacks()) {
                         storeMenu();
-                        changeIcon(context, pieEditor.getGrabbedIcon());
-                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
+                        changeIcon(context, grabbed);
+                    } else if (grabbed instanceof Apps.AppIcon &&
                             PieLauncherApp.apps.isDrawerIcon(
-                                    (Apps.AppIcon) pieEditor.getGrabbedIcon())) {
-                        removeIconFromPie(pieEditor.getGrabbedIcon(), true);
-                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon) {
+                                    (Apps.AppIcon) grabbed)) {
+                        removeIconFromPie(grabbed, true);
+                    } else if (grabbed instanceof Apps.AppIcon) {
                         PickIconActivity.askToHide(context,
-                                ((Apps.AppIcon) pieEditor.getGrabbedIcon()).componentName);
-                    } else if (pieEditor.getGrabbedIcon() != null) {
-                        pieEditor.getGrabbedIcon().showOptions(context);
+                                ((Apps.AppIcon) grabbed).componentName);
+                    } else if (grabbed != null) {
+                        grabbed.showOptions(context);
                     }
                 }
                 return true;
@@ -1138,14 +1139,15 @@ public class AppPieView extends View {
                 if (!pieEditor.hasGrabbedIcon()) {
                     endEditMode();
                 } else {
+                    PieItem grabbed = pieEditor.getGrabbedIcon();
                     pieEditor.rollback(pieMenu.icons);
                     fadeOutMode();
-                    if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
+                    if (grabbed instanceof Apps.AppIcon &&
                             PieLauncherApp.apps.isDrawerIcon(
-                                    (Apps.AppIcon) pieEditor.getGrabbedIcon())) {
-                        removeIconFromPie(pieEditor.getGrabbedIcon(), true);
-                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
-                            Apps.isShortcut((Apps.AppIcon) pieEditor.getGrabbedIcon())) {
+                                    (Apps.AppIcon) grabbed)) {
+                        removeIconFromPie(grabbed, true);
+                    } else if (grabbed instanceof Apps.AppIcon &&
+                            Apps.isShortcut((Apps.AppIcon) grabbed)) {
                         // The end target uninstalls apps; a pinned shortcut (e.g.
                         // a PWA) has nothing to uninstall, so remove it instead.
                         // Unlike launchAppInfo() this stays in-app, so we must end
@@ -1153,14 +1155,14 @@ public class AppPieView extends View {
                         // MODE_EDIT and the pie won't open until the activity is
                         // recreated (e.g. by pressing Home).
                         PieLauncherApp.apps.removePinnedShortcut(context,
-                                (Apps.AppIcon) pieEditor.getGrabbedIcon());
+                                (Apps.AppIcon) grabbed);
                         endEditMode();
-                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon) {
+                    } else if (grabbed instanceof Apps.AppIcon) {
                         // Persist changes before launching app info because
                         // that can be used to uninstall an app which would
                         // trigger indexing what would reset any changes.
                         storeMenu();
-                        actionHandler.requestAppInfo((Apps.AppIcon) pieEditor.getGrabbedIcon());
+                        actionHandler.requestAppInfo((Apps.AppIcon) grabbed);
                     } else {
                         endEditMode();
                     }

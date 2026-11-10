@@ -226,17 +226,36 @@ public class Apps {
 		}
 	}
 
-	// Removes a pinned shortcut from the launcher completely.
+	public static void removeItemFromPieMenu(
+			List<PieItem> menu,
+			PieItem item,
+			boolean isRigid) {
+		if (isRigid) {
+			int idx = menu.indexOf(item);
+			if (idx >= 0) {
+				menu.set(idx, PieItem.createGhost());
+				shrinkRigidCapacityIfNeeded(menu);
+			}
+		} else {
+			menu.remove(item);
+		}
+	}
+
+	public void removeItemFromPie(Context context, PieItem item) {
+		boolean isRigid = PieLauncherApp.getPrefs(context).isRigidPie();
+		removeItemFromPieMenu(menuPrimary, item, isRigid);
+		removeItemFromPieMenu(menuSecondary, item, isRigid);
+		store(context);
+		propagateUpdate();
+	}
+
 	public void removePinnedShortcut(Context context, AppIcon icon) {
 		if (!isShortcut(icon)) {
 			return;
 		}
 		PieLauncherApp.getDatabase(context).removePinnedShortcut(context, icon);
 		apps.remove(new LauncherItemKey(icon.componentName, icon.userHandle));
-		menuPrimary.remove(icon);
-		menuSecondary.remove(icon);
-		store(context);
-		propagateUpdate();
+		removeItemFromPie(context, icon);
 		AppLauncher.toast(context, context.getString(
 				R.string.removed_from_home_screen, icon.label));
 	}
@@ -256,10 +275,10 @@ public class Apps {
 			handler.post(() -> {
 				removePackageFromApps(apps, packageName, userHandle,
 						true);
-				removePackageFromPieMenu(menuPrimary, packageName,
-						userHandle);
-				removePackageFromPieMenu(menuSecondary, packageName,
-						userHandle);
+				boolean isRigid = PieLauncherApp.getPrefs(appContext).isRigidPie();
+				removePackageFromPieMenu(menuPrimary, packageName, userHandle, isRigid);
+				removePackageFromPieMenu(menuSecondary, packageName, userHandle, isRigid);
+				store(appContext);
 				propagateUpdate();
 			});
 		});
@@ -909,17 +928,25 @@ public class Apps {
 	private void removePackageFromPieMenu(
 			List<PieItem> icons,
 			String packageName,
-			UserHandle userHandle) {
-		Iterator<PieItem> it = icons.iterator();
-		while (it.hasNext()) {
-			PieItem item = it.next();
+			UserHandle userHandle,
+			boolean isRigid) {
+		for (int i = 0; i < icons.size(); ++i) {
+			PieItem item = icons.get(i);
 			if (item instanceof AppIcon) {
 				AppIcon appIcon = (AppIcon) item;
 				if (isPackageMatch(appIcon, packageName, true) &&
 						(userHandle == null || userHandle.equals(appIcon.userHandle))) {
-					it.remove();
+					if (isRigid) {
+						icons.set(i, PieItem.createGhost());
+					} else {
+						icons.remove(i);
+						--i;
+					}
 				}
 			}
+		}
+		if (isRigid) {
+			shrinkRigidCapacityIfNeeded(icons);
 		}
 	}
 

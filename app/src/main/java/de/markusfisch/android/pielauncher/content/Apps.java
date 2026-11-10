@@ -50,7 +50,7 @@ public class Apps {
 		void onAppShortcuts(AppIcon app, List<AppIcon> shortcuts);
 	}
 
-	public static class AppIcon extends CanvasPieMenu.CanvasIcon {
+	public static class AppIcon extends PieItem {
 		public final Rect hitRect = new Rect();
 		public final String label;
 		public final UserHandle userHandle;
@@ -90,6 +90,24 @@ public class Apps {
 			AppIcon ghost = new AppIcon(null, "", (Bitmap) null, null);
 			ghost.isGhost = true;
 			return ghost;
+		}
+
+		@Override
+		public String getItemKey(Context context) {
+			if (componentName == null) {
+				return "";
+			}
+			return LauncherItemKey.flattenToString(context, componentName, userHandle);
+		}
+
+		@Override
+		public String getLabel() {
+			return label;
+		}
+
+		@Override
+		public boolean launch(Context context) {
+			return AppLauncher.launchApp(context, this);
 		}
 
 		byte[] iconBytes;

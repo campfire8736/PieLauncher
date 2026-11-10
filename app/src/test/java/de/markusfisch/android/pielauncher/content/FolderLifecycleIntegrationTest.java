@@ -2,9 +2,12 @@ package de.markusfisch.android.pielauncher.content;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Process;
 import android.os.UserHandle;
+import android.widget.GridView;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -16,6 +19,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.lang.reflect.Constructor;
@@ -25,6 +29,8 @@ import java.util.List;
 
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.activity.HomeActivity;
+import de.markusfisch.android.pielauncher.activity.PickPieAppsActivity;
+import de.markusfisch.android.pielauncher.adapter.PickPieAppsAdapter;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.widget.AppPieView;
@@ -403,6 +409,113 @@ public class FolderLifecycleIntegrationTest {
 
 		// Verify folder is still in main menu (not removed when edited)
 		assertTrue(PieLauncherApp.apps.menuPrimary.contains(folder));
+	}
+
+	@Test
+	public void testOpeningSelectionScreenFromFolderInEditMode_AppliesToFolderNotSecondary() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		Apps.AppIcon folderApp1 = createAppIcon("com.pkg.app1", "App 1");
+		Apps.AppIcon folderApp2 = createAppIcon("com.pkg.app2", "App 2");
+		Apps.AppIcon secondaryApp = createAppIcon("com.pkg.secondary", "Secondary App");
+
+		PieLauncherApp.apps.apps.clear();
+		PieLauncherApp.apps.apps.put(new LauncherItemKey(folderApp1.componentName, folderApp1.userHandle), folderApp1);
+		PieLauncherApp.apps.apps.put(new LauncherItemKey(folderApp2.componentName, folderApp2.userHandle), folderApp2);
+		PieLauncherApp.apps.apps.put(new LauncherItemKey(secondaryApp.componentName, secondaryApp.userHandle), secondaryApp);
+
+		List<PieItem> folderItems = new ArrayList<>();
+		folderItems.add(folderApp1);
+
+		FolderManager.getOrCreateFolder(context, "test_folder_pick", PieLauncherApp.apps.apps);
+		FolderItem cachedFolder = FolderManager.getOrCreateFolder(context, "test_folder_pick", PieLauncherApp.apps.apps);
+		cachedFolder.items.clear();
+		cachedFolder.items.add(folderApp1);
+
+		PieLauncherApp.apps.menuSecondary.clear();
+		PieLauncherApp.apps.menuSecondary.add(secondaryApp);
+		PieLauncherApp.apps.store(context);
+
+		// Enter folder and EditMode
+		pieView.setActiveFolder(cachedFolder);
+		Method showEditorMethod = HomeActivity.class.getDeclaredMethod("showEditor");
+		showEditorMethod.setAccessible(true);
+		showEditorMethod.invoke(activity);
+
+		assertTrue(pieView.inEditMode());
+		assertTrue(pieView.isInFolder());
+
+		// Trigger Selection screen via action button (BACK_OR_REMOVE_ICON)
+		java.lang.reflect.Field rendererField = AppPieView.class.getDeclaredField("editorRenderer");
+		rendererField.setAccessible(true);
+		de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer editorRenderer =
+				(de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) rendererField.get(pieView);
+
+		java.lang.reflect.Field touchField = AppPieView.class.getDeclaredField("touch");
+		touchField.setAccessible(true);
+		android.graphics.Point touchPoint = (android.graphics.Point) touchField.get(pieView);
+		touchPoint.set(editorRenderer.iconStartRect.centerX(), editorRenderer.iconStartRect.centerY());
+
+		Method performEditActionMethod = AppPieView.class.getDeclaredMethod("performEditAction", Context.class);
+		performEditActionMethod.setAccessible(true);
+		boolean handled = (boolean) performEditActionMethod.invoke(pieView, activity);
+		assertTrue(handled);
+
+		// Verify PickPieAppsActivity was started with EXTRA_FOLDER_ID
+		Intent intent = ShadowApplication.getInstance().getNextStartedActivity();
+		assertNotNull(intent);
+		assertEquals(PickPieAppsActivity.class.getName(), intent.getComponent().getClassName());
+		assertEquals("test_folder_pick", intent.getStringExtra(PickPieAppsActivity.EXTRA_FOLDER_ID));
+
+		// Run PickPieAppsActivity
+		ActivityController<PickPieAppsActivity> pickController =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity pickActivity = pickController.get();
+
+		GridView gridView = pickActivity.findViewById(R.id.apps);
+		assertNotNull(gridView);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+		assertNotNull(adapter);
+
+		// Select folderApp2 (find its position in adapter)
+		int app2Pos = -1;
+		for (int i = 0; i < adapter.getCount(); i++) {
+			if (folderApp2.equals(adapter.getItem(i))) {
+				app2Pos = i;
+				break;
+			}
+		}
+		assertTrue(app2Pos >= 0);
+		gridView.performItemClick(null, app2Pos, adapter.getItemId(app2Pos));
+
+		// Apply selection
+		pickActivity.findViewById(R.id.apply).performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+		assertTrue(pickActivity.isFinishing());
+
+		// Resume HomeActivity
+		controller.resume();
+
+		// Verify HomeActivity is back in EditMode inside the folder
+		assertTrue(pieView.inEditMode());
+		assertTrue(pieView.isInFolder());
+		assertEquals(cachedFolder, pieView.getActiveFolder());
+
+		// Verify folder items contain both folderApp1 and folderApp2
+		assertTrue(cachedFolder.items.contains(folderApp1));
+		assertTrue(cachedFolder.items.contains(folderApp2));
+		assertFalse(cachedFolder.items.contains(secondaryApp));
+
+		// Verify menuSecondary is unchanged
+		assertEquals(1, PieLauncherApp.apps.menuSecondary.size());
+		assertTrue(PieLauncherApp.apps.menuSecondary.contains(secondaryApp));
 	}
 
 	private Apps.AppIcon createAppIcon(String pkg, String label) {

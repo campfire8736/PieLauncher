@@ -25,6 +25,8 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppLauncher;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.DrawerSectionRegistry;
+import de.markusfisch.android.pielauncher.content.FolderItem;
+import de.markusfisch.android.pielauncher.content.FolderManager;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
 import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
@@ -38,6 +40,7 @@ import de.markusfisch.android.pielauncher.widget.ScrollWithListenerView;
 
 public class PickPieAppsActivity extends Activity {
 	public static final String EXTRA_IS_PRIMARY = "is_primary";
+	public static final String EXTRA_FOLDER_ID = "folder_id";
 
 	private final Set<LauncherItemKey> selectedKeys = new HashSet<>();
 	private final Set<LauncherItemKey> initialKeys = new HashSet<>();
@@ -45,6 +48,8 @@ public class PickPieAppsActivity extends Activity {
 	private final List<Apps.AppIcon> allApps = new ArrayList<>();
 
 	private boolean isPrimary = true;
+	private String folderId = null;
+	private FolderItem folder = null;
 	private ToolbarBackground toolbarBackground;
 	private ScrollWithListenerView scrollListenerView;
 	private View warningContainer;
@@ -53,9 +58,20 @@ public class PickPieAppsActivity extends Activity {
 	private PickPieAppsAdapter adapter;
 
 	public static void start(Context context, boolean isPrimary) {
+		start(context, isPrimary, null);
+	}
+
+	public static void start(Context context, boolean isPrimary, String folderId) {
 		Intent intent = new Intent(context, PickPieAppsActivity.class);
 		intent.putExtra(EXTRA_IS_PRIMARY, isPrimary);
+		if (folderId != null) {
+			intent.putExtra(EXTRA_FOLDER_ID, folderId);
+		}
 		context.startActivity(intent);
+	}
+
+	public static void start(Context context, String folderId) {
+		start(context, false, folderId);
 	}
 
 	@Override
@@ -68,6 +84,10 @@ public class PickPieAppsActivity extends Activity {
 		setContentView(R.layout.activity_pick_pie_apps);
 
 		isPrimary = getIntent().getBooleanExtra(EXTRA_IS_PRIMARY, true);
+		folderId = getIntent().getStringExtra(EXTRA_FOLDER_ID);
+		if (folderId != null) {
+			folder = FolderManager.getOrCreateFolder(this, folderId, PieLauncherApp.apps.apps);
+		}
 
 		BackgroundBlur.setBlurRadius(getWindow(),
 				PieLauncherApp.getPrefs(this).getBackgroundBlurRadius());
@@ -100,10 +120,17 @@ public class PickPieAppsActivity extends Activity {
 		loadApps();
 	}
 
-	private void initSelection() {
-		List<PieItem> targetMenu = isPrimary
+	private List<PieItem> getTargetMenu() {
+		if (folder != null) {
+			return folder.items;
+		}
+		return isPrimary
 				? PieLauncherApp.apps.menuPrimary
 				: PieLauncherApp.apps.menuSecondary;
+	}
+
+	private void initSelection() {
+		List<PieItem> targetMenu = getTargetMenu();
 		selectedKeys.clear();
 		for (PieItem item : targetMenu) {
 			if (item instanceof Apps.AppIcon) {
@@ -210,9 +237,7 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private int getSelectedCount() {
-		List<PieItem> targetMenu = isPrimary
-				? PieLauncherApp.apps.menuPrimary
-				: PieLauncherApp.apps.menuSecondary;
+		List<PieItem> targetMenu = getTargetMenu();
 		int count = selectedKeys.size();
 		for (PieItem item : targetMenu) {
 			if (item != null && !item.isGhost && !(item instanceof Apps.AppIcon)) {
@@ -327,9 +352,7 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private void applySelection() {
-		List<PieItem> targetMenu = isPrimary
-				? PieLauncherApp.apps.menuPrimary
-				: PieLauncherApp.apps.menuSecondary;
+		List<PieItem> targetMenu = getTargetMenu();
 		Preferences prefs = PieLauncherApp.getPrefs(this);
 		boolean isRigid = prefs != null && prefs.isRigidPie();
 
@@ -365,7 +388,11 @@ public class PickPieAppsActivity extends Activity {
 		} else {
 			Apps.updateSelectionInRigidMenu(targetMenu, selectedKeys, allApps);
 		}
-		PieLauncherApp.apps.store(this);
+		if (folder != null) {
+			PieLauncherApp.getDatabase(this).storeMenu("folder:" + folder.id, folder.items);
+		} else {
+			PieLauncherApp.apps.store(this);
+		}
 		if (PieLauncherApp.getPrefs(this).excludePie() !=
 				Preferences.EXCLUDE_PIE_NONE) {
 			PieLauncherApp.apps.propagateUpdate();

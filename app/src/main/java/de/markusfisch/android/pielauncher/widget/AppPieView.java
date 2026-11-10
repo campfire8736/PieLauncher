@@ -103,7 +103,10 @@ public class AppPieView extends View {
     }
 
     public interface EditListener {
-        void onPickPieApps(boolean isPrimary);
+        default void onPickPieApps(boolean isPrimary) {
+            onPickPieApps(isPrimary, null);
+        }
+        void onPickPieApps(boolean isPrimary, String folderId);
         void onPreferences();
     }
 
@@ -1227,10 +1230,11 @@ public class AppPieView extends View {
                 pieConfig.updateChangeRadiusIcon(context, editorRenderer);
                 return true;
             case BACK_OR_REMOVE_ICON:
+                String folderId = activeFolder != null ? activeFolder.id : null;
                 if (editListener != null) {
-                    editListener.onPickPieApps(isPrimaryMenu());
+                    editListener.onPickPieApps(isPrimaryMenu(), folderId);
                 } else {
-                    PickPieAppsActivity.start(context, isPrimaryMenu());
+                    PickPieAppsActivity.start(context, isPrimaryMenu(), folderId);
                 }
                 return true;
             case ADD_FOLDER:

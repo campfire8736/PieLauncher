@@ -29,6 +29,8 @@ import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.Database;
+import de.markusfisch.android.pielauncher.content.FolderItem;
+import de.markusfisch.android.pielauncher.content.FolderManager;
 import de.markusfisch.android.pielauncher.graphics.ToolbarBackground;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.view.SoftKeyboard;
@@ -105,6 +107,11 @@ public class HomeActivity extends Activity {
 
 		if (state != null) {
 			showEditorOnResume = state.getBoolean("show_editor_on_resume", false);
+			String activeFolderId = state.getString("active_folder_id");
+			if (activeFolderId != null) {
+				FolderItem folder = FolderManager.getOrCreateFolder(this, activeFolderId, PieLauncherApp.apps.apps);
+				pieView.setActiveFolder(folder);
+			}
 		}
 
 		kb = new SoftKeyboard(this);
@@ -277,6 +284,9 @@ public class HomeActivity extends Activity {
 		super.onSaveInstanceState(outState);
 		outState.putBoolean("show_editor_on_resume",
 				showEditorOnResume || (pieView != null && pieView.inEditMode()));
+		if (pieView != null && pieView.getActiveFolder() != null) {
+			outState.putString("active_folder_id", pieView.getActiveFolder().id);
+		}
 	}
 
 	@Override
@@ -431,9 +441,9 @@ public class HomeActivity extends Activity {
 		});
 		pieView.setEditListener(new AppPieView.EditListener() {
 			@Override
-			public void onPickPieApps(boolean isPrimary) {
+			public void onPickPieApps(boolean isPrimary, String folderId) {
 				showEditorOnResume = true;
-				PickPieAppsActivity.start(HomeActivity.this, isPrimary);
+				PickPieAppsActivity.start(HomeActivity.this, isPrimary, folderId);
 			}
 
 			@Override

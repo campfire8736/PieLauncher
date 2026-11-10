@@ -36,6 +36,8 @@ import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.adapter.PickPieAppsAdapter;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.FolderItem;
+import de.markusfisch.android.pielauncher.content.FolderManager;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 
@@ -503,5 +505,61 @@ public class PickPieAppsActivityTest {
 
 		// Warning should be GONE again
 		assertEquals(View.GONE, warningContainer.getVisibility());
+	}
+
+	@Test
+	public void testFolderSelection_InitializesFromFolderAndAppliesToFolderNotSecondary() {
+		Context context = ApplicationProvider.getApplicationContext();
+
+		FolderItem folder = FolderManager.createNewFolder(context, PieLauncherApp.apps.apps);
+		folder.items.clear();
+		folder.items.add(appA);
+
+		PieLauncherApp.apps.menuSecondary.clear();
+		PieLauncherApp.apps.menuSecondary.add(appB);
+
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_FOLDER_ID, folder.id);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		GridView gridView = activity.findViewById(R.id.apps);
+		assertNotNull(gridView);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+		assertNotNull(adapter);
+
+		// Verify appA is selected (index 0) and appB is unselected (index 1) in folder selection
+		View view0 = adapter.getView(0, null, gridView);
+		CheckBox cb0 = view0.findViewById(R.id.selected);
+		assertTrue(cb0.isChecked());
+
+		View view1 = adapter.getView(1, null, gridView);
+		CheckBox cb1 = view1.findViewById(R.id.selected);
+		assertFalse(cb1.isChecked());
+
+		// Toggle appC (index 2) to select it
+		gridView.performItemClick(null, 2, adapter.getItemId(2));
+
+		// Apply changes
+		activity.findViewById(R.id.apply).performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+		assertTrue(activity.isFinishing());
+
+		// Verify folder items updated to include appA and appC
+		assertEquals(2, folder.items.size());
+		assertTrue(folder.items.contains(appA));
+		assertTrue(folder.items.contains(appC));
+		assertFalse(folder.items.contains(appB));
+
+		// Verify menuSecondary remains unchanged with only appB
+		assertEquals(1, PieLauncherApp.apps.menuSecondary.size());
+		assertTrue(PieLauncherApp.apps.menuSecondary.contains(appB));
 	}
 }

@@ -1244,7 +1244,10 @@ public class AppPieView extends View {
         centerSmoothCoordinatesAt(pieMenu.icons, viewWidth >> 1, viewHeight >> 1);
         pieConfig.updateChangeIcons(context, editorRenderer);
         invalidate();
-        Toast.makeText(context, R.string.added_to_home_screen, Toast.LENGTH_SHORT).show();
+        Toast.makeText(
+                context,
+                context.getString(R.string.added_to_home_screen, folder.getLabel()),
+                Toast.LENGTH_SHORT).show();
     }
 
     private void updateAppShortcuts() {

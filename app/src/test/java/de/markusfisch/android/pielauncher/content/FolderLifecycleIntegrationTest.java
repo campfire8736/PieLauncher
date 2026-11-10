@@ -96,6 +96,22 @@ public class FolderLifecycleIntegrationTest {
 	}
 
 	@Test
+	public void testAddFolderToPie_ToastFormatsLabelCorrectly() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+
+		Method addFolderMethod = AppPieView.class.getDeclaredMethod("addFolderToPie", Context.class);
+		addFolderMethod.setAccessible(true);
+		addFolderMethod.invoke(pieView, activity);
+
+		String latestToast = org.robolectric.shadows.ShadowToast.getTextOfLatestToast();
+		assertNotNull(latestToast);
+		assertFalse("Toast should format %1$s placeholder", latestToast.contains("%1$s"));
+		assertTrue("Toast should include folder name", latestToast.contains(activity.getString(R.string.folder)));
+	}
+
+	@Test
 	public void testSelectFolderOnPie_ChangesMenuToFolderItemsOnNextOpen() {
 		controller = Robolectric.buildActivity(HomeActivity.class).setup();
 		activity = controller.get();

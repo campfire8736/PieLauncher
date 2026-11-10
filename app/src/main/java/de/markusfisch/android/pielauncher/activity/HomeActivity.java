@@ -69,6 +69,10 @@ public class HomeActivity extends Activity {
 		if (pieView.inEditMode()) {
 			pieView.endEditMode();
 			showAllApps();
+		} else if (pieView.inListMode()) {
+			hideAllApps();
+		} else if (pieView.isInFolder()) {
+			pieView.exitFolder();
 		} else {
 			hideAllApps();
 		}
@@ -605,6 +609,9 @@ public class HomeActivity extends Activity {
 		}
 		if (pieView == null || !pieView.inEditMode()) {
 			toolbar.setVisibility(View.GONE);
+		}
+		if (pieView != null && pieView.isInFolder()) {
+			pieView.exitFolder();
 		}
 		// Ensure the pie menu is initially hidden because on some devices
 		// there's not always a matching ACTION_UP/_CANCEL event for every

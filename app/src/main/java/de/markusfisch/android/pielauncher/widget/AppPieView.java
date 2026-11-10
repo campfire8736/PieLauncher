@@ -34,6 +34,7 @@ import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsAnimation;
 import android.widget.OverScroller;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -244,6 +245,8 @@ public class AppPieView extends View {
     private Apps.AppIcon highlightedIcon;
     private long highlightedFrom;
     private boolean appListIsFiltered = false;
+    private FolderItem activeFolder = null;
+    private List<PieItem> returnMenuBeforeFolder = null;
 
     private final AppShortcutsController shortcutsController;
     private final AppActionHandler actionHandler;
@@ -298,6 +301,9 @@ public class AppPieView extends View {
             PieLauncherApp.apps.removeItemFromPie(getContext(), folder);
             pieEditor.removeGrabbedIcon();
             FolderManager.deleteFolder(getContext(), folder.id);
+            if (activeFolder == folder) {
+                exitFolder();
+            }
             fadeOutMode();
             endEditMode();
         }
@@ -438,6 +444,30 @@ public class AppPieView extends View {
 
     public boolean inListMode() {
         return stateManager.inListMode();
+    }
+
+    public boolean isInFolder() {
+        return activeFolder != null;
+    }
+
+    public FolderItem getActiveFolder() {
+        return activeFolder;
+    }
+
+    public void setActiveFolder(FolderItem folder) {
+        this.activeFolder = folder;
+        if (folder != null) {
+            this.returnMenuBeforeFolder = (pieMenu.icons == menuSecondary) ? menuSecondary : menuPrimary;
+        }
+    }
+
+    public void exitFolder() {
+        if (activeFolder != null) {
+            activeFolder = null;
+            setMenu(returnMenuBeforeFolder != null ? returnMenuBeforeFolder : menuPrimary);
+            returnMenuBeforeFolder = null;
+            invalidate();
+        }
     }
 
     public boolean isScrollingAppShortcuts() {
@@ -701,7 +731,10 @@ public class AppPieView extends View {
     private class AppPieTouchListener implements PieTouchListener {
         @Override
         public void openMenu(long eventTime) {
-            if (prefs.splitPieMenu() != Preferences.ALTERNATE_MENU_NONE) {
+            if (activeFolder != null) {
+                setMenu(activeFolder.items);
+                setCenter(touch.x, touch.y);
+            } else if (prefs.splitPieMenu() != Preferences.ALTERNATE_MENU_NONE) {
                 selectMenu(touch.x, touch.y);
                 setCenter(touch.x, touch.y);
             } else {
@@ -1095,6 +1128,11 @@ public class AppPieView extends View {
                     appIcon = null;
                 }
             }
+            if (appIcon instanceof FolderItem) {
+                setActiveFolder((FolderItem) appIcon);
+                fadeOutMode();
+                return true;
+            }
             boolean pieVisible = stateManager.getFadePie().isVisible();
             fadeOutMode();
             return actionHandler.performPieAction(context, tapFlags, appIcon, pieVisible);
@@ -1166,6 +1204,9 @@ public class AppPieView extends View {
                     PickPieAppsActivity.start(context, isPrimaryMenu());
                 }
                 return true;
+            case ADD_FOLDER:
+                addFolderToPie(context);
+                return true;
             case EDIT_SETTINGS_OR_UNDO:
                 if (hasSecondaryMenu()) {
                     storeMenu();
@@ -1190,6 +1231,20 @@ public class AppPieView extends View {
             default:
                 return false;
         }
+    }
+
+    private void addFolderToPie(Context context) {
+        FolderItem folder = FolderManager.createNewFolder(context, PieLauncherApp.apps.apps);
+        List<PieItem> currentMenu = activeFolder != null
+                ? activeFolder.items
+                : (isPrimaryMenu() ? menuPrimary : menuSecondary);
+        Apps.addItemToPieMenu(currentMenu, folder, pieMenu.isRigid());
+        storeMenu();
+        pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
+        centerSmoothCoordinatesAt(pieMenu.icons, viewWidth >> 1, viewHeight >> 1);
+        pieConfig.updateChangeIcons(context, editorRenderer);
+        invalidate();
+        Toast.makeText(context, R.string.added_to_home_screen, Toast.LENGTH_SHORT).show();
     }
 
     private void updateAppShortcuts() {
@@ -1404,6 +1459,9 @@ public class AppPieView extends View {
             case BACK_OR_REMOVE_ICON:
                 setHighlightedAction(editorRenderer.iconStartRect);
                 break;
+            case ADD_FOLDER:
+                setHighlightedAction(editorRenderer.iconFolderRect);
+                break;
             case EDIT_SETTINGS_OR_UNDO:
                 setHighlightedAction(editorRenderer.iconCenterRect);
                 break;
@@ -1475,6 +1533,9 @@ public class AppPieView extends View {
     private void storeMenu() {
         Context context = getContext();
         if (context != null) {
+            if (activeFolder != null) {
+                PieLauncherApp.getDatabase(context).storeMenu("folder:" + activeFolder.id, activeFolder.items);
+            }
             PieLauncherApp.apps.store(context);
         }
         pieConfig.savePreferences(prefs, isPrimaryMenu());

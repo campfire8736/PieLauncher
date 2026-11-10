@@ -21,8 +21,16 @@ import de.markusfisch.android.pielauncher.graphics.PieMenu;
 import de.markusfisch.android.pielauncher.widget.PreferenceSliderView;
 import de.markusfisch.android.pielauncher.widget.state.Fader;
 import de.markusfisch.android.pielauncher.widget.state.EditorAction;
+import de.markusfisch.android.pielauncher.content.PieItemAction;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EditorRenderer {
+
+    private final Context context;
+    public final List<Rect> grabbedActionRects = new ArrayList<>();
+    private List<PieItemAction> activeGrabbedActions = new ArrayList<>();
 
     public final Rect iconStartRect = new Rect();
     public final Rect iconCenterRect = new Rect();
@@ -76,6 +84,7 @@ public class EditorRenderer {
     private float actionSizeSq;
 
     public EditorRenderer(Context context) {
+        this.context = context;
         Resources res = context.getResources();
         dp = res.getDisplayMetrics().density;
 
@@ -193,13 +202,23 @@ public class EditorRenderer {
 
         boolean hasIcon = grabbedIcon != null;
         boolean invalidate = f < 1f;
+        boolean portrait = canvas.getHeight() > canvas.getWidth();
+
+        if (hasIcon) {
+            activeGrabbedActions = grabbedIcon.getEditActions(context, hasPacks);
+            layoutGrabbedActions(activeGrabbedActions, canvas.getWidth(), canvas.getHeight(), portrait);
+        } else {
+            activeGrabbedActions.clear();
+            grabbedActionRects.clear();
+        }
 
         int barAlpha = Math.round(f * ((barColor >>> 24) & 0xff));
         paintBar.setColor((barAlpha << 24) | (barColor & 0xffffff));
 
-        boolean portrait = canvas.getHeight() > canvas.getWidth();
         float cornerRadiusTop = (portrait ? topBarRect.height() : topBarRect.width()) * 0.5f;
         float cornerRadiusBottom = (portrait ? bottomBarRect.height() : bottomBarRect.width()) * 0.5f;
+
+        String tip = getTip(hasIcon, hasPacks, grabbedIcon);
 
         if (!hasIcon) {
             topBarRectF.set(topBarRect);
@@ -207,7 +226,6 @@ public class EditorRenderer {
             bottomBarRectF.set(bottomBarRect);
             canvas.drawRoundRect(bottomBarRectF, cornerRadiusBottom, cornerRadiusBottom, paintBar);
         } else {
-            String tip = getTip(hasIcon, hasPacks);
             if (tip != null && portrait) {
                 float tipWidth = paintText.measureText(tip);
                 float cx = canvas.getWidth() * 0.5f;
@@ -228,7 +246,7 @@ public class EditorRenderer {
         // Only draw tips in portrait orientation.
         // There's probably not enough space in landscape.
         if (canvas.getWidth() < canvas.getHeight()) {
-            drawTip(canvas, getTip(hasIcon, hasPacks));
+            drawTip(canvas, tip);
         }
 
         if (hasIcon) {
@@ -242,19 +260,25 @@ public class EditorRenderer {
             }
             Rect activeHighlight = highlightedAction;
             if (hasTouch) {
-                if (contains(iconStartRect, touch)) {
-                    activeHighlight = iconStartRect;
-                } else if (contains(iconCenterRect, touch)) {
-                    activeHighlight = iconCenterRect;
-                } else if (contains(iconEndRect, touch)) {
-                    activeHighlight = iconEndRect;
-                } else {
-                    activeHighlight = null;
+                activeHighlight = null;
+                for (int i = 0; i < grabbedActionRects.size(); i++) {
+                    Rect actionRect = grabbedActionRects.get(i);
+                    if (contains(actionRect, touch)) {
+                        activeHighlight = actionRect;
+                        break;
+                    }
                 }
             }
-            drawAction(canvas, iconRemove, iconStartRect, r, activeHighlight);
-            drawAction(canvas, hasPacks ? iconEdit : iconHide, iconCenterRect, r, activeHighlight);
-            drawAction(canvas, iconDetails, iconEndRect, r, activeHighlight);
+            for (int i = 0; i < activeGrabbedActions.size(); i++) {
+                if (i < grabbedActionRects.size()) {
+                    PieItemAction action = activeGrabbedActions.get(i);
+                    Rect actionRect = grabbedActionRects.get(i);
+                    Bitmap icon = action.getIcon(context);
+                    if (icon != null) {
+                        drawAction(canvas, icon, actionRect, r, activeHighlight);
+                    }
+                }
+            }
         } else {
             drawAction(canvas, iconChangeTwist, iconChangeTwistRect, 0f, highlightedAction);
             drawAction(canvas, iconChangeIconScale, iconChangeIconScaleRect, 0f, highlightedAction);
@@ -285,19 +309,133 @@ public class EditorRenderer {
     }
 
     private String getTip(boolean hasIcon, boolean hasPacks) {
+        return getTip(hasIcon, hasPacks, null);
+    }
+
+    private String getTip(boolean hasIcon, boolean hasPacks, PieItem grabbedIcon) {
         if (hasIcon) {
+            if (activeGrabbedActions.isEmpty() && grabbedIcon != null) {
+                activeGrabbedActions = grabbedIcon.getEditActions(context, hasPacks);
+            }
             if (hasTouch) {
+                for (int i = 0; i < activeGrabbedActions.size(); i++) {
+                    if (i < grabbedActionRects.size() && contains(grabbedActionRects.get(i), touch)) {
+                        return activeGrabbedActions.get(i).getTip(context);
+                    }
+                }
                 if (contains(iconStartRect, touch)) {
-                    return removeIconTip;
+                    return !activeGrabbedActions.isEmpty()
+                            ? activeGrabbedActions.get(0).getTip(context)
+                            : removeIconTip;
                 } else if (contains(iconCenterRect, touch)) {
-                    return hasPacks ? editAppTip : hideAppTip;
+                    return activeGrabbedActions.size() >= 3
+                            ? activeGrabbedActions.get(1).getTip(context)
+                            : (hasPacks ? editAppTip : hideAppTip);
                 } else if (contains(iconEndRect, touch)) {
-                    return removeAppTip;
+                    return !activeGrabbedActions.isEmpty()
+                            ? activeGrabbedActions.get(activeGrabbedActions.size() - 1).getTip(context)
+                            : removeAppTip;
                 }
             }
             return dragToOrderTip;
         }
         return null;
+    }
+
+    public void layoutGrabbedActions(
+            List<PieItemAction> actions,
+            int viewWidth,
+            int viewHeight,
+            boolean portrait) {
+        this.activeGrabbedActions = actions != null ? actions : new ArrayList<>();
+        if (actions == null || actions.isEmpty()) {
+            grabbedActionRects.clear();
+            return;
+        }
+        int count = actions.size();
+        while (grabbedActionRects.size() < count) {
+            grabbedActionRects.add(new Rect());
+        }
+        while (grabbedActionRects.size() > count) {
+            grabbedActionRects.remove(grabbedActionRects.size() - 1);
+        }
+
+        if (count == 3) {
+            grabbedActionRects.get(0).set(iconStartRect);
+            grabbedActionRects.get(1).set(iconCenterRect);
+            grabbedActionRects.get(2).set(iconEndRect);
+            return;
+        }
+
+        int w = iconRemove != null ? iconRemove.getWidth() : 0;
+        int h = iconRemove != null ? iconRemove.getHeight() : 0;
+        int totalWidth = count * w;
+        int totalHeight = count * h;
+        int spaces = count + 1;
+
+        if (portrait) {
+            int y = iconStartRect.top != 0 || iconStartRect.bottom != 0
+                    ? iconStartRect.top
+                    : (viewHeight - controlsPadding - h / 2);
+            int step = Math.round((float) (viewWidth - totalWidth) / spaces);
+            int x = step;
+            for (int i = 0; i < count; i++) {
+                grabbedActionRects.get(i).set(x, y, x + w, y + h);
+                x += step + w;
+            }
+        } else {
+            int x = iconStartRect.left != 0 || iconStartRect.right != 0
+                    ? iconStartRect.left
+                    : (viewWidth - controlsPadding - w / 2);
+            int step = Math.round((float) (viewHeight - totalHeight) / spaces);
+            int y = step;
+            for (int i = 0; i < count; i++) {
+                grabbedActionRects.get(i).set(x, y, x + w, y + h);
+                y += step + h;
+            }
+        }
+
+        if (count == 2) {
+            iconStartRect.set(grabbedActionRects.get(0));
+            iconCenterRect.set(0, 0, 0, 0);
+            iconEndRect.set(grabbedActionRects.get(1));
+        } else if (count == 1) {
+            iconStartRect.set(grabbedActionRects.get(0));
+            iconCenterRect.set(0, 0, 0, 0);
+            iconEndRect.set(0, 0, 0, 0);
+        }
+    }
+
+    public PieItemAction getGrabbedActionAt(Point touch) {
+        return getGrabbedActionAt(touch, null, false);
+    }
+
+    public PieItemAction getGrabbedActionAt(Point touch, PieItem grabbedIcon, boolean hasPacks) {
+        if (touch == null) {
+            return null;
+        }
+        if (activeGrabbedActions.isEmpty() && grabbedIcon != null) {
+            activeGrabbedActions = grabbedIcon.getEditActions(context, hasPacks);
+        }
+        for (int i = 0; i < activeGrabbedActions.size(); i++) {
+            if (i < grabbedActionRects.size() && contains(grabbedActionRects.get(i), touch)) {
+                return activeGrabbedActions.get(i);
+            }
+        }
+        if (contains(iconStartRect, touch) && !activeGrabbedActions.isEmpty()) {
+            return activeGrabbedActions.get(0);
+        }
+        if (contains(iconEndRect, touch) && !activeGrabbedActions.isEmpty()) {
+            return activeGrabbedActions.get(activeGrabbedActions.size() - 1);
+        }
+        if (contains(iconCenterRect, touch) && activeGrabbedActions.size() >= 3) {
+            return activeGrabbedActions.get(1);
+        }
+        return null;
+    }
+
+    public List<PieItemAction> getActiveGrabbedActions() {
+        return activeGrabbedActions;
     }
 
     private void drawTip(Canvas canvas, String tip) {

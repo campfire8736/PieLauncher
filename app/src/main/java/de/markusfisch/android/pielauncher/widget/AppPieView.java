@@ -48,6 +48,7 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppSearch;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.DrawerSectionRegistry;
+import de.markusfisch.android.pielauncher.content.PieItemAction;
 import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
@@ -244,6 +245,48 @@ public class AppPieView extends View {
 
     private final AppShortcutsController shortcutsController;
     private final AppActionHandler actionHandler;
+    private final PieItemAction.ActionListener actionListener = new PieItemAction.ActionListener() {
+        @Override
+        public void removeFromPie(PieItem item) {
+            boolean isDrawer = item instanceof Apps.AppIcon &&
+                    PieLauncherApp.apps.isDrawerIcon((Apps.AppIcon) item);
+            removeIconFromPie(item, isDrawer);
+        }
+
+        @Override
+        public void changeIcon(PieItem item) {
+            pieEditor.rollback(pieMenu.icons);
+            if (pieEditor.isNeverDropped()) {
+                fadeOutMode();
+                returnToList();
+            }
+            storeMenu();
+            AppPieView.this.changeIcon(getContext(), item);
+        }
+
+        @Override
+        public void hideApp(Apps.AppIcon item) {
+            pieEditor.rollback(pieMenu.icons);
+            if (pieEditor.isNeverDropped()) {
+                fadeOutMode();
+                returnToList();
+            }
+            PickIconActivity.askToHide(getContext(), item.componentName);
+        }
+
+        @Override
+        public void requestAppInfo(Apps.AppIcon item) {
+            pieEditor.rollback(pieMenu.icons);
+            fadeOutMode();
+            storeMenu();
+            actionHandler.requestAppInfo(item);
+        }
+
+        @Override
+        public void endEditMode() {
+            AppPieView.this.endEditMode();
+        }
+    };
     private int keyboardHeight = -1;
     private int insetsTop = 0;
 
@@ -992,6 +1035,10 @@ public class AppPieView extends View {
         }
         CanvasPieMenu.paint.setAlpha(255);
         pieEditor.editIcon(icon);
+        if (icon != null && viewWidth > 0 && viewHeight > 0) {
+            List<PieItemAction> actions = icon.getEditActions(getContext(), PieLauncherApp.iconPack.hasPacks());
+            editorRenderer.layoutGrabbedActions(actions, viewWidth, viewHeight, viewHeight > viewWidth);
+        }
         if (stateManager.getMode() != ViewStateManager.MODE_EDIT) {
             stateManager.showEditor();
         }
@@ -1062,7 +1109,17 @@ public class AppPieView extends View {
     }
 
     private boolean performEditAction(Context context) {
-        EditorAction action = editorRenderer.getActionAt(touch, pieEditor.hasGrabbedIcon());
+        if (pieEditor.hasGrabbedIcon()) {
+            PieItem grabbedIcon = pieEditor.getGrabbedIcon();
+            PieItemAction action = editorRenderer.getGrabbedActionAt(touch);
+            if (action != null && grabbedIcon != null) {
+                action.perform(context, grabbedIcon, actionListener);
+                return true;
+            }
+            return false;
+        }
+
+        EditorAction action = editorRenderer.getActionAt(touch, false);
         switch (action) {
             case CHANGE_TWIST:
                 pieConfig.cycleTwist();
@@ -1083,90 +1140,31 @@ public class AppPieView extends View {
                 pieConfig.updateChangeRadiusIcon(context, editorRenderer);
                 return true;
             case BACK_OR_REMOVE_ICON:
-                if (!pieEditor.hasGrabbedIcon()) {
-                    if (editListener != null) {
-                        editListener.onPickPieApps(isPrimaryMenu());
-                    } else {
-                        PickPieAppsActivity.start(context, isPrimaryMenu());
-                    }
+                if (editListener != null) {
+                    editListener.onPickPieApps(isPrimaryMenu());
                 } else {
-                    boolean isDrawer = pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
-                            PieLauncherApp.apps.isDrawerIcon(
-                                    (Apps.AppIcon) pieEditor.getGrabbedIcon());
-                    removeIconFromPie(pieEditor.getGrabbedIcon(), isDrawer);
+                    PickPieAppsActivity.start(context, isPrimaryMenu());
                 }
                 return true;
             case EDIT_SETTINGS_OR_UNDO:
-                if (!pieEditor.hasGrabbedIcon()) {
-                    if (hasSecondaryMenu()) {
-                        storeMenu();
-                        setMenu(isPrimaryMenu() ? menuSecondary : menuPrimary);
-                        centerSmoothCoordinatesAt(pieMenu.icons,
-                                viewWidth >> 1, viewHeight >> 1);
-                        pieConfig.updateSplitPieIcon(context, editorRenderer, !isPrimaryMenu());
-                        pieConfig.updateChangeIcons(context, editorRenderer);
-                        invalidate();
-                    } else {
-                        if (editListener != null) {
-                            editListener.onPreferences();
-                        } else {
-                            PreferencesActivity.start(context);
-                        }
-                    }
+                if (hasSecondaryMenu()) {
+                    storeMenu();
+                    setMenu(isPrimaryMenu() ? menuSecondary : menuPrimary);
+                    centerSmoothCoordinatesAt(pieMenu.icons,
+                            viewWidth >> 1, viewHeight >> 1);
+                    pieConfig.updateSplitPieIcon(context, editorRenderer, !isPrimaryMenu());
+                    pieConfig.updateChangeIcons(context, editorRenderer);
+                    invalidate();
                 } else {
-                    PieItem grabbed = pieEditor.getGrabbedIcon();
-                    pieEditor.rollback(pieMenu.icons);
-                    if (pieEditor.isNeverDropped()) {
-                        fadeOutMode();
-                        returnToList();
-                    }
-                    if (PieLauncherApp.iconPack.hasPacks()) {
-                        storeMenu();
-                        changeIcon(context, grabbed);
-                    } else if (grabbed instanceof Apps.AppIcon &&
-                            PieLauncherApp.apps.isDrawerIcon(
-                                    (Apps.AppIcon) grabbed)) {
-                        removeIconFromPie(grabbed, true);
-                    } else if (grabbed instanceof Apps.AppIcon) {
-                        PickIconActivity.askToHide(context,
-                                ((Apps.AppIcon) grabbed).componentName);
-                    } else if (grabbed != null) {
-                        grabbed.showOptions(context);
+                    if (editListener != null) {
+                        editListener.onPreferences();
+                    } else {
+                        PreferencesActivity.start(context);
                     }
                 }
                 return true;
             case END_EDIT_MODE:
-                if (!pieEditor.hasGrabbedIcon()) {
-                    endEditMode();
-                } else {
-                    PieItem grabbed = pieEditor.getGrabbedIcon();
-                    pieEditor.rollback(pieMenu.icons);
-                    fadeOutMode();
-                    if (grabbed instanceof Apps.AppIcon &&
-                            PieLauncherApp.apps.isDrawerIcon(
-                                    (Apps.AppIcon) grabbed)) {
-                        removeIconFromPie(grabbed, true);
-                    } else if (grabbed instanceof Apps.AppIcon &&
-                            Apps.isShortcut((Apps.AppIcon) grabbed)) {
-                        // The end target uninstalls apps; a pinned shortcut (e.g.
-                        // a PWA) has nothing to uninstall, so remove it instead.
-                        // Unlike launchAppInfo() this stays in-app, so we must end
-                        // edit mode ourselves — otherwise the view is left in
-                        // MODE_EDIT and the pie won't open until the activity is
-                        // recreated (e.g. by pressing Home).
-                        PieLauncherApp.apps.removePinnedShortcut(context,
-                                (Apps.AppIcon) grabbed);
-                        endEditMode();
-                    } else if (grabbed instanceof Apps.AppIcon) {
-                        // Persist changes before launching app info because
-                        // that can be used to uninstall an app which would
-                        // trigger indexing what would reset any changes.
-                        storeMenu();
-                        actionHandler.requestAppInfo((Apps.AppIcon) grabbed);
-                    } else {
-                        endEditMode();
-                    }
-                }
+                endEditMode();
                 return true;
             case NONE:
             default:
@@ -1369,7 +1367,19 @@ public class AppPieView extends View {
     }
 
     private void editActionsFeedback() {
-        EditorAction action = editorRenderer.getActionAt(touch, pieEditor.hasGrabbedIcon());
+        if (pieEditor.hasGrabbedIcon()) {
+            PieItemAction action = editorRenderer.getGrabbedActionAt(touch);
+            if (action != null) {
+                int index = editorRenderer.getActiveGrabbedActions().indexOf(action);
+                if (index >= 0 && index < editorRenderer.grabbedActionRects.size()) {
+                    setHighlightedAction(editorRenderer.grabbedActionRects.get(index));
+                    return;
+                }
+            }
+            resetHighlightedAction();
+            return;
+        }
+        EditorAction action = editorRenderer.getActionAt(touch, false);
         switch (action) {
             case BACK_OR_REMOVE_ICON:
                 setHighlightedAction(editorRenderer.iconStartRect);

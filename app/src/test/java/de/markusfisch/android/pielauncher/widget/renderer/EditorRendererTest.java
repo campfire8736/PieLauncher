@@ -150,6 +150,54 @@ public class EditorRendererTest {
     }
 
     @Test
+    public void testDraw_WithGrabbedShortcut_DrawsTwoActions() {
+        when(mockFaderEdit.isVisible()).thenReturn(true);
+        when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);
+
+        Apps.AppIcon shortcutIcon = createTestAppIcon("Test Shortcut");
+        shortcutIcon.shortcutId = "shortcut_123";
+        shortcutIcon.shortcutPackage = "com.example.app";
+
+        invokeDraw(mockFaderEdit, shortcutIcon);
+
+        // With a grabbed shortcut, 2 action icons are drawn (remove, show app info) plus the grabbed icon = 3 bitmaps
+        verify(mockCanvas, times(3)).drawBitmap(any(Bitmap.class), nullable(Rect.class), any(Rect.class), any(Paint.class));
+        assertEquals(2, editorRenderer.getActiveGrabbedActions().size());
+        assertEquals("remove_from_pie", editorRenderer.getActiveGrabbedActions().get(0).getId());
+        assertEquals("app_info", editorRenderer.getActiveGrabbedActions().get(1).getId());
+    }
+
+    @Test
+    public void testDraw_WithGrabbedDrawerIcon_DrawsOneAction() {
+        when(mockFaderEdit.isVisible()).thenReturn(true);
+        when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);
+
+        Apps.AppIcon drawerIcon = createTestAppIcon("Drawer");
+        // Simulate drawer package name
+        java.lang.reflect.Field drawerPackageField;
+        try {
+            drawerPackageField = Apps.class.getDeclaredField("drawerPackageName");
+            drawerPackageField.setAccessible(true);
+            drawerPackageField.set(de.markusfisch.android.pielauncher.app.PieLauncherApp.apps, drawerIcon.componentName.getPackageName());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        invokeDraw(mockFaderEdit, drawerIcon);
+
+        // With a drawer icon, only 1 action icon is drawn (remove) plus the grabbed icon = 2 bitmaps
+        verify(mockCanvas, times(2)).drawBitmap(any(Bitmap.class), nullable(Rect.class), any(Rect.class), any(Paint.class));
+        assertEquals(1, editorRenderer.getActiveGrabbedActions().size());
+        assertEquals("remove_from_pie", editorRenderer.getActiveGrabbedActions().get(0).getId());
+
+        try {
+            drawerPackageField.set(de.markusfisch.android.pielauncher.app.PieLauncherApp.apps, null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
     public void testDraw_WithGrabbedIcon_DoesNotDrawBottomBar() {
         when(mockFaderEdit.isVisible()).thenReturn(true);
         when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);

@@ -749,4 +749,77 @@ public class AppPieViewTest {
 
         org.junit.Assert.assertEquals("App info should be requested for grabbed redIcon", redIcon, requestedIcon[0]);
     }
+
+    @Test
+    public void testGrabbedShortcutReleasedOnAppInfoRequestsAppInfo() {
+        final Apps.AppIcon[] requestedIcon = new Apps.AppIcon[1];
+        appPieView.setActionCallback(new AppPieView.ActionCallback() {
+            @Override
+            public void onAppTapped(Apps.AppIcon icon) {}
+
+            @Override
+            public void onAppInfoRequested(Apps.AppIcon icon) {
+                requestedIcon[0] = icon;
+            }
+
+            @Override
+            public void onEditOptionsRequested(Apps.AppIcon icon) {}
+        });
+
+        // Create a shortcut icon on the pie menu
+        Apps.AppIcon shortcutIcon = null;
+        try {
+            java.lang.reflect.Constructor<Apps.AppIcon> constructor =
+                    Apps.AppIcon.class.getDeclaredConstructor(
+                            android.content.ComponentName.class,
+                            String.class,
+                            android.graphics.Bitmap.class,
+                            android.os.UserHandle.class);
+            constructor.setAccessible(true);
+            shortcutIcon = constructor.newInstance(
+                    new android.content.ComponentName("de.markusfisch.android.pielauncher.shortcut", "token123"),
+                    "Shortcut Test",
+                    (Bitmap) null,
+                    android.os.Process.myUserHandle());
+            shortcutIcon.shortcutId = "id_123";
+            shortcutIcon.shortcutPackage = "com.example.shortcut";
+            PieLauncherApp.apps.menuPrimary.add(shortcutIcon);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        appPieView.showEditor();
+        try {
+            java.lang.reflect.Method editIconMethod = AppPieView.class.getDeclaredMethod("editIcon", de.markusfisch.android.pielauncher.content.PieItem.class);
+            editIconMethod.setAccessible(true);
+            editIconMethod.invoke(appPieView, shortcutIcon);
+
+            java.lang.reflect.Field editorRendererField = AppPieView.class.getDeclaredField("editorRenderer");
+            editorRendererField.setAccessible(true);
+            de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer renderer =
+                    (de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) editorRendererField.get(appPieView);
+
+            // Verify shortcut has 2 actions: remove and app_info
+            org.junit.Assert.assertEquals(2, renderer.getActiveGrabbedActions().size());
+            org.junit.Assert.assertEquals("remove_from_pie", renderer.getActiveGrabbedActions().get(0).getId());
+            org.junit.Assert.assertEquals("app_info", renderer.getActiveGrabbedActions().get(1).getId());
+            org.junit.Assert.assertEquals("Show app info", renderer.getActiveGrabbedActions().get(1).getTip(appPieView.getContext()));
+
+            // Release over the app_info action (index 1 / iconEndRect)
+            java.lang.reflect.Field touchField = AppPieView.class.getDeclaredField("touch");
+            touchField.setAccessible(true);
+            android.graphics.Point touchPoint = (android.graphics.Point) touchField.get(appPieView);
+            android.graphics.Rect actionRect = renderer.grabbedActionRects.get(1);
+            touchPoint.set(actionRect.centerX(), actionRect.centerY());
+
+            java.lang.reflect.Method performEditActionMethod = AppPieView.class.getDeclaredMethod("performEditAction", android.content.Context.class);
+            performEditActionMethod.setAccessible(true);
+            boolean result = (boolean) performEditActionMethod.invoke(appPieView, appPieView.getContext());
+            org.junit.Assert.assertTrue("Action should be performed", result);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        org.junit.Assert.assertEquals("App info should be requested for grabbed shortcut", shortcutIcon, requestedIcon[0]);
+    }
 }

@@ -49,9 +49,11 @@ public class FolderItemTest {
 		assertTrue(folder.launch(context));
 
 		List<PieItemAction> actions = folder.getEditActions(context, false);
-		assertEquals(1, actions.size());
+		assertEquals(2, actions.size());
 		assertEquals(DeleteFolderAction.ID, actions.get(0).getId());
 		assertEquals("Delete folder", actions.get(0).getTip(context));
+		assertEquals(EditFolderAction.ID, actions.get(1).getId());
+		assertEquals("Edit folder", actions.get(1).getTip(context));
 	}
 
 	@Test
@@ -81,10 +83,32 @@ public class FolderItemTest {
 			@Override public void requestAppInfo(Apps.AppIcon item) {}
 			@Override public void removePinnedShortcut(Apps.AppIcon item) {}
 			@Override public void deleteFolder(FolderItem f) { deleted[0] = f; }
+			@Override public void editFolder(FolderItem f) {}
 			@Override public void endEditMode() {}
 		};
 
 		action.perform(context, folder, listener);
 		assertEquals(folder, deleted[0]);
+	}
+
+	@Test
+	public void testEditFolderActionDelegatesToListener() {
+		FolderItem folder = new FolderItem("f2", "Folder 2", null);
+		EditFolderAction action = new EditFolderAction();
+
+		final FolderItem[] edited = new FolderItem[1];
+		PieItemAction.ActionListener listener = new PieItemAction.ActionListener() {
+			@Override public void removeFromPie(PieItem item) {}
+			@Override public void changeIcon(PieItem item) {}
+			@Override public void hideApp(Apps.AppIcon item) {}
+			@Override public void requestAppInfo(Apps.AppIcon item) {}
+			@Override public void removePinnedShortcut(Apps.AppIcon item) {}
+			@Override public void deleteFolder(FolderItem f) {}
+			@Override public void editFolder(FolderItem f) { edited[0] = f; }
+			@Override public void endEditMode() {}
+		};
+
+		action.perform(context, folder, listener);
+		assertEquals(folder, edited[0]);
 	}
 }

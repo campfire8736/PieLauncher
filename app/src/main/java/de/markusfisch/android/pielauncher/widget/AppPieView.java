@@ -307,6 +307,24 @@ public class AppPieView extends View {
         }
 
         @Override
+        public void editFolder(FolderItem folder) {
+            pieEditor.rollback(pieMenu.icons);
+            storeMenu();
+            setActiveFolder(folder);
+            setMenu(folder.items);
+            editorRenderer.setAddFolderEnabled(false);
+            setCenter(viewWidth >> 1, viewHeight >> 1);
+            layoutEditorRenderer();
+            pieEditor.beginEdit(pieMenu.icons);
+            pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
+            centerSmoothCoordinatesAt(pieMenu.icons, viewWidth >> 1, viewHeight >> 1);
+            if (editorListener != null) {
+                editorListener.onEditorStateChanged(true);
+            }
+            invalidate();
+        }
+
+        @Override
         public void endEditMode() {
             AppPieView.this.endEditMode();
         }

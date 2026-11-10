@@ -25,6 +25,8 @@ public interface PieItemAction {
 
 		void deleteFolder(FolderItem folder);
 
+		void editFolder(FolderItem folder);
+
 		void endEditMode();
 	}
 }

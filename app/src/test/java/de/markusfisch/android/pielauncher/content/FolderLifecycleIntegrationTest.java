@@ -345,6 +345,66 @@ public class FolderLifecycleIntegrationTest {
 		assertFalse(editorRenderer.isAddFolderEnabled());
 	}
 
+	@Test
+	public void testGrabbingFolderInEditMode_DroppingOnEditAction_DisplaysFolderContentInEditMode() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		List<PieItem> folderItems = new ArrayList<>();
+		Apps.AppIcon folderApp = createAppIcon("com.pkg.folderapp", "Folder App");
+		folderItems.add(folderApp);
+
+		FolderItem folder = new FolderItem("folder1", "Folder 1", null, folderItems);
+		PieLauncherApp.apps.menuPrimary.add(folder);
+
+		// Enter EditMode on primary menu with the folder
+		Method editIconMethod = AppPieView.class.getDeclaredMethod("editIcon", PieItem.class);
+		editIconMethod.setAccessible(true);
+		editIconMethod.invoke(pieView, (PieItem) null);
+		assertTrue(pieView.inEditMode());
+		assertFalse(pieView.isInFolder());
+
+		// Now grab the folder in EditMode
+		editIconMethod.invoke(pieView, folder);
+
+		java.lang.reflect.Field rendererField = AppPieView.class.getDeclaredField("editorRenderer");
+		rendererField.setAccessible(true);
+		de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer editorRenderer =
+				(de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) rendererField.get(pieView);
+
+		// Verify 2 grabbed actions: DeleteFolderAction and EditFolderAction
+		assertEquals(2, editorRenderer.getActiveGrabbedActions().size());
+		assertTrue(editorRenderer.getActiveGrabbedActions().get(0) instanceof DeleteFolderAction);
+		assertTrue(editorRenderer.getActiveGrabbedActions().get(1) instanceof EditFolderAction);
+
+		// Simulate dropping on the EditFolderAction (action index 1)
+		android.graphics.Rect editActionRect = editorRenderer.grabbedActionRects.get(1);
+		java.lang.reflect.Field touchField = AppPieView.class.getDeclaredField("touch");
+		touchField.setAccessible(true);
+		android.graphics.Point touchPoint = (android.graphics.Point) touchField.get(pieView);
+		touchPoint.set(editActionRect.centerX(), editActionRect.centerY());
+
+		Method performEditActionMethod = AppPieView.class.getDeclaredMethod("performEditAction", Context.class);
+		performEditActionMethod.setAccessible(true);
+		boolean handled = (boolean) performEditActionMethod.invoke(pieView, activity);
+		assertTrue(handled);
+
+		// Verify that EditMode now displays the folder's content
+		assertTrue(pieView.isInFolder());
+		assertEquals(folder, pieView.getActiveFolder());
+
+		java.lang.reflect.Field pieMenuField = AppPieView.class.getDeclaredField("pieMenu");
+		pieMenuField.setAccessible(true);
+		de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+				(de.markusfisch.android.pielauncher.graphics.CanvasPieMenu) pieMenuField.get(pieView);
+		assertEquals(folderItems, pieMenu.icons);
+
+		// Verify folder is still in main menu (not removed when edited)
+		assertTrue(PieLauncherApp.apps.menuPrimary.contains(folder));
+	}
+
 	private Apps.AppIcon createAppIcon(String pkg, String label) {
 		try {
 			Constructor<Apps.AppIcon> constructor =

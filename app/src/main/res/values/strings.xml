@@ -163,5 +163,6 @@
 	<string name="warning_pie_too_many_items">More than 8 items selected (not recommended for usability).</string>
 	<string name="folder">Folder</string>
 	<string name="delete_folder">Delete folder</string>
+	<string name="edit_folder">Edit folder</string>
 	<string name="tip_add_folder">Add folder to pie menu</string>
 </resources>

@@ -19,7 +19,7 @@ public class DeleteFolderAction implements PieItemAction {
 	@Override
 	public Bitmap getIcon(Context context) {
 		if (cachedIcon == null && context != null) {
-			cachedIcon = EditorRenderer.getWhiteBitmapFromDrawable(context, R.drawable.ic_details);
+			cachedIcon = EditorRenderer.getWhiteBitmapFromDrawable(context, R.drawable.ic_remove);
 		}
 		return cachedIcon;
 	}

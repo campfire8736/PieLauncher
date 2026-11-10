@@ -298,14 +298,12 @@ public class AppPieView extends View {
 
         @Override
         public void deleteFolder(FolderItem folder) {
-            PieLauncherApp.apps.removeItemFromPie(getContext(), folder);
-            pieEditor.removeGrabbedIcon();
+            removeIconFromPie(folder, false);
             FolderManager.deleteFolder(getContext(), folder.id);
             if (activeFolder == folder) {
                 exitFolder();
             }
-            fadeOutMode();
-            endEditMode();
+            storeMenu();
         }
 
         @Override

@@ -49,10 +49,9 @@ public class FolderItemTest {
 		assertTrue(folder.launch(context));
 
 		List<PieItemAction> actions = folder.getEditActions(context, false);
-		assertEquals(2, actions.size());
-		assertEquals(RemoveFromPieAction.ID, actions.get(0).getId());
-		assertEquals(DeleteFolderAction.ID, actions.get(1).getId());
-		assertEquals("Delete folder", actions.get(1).getTip(context));
+		assertEquals(1, actions.size());
+		assertEquals(DeleteFolderAction.ID, actions.get(0).getId());
+		assertEquals("Delete folder", actions.get(0).getTip(context));
 	}
 
 	@Test

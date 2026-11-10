@@ -44,7 +44,6 @@ public class FolderItem extends PieItem {
 	@Override
 	public List<PieItemAction> getEditActions(Context context, boolean hasPacks) {
 		List<PieItemAction> actions = new ArrayList<>();
-		actions.add(new RemoveFromPieAction());
 		actions.add(new DeleteFolderAction());
 		return actions;
 	}

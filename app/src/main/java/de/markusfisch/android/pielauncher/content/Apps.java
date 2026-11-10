@@ -110,6 +110,22 @@ public class Apps {
 			return AppLauncher.launchApp(context, this);
 		}
 
+		@Override
+		public List<PieItemAction> getEditActions(Context context, boolean hasPacks) {
+			List<PieItemAction> actions = new ArrayList<>();
+			actions.add(new RemoveFromPieAction());
+			if (PieLauncherApp.apps.isDrawerIcon(this)) {
+				return actions;
+			}
+			if (Apps.isShortcut(this)) {
+				actions.add(new AppInfoAction(true));
+				return actions;
+			}
+			actions.add(new ChangeIconOrHideAppAction(hasPacks));
+			actions.add(new AppInfoAction(false));
+			return actions;
+		}
+
 		byte[] iconBytes;
 		double frecencyScore;
 		long frecencyUpdatedAt;

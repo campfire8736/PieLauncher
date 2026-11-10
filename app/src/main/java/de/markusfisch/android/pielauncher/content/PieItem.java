@@ -5,6 +5,9 @@ import android.graphics.Bitmap;
 
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class PieItem extends CanvasPieMenu.CanvasIcon {
 	public PieItem(Bitmap bitmap) {
 		super(bitmap);
@@ -41,6 +44,20 @@ public abstract class PieItem extends CanvasPieMenu.CanvasIcon {
 	 */
 	public boolean showOptions(Context context) {
 		return false;
+	}
+
+	/**
+	 * Returns the list of actions available when this item is grabbed in EditMode.
+	 * Default implementation provides the "Remove from pie menu" action.
+	 */
+	public List<PieItemAction> getEditActions(Context context) {
+		return getEditActions(context, false);
+	}
+
+	public List<PieItemAction> getEditActions(Context context, boolean hasPacks) {
+		List<PieItemAction> actions = new ArrayList<>();
+		actions.add(new RemoveFromPieAction());
+		return actions;
 	}
 
 	public static PieItem createGhost() {

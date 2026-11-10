@@ -127,7 +127,7 @@ public class EditorRenderer {
         iconPreferences = Converter.getBitmapFromDrawable(context, R.drawable.ic_preferences);
     }
 
-    private static Bitmap getWhiteBitmapFromDrawable(Context context, int resId) {
+    public static Bitmap getWhiteBitmapFromDrawable(Context context, int resId) {
         Drawable d = context.getDrawable(resId);
         if (d != null) {
             d = d.mutate();

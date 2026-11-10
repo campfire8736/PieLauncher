@@ -109,4 +109,43 @@ public class PieItemTest {
 		assertNull(PieItemRegistry.restoreItem(context, "unknown:key", allApps));
 		assertNull(PieItemRegistry.restoreItem(context, "com.nonexistent/Activity", allApps));
 	}
+
+	@Test
+	public void testDefaultPieItemEditActions() {
+		PieItem genericItem = new PieItem(null) {
+			@Override
+			public String getItemKey(Context c) { return "generic"; }
+			@Override
+			public String getLabel() { return "Generic"; }
+			@Override
+			public boolean launch(Context c) { return false; }
+		};
+		java.util.List<PieItemAction> actions = genericItem.getEditActions(context, false);
+		assertEquals(1, actions.size());
+		assertEquals(RemoveFromPieAction.ID, actions.get(0).getId());
+	}
+
+	@Test
+	public void testRegularAppEditActions() {
+		java.util.List<PieItemAction> actionsNoPacks = testApp.getEditActions(context, false);
+		assertEquals(3, actionsNoPacks.size());
+		assertEquals(RemoveFromPieAction.ID, actionsNoPacks.get(0).getId());
+		assertEquals(ChangeIconOrHideAppAction.ID_HIDE_APP, actionsNoPacks.get(1).getId());
+		assertEquals(AppInfoAction.ID_UNINSTALL_APP, actionsNoPacks.get(2).getId());
+
+		java.util.List<PieItemAction> actionsWithPacks = testApp.getEditActions(context, true);
+		assertEquals(3, actionsWithPacks.size());
+		assertEquals(ChangeIconOrHideAppAction.ID_CHANGE_ICON, actionsWithPacks.get(1).getId());
+	}
+
+	@Test
+	public void testShortcutEditActions() {
+		testApp.shortcutId = "test_shortcut";
+		testApp.shortcutPackage = "com.example.test";
+		java.util.List<PieItemAction> actions = testApp.getEditActions(context, true);
+		assertEquals(2, actions.size());
+		assertEquals(RemoveFromPieAction.ID, actions.get(0).getId());
+		assertEquals(AppInfoAction.ID_APP_INFO, actions.get(1).getId());
+		assertEquals("Show app info", actions.get(1).getTip(context));
+	}
 }

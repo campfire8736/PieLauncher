@@ -33,6 +33,7 @@ public class EditorRenderer {
     private List<PieItemAction> activeGrabbedActions = new ArrayList<>();
 
     public final Rect iconStartRect = new Rect();
+    public final Rect iconFolderRect = new Rect();
     public final Rect iconCenterRect = new Rect();
     public final Rect iconEndRect = new Rect();
     public final Rect iconChangeTwistRect = new Rect();
@@ -76,6 +77,7 @@ public class EditorRenderer {
     public Bitmap iconChangeIconScale;
     public Bitmap iconChangeRadius;
     public Bitmap iconAdd;
+    public Bitmap iconFolder;
     public Bitmap iconSplitPie;
     public Bitmap iconPreferences;
     public Bitmap iconDone;
@@ -128,6 +130,7 @@ public class EditorRenderer {
         removeAppTip = context.getString(R.string.tip_remove_app);
 
         iconAdd = Converter.getBitmapFromDrawable(context, R.drawable.ic_add);
+        iconFolder = Converter.getBitmapFromDrawable(context, R.drawable.ic_folder);
         iconEdit = getWhiteBitmapFromDrawable(context, R.drawable.ic_edit);
         iconHide = getWhiteBitmapFromDrawable(context, R.drawable.ic_hide);
         iconRemove = getWhiteBitmapFromDrawable(context, R.drawable.ic_remove);
@@ -284,7 +287,10 @@ public class EditorRenderer {
             drawAction(canvas, iconChangeIconScale, iconChangeIconScaleRect, 0f, highlightedAction);
             drawAction(canvas, iconChangeRadius, iconChangeRadiusRect, 0f, highlightedAction);
             drawAction(canvas, iconAdd, iconStartRect, 0f, highlightedAction);
-            drawAction(canvas, hasSecondaryMenu ? iconSplitPie : iconPreferences, iconCenterRect, 0f, highlightedAction);
+            drawAction(canvas, iconFolder, iconFolderRect, 0f, highlightedAction);
+            if (hasSecondaryMenu) {
+                drawAction(canvas, iconSplitPie, iconCenterRect, 0f, highlightedAction);
+            }
             drawAction(canvas, iconDone, iconEndRect, 0f, highlightedAction);
         }
 
@@ -501,14 +507,34 @@ public class EditorRenderer {
             float sp,
             int spaceBetween,
             int iconSize) {
+        layout(viewWidth, viewHeight, controlsPadding, textOffset, sp, spaceBetween, iconSize, false);
+    }
+
+    public void layout(
+            int viewWidth,
+            int viewHeight,
+            int controlsPadding,
+            float textOffset,
+            float sp,
+            int spaceBetween,
+            int iconSize,
+            boolean hasSecondaryMenu) {
         boolean portrait = viewHeight > viewWidth;
+
+        Bitmap[] bottomIcons;
+        Rect[] bottomRects;
+        if (hasSecondaryMenu) {
+            bottomIcons = new Bitmap[]{iconAdd, iconFolder, iconSplitPie, iconDone};
+            bottomRects = new Rect[]{iconStartRect, iconFolderRect, iconCenterRect, iconEndRect};
+        } else {
+            iconCenterRect.set(0, 0, 0, 0);
+            bottomIcons = new Bitmap[]{iconAdd, iconFolder, iconDone};
+            bottomRects = new Rect[]{iconStartRect, iconFolderRect, iconEndRect};
+        }
+
         int max = distributeButtons(
-                iconAdd,
-                iconPreferences,
-                iconDone,
-                iconStartRect,
-                iconCenterRect,
-                iconEndRect,
+                bottomIcons,
+                bottomRects,
                 -controlsPadding,
                 viewWidth,
                 viewHeight,
@@ -518,12 +544,8 @@ public class EditorRenderer {
                 ? Math.max(controlsPadding, (insetsTop > 0 ? insetsTop : Math.round(24f * dp)) + Math.round(88f * dp))
                 : controlsPadding;
         distributeButtons(
-                iconChangeTwist,
-                iconChangeIconScale,
-                iconChangeRadius,
-                iconChangeTwistRect,
-                iconChangeIconScaleRect,
-                iconChangeRadiusRect,
+                new Bitmap[]{iconChangeTwist, iconChangeIconScale, iconChangeRadius},
+                new Rect[]{iconChangeTwistRect, iconChangeIconScaleRect, iconChangeRadiusRect},
                 topBase,
                 viewWidth,
                 viewHeight,
@@ -537,10 +559,17 @@ public class EditorRenderer {
         int topMinY = Math.min(iconChangeTwistRect.top, Math.min(iconChangeIconScaleRect.top, iconChangeRadiusRect.top));
         int topMaxY = Math.max(iconChangeTwistRect.bottom, Math.max(iconChangeIconScaleRect.bottom, iconChangeRadiusRect.bottom));
 
-        int botMinX = Math.min(iconStartRect.left, Math.min(iconCenterRect.left, iconEndRect.left));
-        int botMaxX = Math.max(iconStartRect.right, Math.max(iconCenterRect.right, iconEndRect.right));
-        int botMinY = Math.min(iconStartRect.top, Math.min(iconCenterRect.top, iconEndRect.top));
-        int botMaxY = Math.max(iconStartRect.bottom, Math.max(iconCenterRect.bottom, iconEndRect.bottom));
+        int botMinX = Math.min(iconStartRect.left, Math.min(iconFolderRect.left, iconEndRect.left));
+        int botMaxX = Math.max(iconStartRect.right, Math.max(iconFolderRect.right, iconEndRect.right));
+        int botMinY = Math.min(iconStartRect.top, Math.min(iconFolderRect.top, iconEndRect.top));
+        int botMaxY = Math.max(iconStartRect.bottom, Math.max(iconFolderRect.bottom, iconEndRect.bottom));
+
+        if (hasSecondaryMenu) {
+            botMinX = Math.min(botMinX, iconCenterRect.left);
+            botMaxX = Math.max(botMaxX, iconCenterRect.right);
+            botMinY = Math.min(botMinY, iconCenterRect.top);
+            botMaxY = Math.max(botMaxY, iconCenterRect.bottom);
+        }
 
         if (portrait) {
             topBarRect.set(topMinX - hPad, topMinY - vPad, topMaxX + hPad, topMaxY + vPad);
@@ -555,29 +584,30 @@ public class EditorRenderer {
     }
 
     private int distributeButtons(
-            Bitmap icon1, Bitmap icon2, Bitmap icon3,
-            Rect rect1, Rect rect2, Rect rect3,
+            Bitmap[] icons,
+            Rect[] rects,
             int base,
             int viewWidth,
             int viewHeight,
             boolean portrait) {
-        int w1 = icon1 != null ? icon1.getWidth() : 0;
-        int h1 = icon1 != null ? icon1.getHeight() : 0;
-        int w2 = icon2 != null ? icon2.getWidth() : 0;
-        int h2 = icon2 != null ? icon2.getHeight() : 0;
-        int w3 = icon3 != null ? icon3.getWidth() : 0;
-        int h3 = icon3 != null ? icon3.getHeight() : 0;
+        int count = Math.min(icons.length, rects.length);
+        int totalWidth = 0;
+        int totalHeight = 0;
+        int largestWidth = 0;
+        int largestHeight = 0;
 
-        rect1.set(0, 0, w1, h1);
-        rect2.set(0, 0, w2, h2);
-        rect3.set(0, 0, w3, h3);
+        for (int i = 0; i < count; i++) {
+            Bitmap icon = icons[i];
+            int w = icon != null ? icon.getWidth() : 0;
+            int h = icon != null ? icon.getHeight() : 0;
+            rects[i].set(0, 0, w, h);
+            totalWidth += w;
+            totalHeight += h;
+            largestWidth = Math.max(largestWidth, w);
+            largestHeight = Math.max(largestHeight, h);
+        }
 
-        int totalWidth = w1 + w2 + w3;
-        int totalHeight = h1 + h2 + h3;
-        int largestWidth = Math.max(w1, Math.max(w2, w3));
-        int largestHeight = Math.max(h1, Math.max(h2, h3));
-
-        int spaces = 4;
+        int spaces = count + 1;
         int max;
         if (portrait) {
             int step = Math.round((float) (viewWidth - totalWidth) / spaces);
@@ -585,26 +615,20 @@ public class EditorRenderer {
             int x = step;
             int y = (base > 0 ? base : viewHeight + base) - largestHeight / 2;
 
-            rect1.offset(x, y);
-            x += step + rect1.width();
-
-            rect2.offset(x, y);
-            x += step + rect2.width();
-
-            rect3.offset(x, y);
+            for (int i = 0; i < count; i++) {
+                rects[i].offset(x, y);
+                x += step + rects[i].width();
+            }
         } else {
             int step = Math.round((float) (viewHeight - totalHeight) / spaces);
             max = largestHeight + step;
             int x = (base > 0 ? base : viewWidth + base) - largestWidth / 2;
             int y = step;
 
-            rect1.offset(x, y);
-            y += step + rect1.height();
-
-            rect2.offset(x, y);
-            y += step + rect2.height();
-
-            rect3.offset(x, y);
+            for (int i = 0; i < count; i++) {
+                rects[i].offset(x, y);
+                y += step + rects[i].height();
+            }
         }
         return max;
     }
@@ -617,12 +641,14 @@ public class EditorRenderer {
                 return EditorAction.CHANGE_ICON_SCALE;
             } else if (contains(iconChangeRadiusRect, touch)) {
                 return EditorAction.CHANGE_RADIUS;
+            } else if (contains(iconFolderRect, touch)) {
+                return EditorAction.ADD_FOLDER;
             }
         }
 
         if (contains(iconStartRect, touch)) {
             return EditorAction.BACK_OR_REMOVE_ICON;
-        } else if (contains(iconCenterRect, touch)) {
+        } else if (!iconCenterRect.isEmpty() && contains(iconCenterRect, touch)) {
             return EditorAction.EDIT_SETTINGS_OR_UNDO;
         } else if (contains(iconEndRect, touch)) {
             return EditorAction.END_EDIT_MODE;

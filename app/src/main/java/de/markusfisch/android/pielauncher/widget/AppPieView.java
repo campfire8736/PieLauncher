@@ -1013,7 +1013,7 @@ public class AppPieView extends View {
         shortcutsController.setTextSize(sp);
         listRenderer.layout(listPadding, searchInputHeight, iconSize, spaceBetween, iconTextPadding, listFadeHeight, sp);
         editorRenderer.setInsetsTop(insetsTop);
-        editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize);
+        editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize, hasSecondaryMenu());
         calculateMaxScrollY();
     }
 
@@ -1024,7 +1024,7 @@ public class AppPieView extends View {
         setPadding(left, 0, right, bottom);
         if (viewWidth > 0 && viewHeight > 0) {
             listRenderer.layout(listPadding, searchInputHeight, iconSize, spaceBetween, iconTextPadding, listFadeHeight, sp);
-            editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize);
+            editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize, hasSecondaryMenu());
         }
     }
 

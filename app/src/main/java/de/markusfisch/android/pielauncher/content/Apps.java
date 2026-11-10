@@ -241,6 +241,31 @@ public class Apps {
 		}
 	}
 
+	public static void addItemToPieMenu(
+			List<PieItem> menu,
+			PieItem item,
+			boolean isRigid) {
+		if (menu == null || item == null) {
+			return;
+		}
+		if (isRigid) {
+			ensureRigidCapacityForAdd(menu);
+			int freeSlot = findFreeSlotInPriorityOrder(menu);
+			if (freeSlot < 0) {
+				expandRigidCapacity(menu);
+				freeSlot = findFreeSlotInPriorityOrder(menu);
+			}
+			if (freeSlot >= 0 && freeSlot < menu.size()) {
+				menu.set(freeSlot, item);
+			} else {
+				menu.add(item);
+			}
+			shrinkRigidCapacityIfNeeded(menu);
+		} else {
+			menu.add(item);
+		}
+	}
+
 	public void removeItemFromPie(Context context, PieItem item) {
 		boolean isRigid = PieLauncherApp.getPrefs(context).isRigidPie();
 		removeItemFromPieMenu(menuPrimary, item, isRigid);
@@ -278,6 +303,10 @@ public class Apps {
 				boolean isRigid = PieLauncherApp.getPrefs(appContext).isRigidPie();
 				removePackageFromPieMenu(menuPrimary, packageName, userHandle, isRigid);
 				removePackageFromPieMenu(menuSecondary, packageName, userHandle, isRigid);
+				for (FolderItem folder : FolderManager.getAllFolders()) {
+					removePackageFromPieMenu(folder.items, packageName, userHandle, isRigid);
+					PieLauncherApp.getDatabase(appContext).storeMenu("folder:" + folder.id, folder.items);
+				}
 				store(appContext);
 				propagateUpdate();
 			});
@@ -1119,7 +1148,7 @@ public class Apps {
 		shrinkRigidCapacityIfNeeded(targetMenu);
 	}
 
-	private static int findFreeSlotInPriorityOrder(List<PieItem> menu) {
+	public static int findFreeSlotInPriorityOrder(List<PieItem> menu) {
 		int S = menu.size();
 		if (S < 1) {
 			return -1;

@@ -297,6 +297,7 @@ public class EditorRendererTest {
     public void testGetActionAt_WithGrabbedIcon() {
         // Assume default rect size of 100x100 for testing
         editorRenderer.iconStartRect.set(0, 0, 100, 100);
+        editorRenderer.iconFolderRect.set(300, 0, 400, 100);
         editorRenderer.iconCenterRect.set(100, 0, 200, 100);
         editorRenderer.iconEndRect.set(200, 0, 300, 100);
         editorRenderer.iconChangeTwistRect.set(0, 100, 100, 200);
@@ -309,7 +310,8 @@ public class EditorRendererTest {
         assertEquals(EditorAction.EDIT_SETTINGS_OR_UNDO, editorRenderer.getActionAt(new Point(150, 50), hasGrabbedIcon));
         assertEquals(EditorAction.END_EDIT_MODE, editorRenderer.getActionAt(new Point(250, 50), hasGrabbedIcon));
 
-        // Change rects are ignored when holding an icon
+        // Folder rect and change rects are ignored when holding an icon
+        assertEquals(EditorAction.NONE, editorRenderer.getActionAt(new Point(350, 50), hasGrabbedIcon));
         assertEquals(EditorAction.NONE, editorRenderer.getActionAt(new Point(50, 150), hasGrabbedIcon));
         assertEquals(EditorAction.NONE, editorRenderer.getActionAt(new Point(150, 150), hasGrabbedIcon));
         assertEquals(EditorAction.NONE, editorRenderer.getActionAt(new Point(250, 150), hasGrabbedIcon));
@@ -322,6 +324,7 @@ public class EditorRendererTest {
     public void testGetActionAt_WithoutGrabbedIcon() {
         // Assume default rect size of 100x100 for testing
         editorRenderer.iconStartRect.set(0, 0, 100, 100);
+        editorRenderer.iconFolderRect.set(300, 0, 400, 100);
         editorRenderer.iconCenterRect.set(100, 0, 200, 100);
         editorRenderer.iconEndRect.set(200, 0, 300, 100);
         editorRenderer.iconChangeTwistRect.set(0, 100, 100, 200);
@@ -333,6 +336,7 @@ public class EditorRendererTest {
         assertEquals(EditorAction.BACK_OR_REMOVE_ICON, editorRenderer.getActionAt(new Point(50, 50), hasGrabbedIcon));
         assertEquals(EditorAction.EDIT_SETTINGS_OR_UNDO, editorRenderer.getActionAt(new Point(150, 50), hasGrabbedIcon));
         assertEquals(EditorAction.END_EDIT_MODE, editorRenderer.getActionAt(new Point(250, 50), hasGrabbedIcon));
+        assertEquals(EditorAction.ADD_FOLDER, editorRenderer.getActionAt(new Point(350, 50), hasGrabbedIcon));
 
         assertEquals(EditorAction.CHANGE_TWIST, editorRenderer.getActionAt(new Point(50, 150), hasGrabbedIcon));
         assertEquals(EditorAction.CHANGE_ICON_SCALE, editorRenderer.getActionAt(new Point(150, 150), hasGrabbedIcon));
@@ -407,12 +411,24 @@ public class EditorRendererTest {
         int height = 1920;
         int controlsPadding = 80;
 
-        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48);
+        // Test without secondary menu (3 buttons: add, folder, done)
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, false);
 
-        // Primary buttons (start, center, end) along bottom
-        assertEquals(editorRenderer.iconStartRect.top, editorRenderer.iconCenterRect.top);
+        assertEquals(editorRenderer.iconStartRect.top, editorRenderer.iconFolderRect.top);
+        assertEquals(editorRenderer.iconFolderRect.top, editorRenderer.iconEndRect.top);
+        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.left < editorRenderer.iconFolderRect.left);
+        org.junit.Assert.assertTrue(editorRenderer.iconFolderRect.left < editorRenderer.iconEndRect.left);
+        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.top > height / 2);
+        org.junit.Assert.assertTrue(editorRenderer.iconCenterRect.isEmpty());
+
+        // Test with secondary menu (4 buttons: add, folder, split pie, done)
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, true);
+
+        assertEquals(editorRenderer.iconStartRect.top, editorRenderer.iconFolderRect.top);
+        assertEquals(editorRenderer.iconFolderRect.top, editorRenderer.iconCenterRect.top);
         assertEquals(editorRenderer.iconCenterRect.top, editorRenderer.iconEndRect.top);
-        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.left < editorRenderer.iconCenterRect.left);
+        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.left < editorRenderer.iconFolderRect.left);
+        org.junit.Assert.assertTrue(editorRenderer.iconFolderRect.left < editorRenderer.iconCenterRect.left);
         org.junit.Assert.assertTrue(editorRenderer.iconCenterRect.left < editorRenderer.iconEndRect.left);
         org.junit.Assert.assertTrue(editorRenderer.iconStartRect.top > height / 2);
 
@@ -432,12 +448,24 @@ public class EditorRendererTest {
         int height = 1080;
         int controlsPadding = 80;
 
-        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48);
+        // Test without secondary menu (3 buttons: add, folder, done)
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, false);
 
-        // Primary buttons along right edge
-        assertEquals(editorRenderer.iconStartRect.left, editorRenderer.iconCenterRect.left);
+        assertEquals(editorRenderer.iconStartRect.left, editorRenderer.iconFolderRect.left);
+        assertEquals(editorRenderer.iconFolderRect.left, editorRenderer.iconEndRect.left);
+        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.top < editorRenderer.iconFolderRect.top);
+        org.junit.Assert.assertTrue(editorRenderer.iconFolderRect.top < editorRenderer.iconEndRect.top);
+        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.left > width / 2);
+        org.junit.Assert.assertTrue(editorRenderer.iconCenterRect.isEmpty());
+
+        // Test with secondary menu (4 buttons: add, folder, split pie, done)
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, true);
+
+        assertEquals(editorRenderer.iconStartRect.left, editorRenderer.iconFolderRect.left);
+        assertEquals(editorRenderer.iconFolderRect.left, editorRenderer.iconCenterRect.left);
         assertEquals(editorRenderer.iconCenterRect.left, editorRenderer.iconEndRect.left);
-        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.top < editorRenderer.iconCenterRect.top);
+        org.junit.Assert.assertTrue(editorRenderer.iconStartRect.top < editorRenderer.iconFolderRect.top);
+        org.junit.Assert.assertTrue(editorRenderer.iconFolderRect.top < editorRenderer.iconCenterRect.top);
         org.junit.Assert.assertTrue(editorRenderer.iconCenterRect.top < editorRenderer.iconEndRect.top);
         org.junit.Assert.assertTrue(editorRenderer.iconStartRect.left > width / 2);
 

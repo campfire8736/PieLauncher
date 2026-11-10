@@ -137,6 +137,30 @@ public class ListRendererTest {
     }
 
     @Test
+    public void testDraw_DrawsSectionHeadersForMultipleSections() {
+        when(mockFaderList.isVisible()).thenReturn(true);
+        when(mockFaderList.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1.0f);
+
+        Apps.AppIcon appIcon = createTestAppIcon("Test App");
+        Apps.AppIcon shortcutIcon = createTestAppIcon("Shortcut");
+        shortcutIcon.shortcutId = "sc1";
+
+        List<Apps.AppIcon> appList = new java.util.ArrayList<>();
+        appList.add(appIcon);
+        appList.add(shortcutIcon);
+
+        invokeDraw(mockFaderList, appList, 0, -1);
+
+        // Header for Android Apps (length 12)
+        verify(mockCanvas, times(1)).drawText(eq((CharSequence) "Android Apps"), eq(0), eq(12), anyFloat(), anyFloat(), any(Paint.class));
+        // Header for App shortcuts (length 13)
+        verify(mockCanvas, times(1)).drawText(eq((CharSequence) "App shortcuts"), eq(0), eq(13), anyFloat(), anyFloat(), any(Paint.class));
+        // App labels
+        verify(mockCanvas, times(1)).drawText(eq((CharSequence) "Test App"), eq(0), eq(8), anyFloat(), anyFloat(), any(Paint.class));
+        verify(mockCanvas, times(1)).drawText(eq((CharSequence) "Shortcut"), eq(0), eq(8), anyFloat(), anyFloat(), any(Paint.class));
+    }
+
+    @Test
     public void testDraw_WithShortcutsHeight_AdjustsRenderNodeHeight() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             when(mockFaderList.isVisible()).thenReturn(true);

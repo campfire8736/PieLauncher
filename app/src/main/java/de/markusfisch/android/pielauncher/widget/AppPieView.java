@@ -47,6 +47,7 @@ import de.markusfisch.android.pielauncher.activity.PreferencesActivity;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppSearch;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.DrawerSectionRegistry;
 import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
@@ -234,6 +235,7 @@ public class AppPieView extends View {
     private int selectedApp = -1;
     private ListListener listListener;
     private List<Apps.AppIcon> appList;
+    private List<DrawerSectionRegistry.SectionGroup> sectionGroups = new ArrayList<>();
     private Rect highlightedAction;
     private Apps.AppIcon touchedIcon;
     private Apps.AppIcon highlightedIcon;
@@ -389,7 +391,11 @@ public class AppPieView extends View {
 
     private final AppSearchFilter appSearchFilter = new AppSearchFilter((newAppList, isFiltered, selected) -> {
         if (newAppList != null) {
-            appList = newAppList;
+            sectionGroups = DrawerSectionRegistry.group(newAppList);
+            appList = DrawerSectionRegistry.flatten(sectionGroups);
+        } else {
+            sectionGroups.clear();
+            appList = null;
         }
         appListIsFiltered = isFiltered;
         selectedApp = selected;
@@ -507,7 +513,7 @@ public class AppPieView extends View {
         Canvas listCanvas = getRecordingCanvas(listRenderNode, canvas);
         currentListBlur = applyBlurOut(listRenderNode, currentListBlur, fList);
         invalidate |= listRenderer.draw(listCanvas, stateManager.getFadeList(),
-                appList, getScrollY(), viewWidth, viewHeight,
+                sectionGroups, appList, getScrollY(), viewWidth, viewHeight,
                 touchedIcon, highlightedIcon, isDraggingDownList(),
                 selectedApp, highlightedFrom, ad, showAppNames(),
                 prefs.listAnimationAppearance(), stateManager.getDragProgress(),
@@ -886,11 +892,24 @@ public class AppPieView extends View {
                 (prefs.showAppNames() == Preferences.SHOW_APP_NAMES_SEARCH && appListIsFiltered);
         int iconAndTextHeight = iconSize + (showAppNames ? iconTextPadding + Math.round(listRenderer.getTextHeight()) : 0);
         int cellHeight = iconAndTextHeight + iconTextPadding * 2;
-        int rows = (int) Math.ceil((double) appList.size() / columns);
+        if ((sectionGroups == null || sectionGroups.isEmpty()) && appList != null && !appList.isEmpty()) {
+            sectionGroups = DrawerSectionRegistry.group(appList);
+        }
+        int totalSectionsHeight = 0;
+        if (sectionGroups != null) {
+            for (DrawerSectionRegistry.SectionGroup group : sectionGroups) {
+                if (group.items.isEmpty()) {
+                    continue;
+                }
+                totalSectionsHeight += listRenderer.getSectionHeaderHeight();
+                int rows = (int) Math.ceil((double) group.items.size() / columns);
+                totalSectionsHeight += rows * cellHeight;
+            }
+        }
         int shortcutsHeight = shortcutsController.getHeight(prefs.showAppShortcuts(), stateManager.inListMode());
         int bottomInset = shortcutsHeight > 0
                 ? getBottomInset() + listPadding : getPaddingBottom();
-        int maxHeight = searchInputHeight + listPadding + rows * cellHeight + listPadding + shortcutsHeight;
+        int maxHeight = searchInputHeight + listPadding + totalSectionsHeight + listPadding + shortcutsHeight;
         int maxY = Math.max(0, maxHeight - (viewHeight - bottomInset));
         if (maxY != maxScrollY) {
             maxScrollY = maxY;

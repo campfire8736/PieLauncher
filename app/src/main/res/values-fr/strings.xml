@@ -160,4 +160,7 @@
 	<string name="discard_changes_message">Voulez-vous ignorer vos modifications ?</string>
 	<string name="discard">Ignorer</string>
 	<string name="warning_pie_too_many_items">Plus de 8 éléments sélectionnés (non recommandé pour l\'ergonomie).</string>
+	<string name="folder">Dossier</string>
+	<string name="delete_folder">Supprimer le dossier</string>
+	<string name="tip_add_folder">Ajouter un dossier à Pie</string>
 </resources>

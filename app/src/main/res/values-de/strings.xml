@@ -157,4 +157,7 @@
 	<string name="discard_changes_message">Möchten Sie Ihre Änderungen verwerfen?</string>
 	<string name="discard">Verwerfen</string>
 	<string name="warning_pie_too_many_items">Mehr als 8 Elemente ausgewählt (aus Gründen der Benutzerfreundlichkeit nicht empfohlen).</string>
+	<string name="folder">Ordner</string>
+	<string name="delete_folder">Ordner löschen</string>
+	<string name="tip_add_folder">Ordner zum Pie Menü hinzufügen</string>
 </resources>

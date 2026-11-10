@@ -808,4 +808,31 @@ public class AppPieViewTest {
 
         org.junit.Assert.assertFalse("Shortcut should be removed from menuPrimary", PieLauncherApp.apps.menuPrimary.contains(shortcutIcon));
     }
+
+    @Test
+    public void testShowEditor_RefreshesToolbarLayoutWhenSecondaryMenuChanges() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        de.markusfisch.android.pielauncher.preference.Preferences prefs = PieLauncherApp.getPrefs(context);
+
+        // 1. Enable secondary menu
+        prefs.setSplitPieMenu(de.markusfisch.android.pielauncher.preference.Preferences.ALTERNATE_MENU_SECONDARY);
+        appPieView.showEditor();
+
+        java.lang.reflect.Field editorRendererField = AppPieView.class.getDeclaredField("editorRenderer");
+        editorRendererField.setAccessible(true);
+        de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer renderer =
+                (de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) editorRendererField.get(appPieView);
+
+        // 4 buttons active: iconCenterRect must NOT be empty
+        org.junit.Assert.assertFalse("iconCenterRect should not be empty with secondary menu", renderer.iconCenterRect.isEmpty());
+        appPieView.endEditMode();
+
+        // 2. Disable secondary menu
+        prefs.setSplitPieMenu(de.markusfisch.android.pielauncher.preference.Preferences.ALTERNATE_MENU_NONE);
+        prefs.setCircleSwapsMenus(de.markusfisch.android.pielauncher.preference.Preferences.ALTERNATE_MENU_NONE);
+        appPieView.showEditor();
+
+        // 3 buttons active: iconCenterRect must be empty (0, 0, 0, 0)
+        org.junit.Assert.assertTrue("iconCenterRect must be empty when secondary menu is disabled", renderer.iconCenterRect.isEmpty());
+    }
 }

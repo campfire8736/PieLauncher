@@ -1044,7 +1044,7 @@ public class AppPieView extends View {
         shortcutsController.setTextSize(sp);
         listRenderer.layout(listPadding, searchInputHeight, iconSize, spaceBetween, iconTextPadding, listFadeHeight, sp);
         editorRenderer.setInsetsTop(insetsTop);
-        editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize, hasSecondaryMenu());
+        layoutEditorRenderer();
         calculateMaxScrollY();
     }
 
@@ -1055,7 +1055,15 @@ public class AppPieView extends View {
         setPadding(left, 0, right, bottom);
         if (viewWidth > 0 && viewHeight > 0) {
             listRenderer.layout(listPadding, searchInputHeight, iconSize, spaceBetween, iconTextPadding, listFadeHeight, sp);
-            editorRenderer.layout(viewWidth, viewHeight, controlsPadding, listRenderer.getTextOffset(), sp, spaceBetween, iconSize, hasSecondaryMenu());
+            layoutEditorRenderer();
+        }
+    }
+
+    private void layoutEditorRenderer() {
+        if (viewWidth > 0 && viewHeight > 0) {
+            editorRenderer.layout(viewWidth, viewHeight, controlsPadding,
+                    listRenderer.getTextOffset(), sp, spaceBetween, iconSize,
+                    hasSecondaryMenu());
         }
     }
 
@@ -1080,6 +1088,7 @@ public class AppPieView extends View {
         }
         pieConfig.updateSplitPieIcon(getResources(), editorRenderer, !isPrimaryMenu());
         setCenter(viewWidth >> 1, viewHeight >> 1);
+        layoutEditorRenderer();
         pieEditor.beginEdit(pieMenu.icons);
         if (!pieMenu.isRigid()) {
             pieMenu.icons.remove(icon);

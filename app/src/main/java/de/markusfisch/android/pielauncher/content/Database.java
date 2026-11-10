@@ -94,10 +94,10 @@ public class Database {
 		executor.execute(task);
 	}
 
-	public ArrayList<Apps.AppIcon> restoreMenu(
+	public ArrayList<PieItem> restoreMenu(
 			String name,
 			Map<LauncherItemKey, Apps.AppIcon> allApps) {
-		ArrayList<Apps.AppIcon> icons = new ArrayList<>();
+		ArrayList<PieItem> icons = new ArrayList<>();
 		Cursor cursor = openHelper.getReadableDatabase().query(MENU_ITEMS,
 				new String[]{ITEM_KEY, POSITION},
 				MENU_NAME + "=?",
@@ -109,11 +109,10 @@ public class Database {
 		boolean isRigid = prefs != null && prefs.isRigidPie();
 		try {
 			int maxPos = -1;
-			List<Pair<Integer, Apps.AppIcon>> list = new ArrayList<>();
+			List<Pair<Integer, PieItem>> list = new ArrayList<>();
 			while (cursor.moveToNext()) {
-				Apps.AppIcon icon = allApps.get(
-						LauncherItemKey.unflattenFromString(
-								context, cursor.getString(0)));
+				PieItem icon = PieItemRegistry.restoreItem(
+						context, cursor.getString(0), allApps);
 				int pos = cursor.getInt(1);
 				if (icon != null) {
 					if (!isRigid) {
@@ -136,9 +135,9 @@ public class Database {
 					S <<= 1;
 				}
 				for (int i = 0; i < S; ++i) {
-					icons.add(Apps.AppIcon.createGhost());
+					icons.add(PieItem.createGhost());
 				}
-				for (Pair<Integer, Apps.AppIcon> pair : list) {
+				for (Pair<Integer, PieItem> pair : list) {
 					if (pair.first < S) {
 						icons.set(pair.first, pair.second);
 					}
@@ -150,30 +149,33 @@ public class Database {
 		return icons;
 	}
 
-	public void storeMenu(String name, List<Apps.AppIcon> icons) {
-		if (Looper.myLooper() == Looper.getMainLooper()) {
-			List<Apps.AppIcon> snapshot = new ArrayList<>(icons.size());
-			for (Apps.AppIcon icon : icons) {
-				snapshot.add(copyIcon(icon));
+	public void storeMenu(String name, List<? extends PieItem> icons) {
+		List<Pair<Integer, String>> snapshot = new ArrayList<>();
+		int position = 0;
+		for (PieItem icon : icons) {
+			if (icon != null && !icon.isGhost) {
+				snapshot.add(new Pair<>(position, icon.getItemKey(context)));
 			}
-			execute(() -> storeMenu(name, snapshot));
+			position++;
+		}
+		if (Looper.myLooper() == Looper.getMainLooper()) {
+			execute(() -> storeMenuEntries(name, snapshot));
 			return;
 		}
+		storeMenuEntries(name, snapshot);
+	}
+
+	private void storeMenuEntries(String name, List<Pair<Integer, String>> entries) {
 		SQLiteDatabase db = openHelper.getWritableDatabase();
 		db.beginTransaction();
 		try {
 			db.delete(MENU_ITEMS, MENU_NAME + "=?", new String[]{name});
-			int position = 0;
-			for (Apps.AppIcon icon : icons) {
-				if (icon != null && !icon.isGhost) {
-					ContentValues values = new ContentValues();
-					values.put(MENU_NAME, name);
-					values.put(POSITION, position);
-					values.put(ITEM_KEY, LauncherItemKey.flattenToString(
-							context, icon.componentName, icon.userHandle));
-					db.insertOrThrow(MENU_ITEMS, null, values);
-				}
-				position++;
+			for (Pair<Integer, String> entry : entries) {
+				ContentValues values = new ContentValues();
+				values.put(MENU_NAME, name);
+				values.put(POSITION, entry.first);
+				values.put(ITEM_KEY, entry.second);
+				db.insertOrThrow(MENU_ITEMS, null, values);
 			}
 			db.setTransactionSuccessful();
 		} finally {

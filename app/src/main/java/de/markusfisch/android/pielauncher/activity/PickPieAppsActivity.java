@@ -22,6 +22,7 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppLauncher;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
 import de.markusfisch.android.pielauncher.graphics.ToolbarBackground;
 import de.markusfisch.android.pielauncher.preference.Preferences;
@@ -118,12 +119,13 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private void initSelection() {
-		List<Apps.AppIcon> targetMenu = isPrimary
+		List<PieItem> targetMenu = isPrimary
 				? PieLauncherApp.apps.menuPrimary
 				: PieLauncherApp.apps.menuSecondary;
 		selectedKeys.clear();
-		for (Apps.AppIcon icon : targetMenu) {
-			if (icon != null) {
+		for (PieItem item : targetMenu) {
+			if (item instanceof Apps.AppIcon) {
+				Apps.AppIcon icon = (Apps.AppIcon) item;
 				selectedKeys.add(new LauncherItemKey(
 						icon.componentName, icon.userHandle));
 			}
@@ -244,21 +246,26 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private void applySelection() {
-		List<Apps.AppIcon> targetMenu = isPrimary
+		List<PieItem> targetMenu = isPrimary
 				? PieLauncherApp.apps.menuPrimary
 				: PieLauncherApp.apps.menuSecondary;
 		Preferences prefs = PieLauncherApp.getPrefs(this);
 		boolean isRigid = prefs != null && prefs.isRigidPie();
 
 		if (!isRigid) {
-			ArrayList<Apps.AppIcon> newMenu = new ArrayList<>();
-			// 1. Retain existing pie icons that remain selected (preserving order).
-			for (Apps.AppIcon icon : targetMenu) {
-				if (icon == null) continue;
-				LauncherItemKey key = new LauncherItemKey(
-						icon.componentName, icon.userHandle);
-				if (selectedKeys.contains(key)) {
-					newMenu.add(icon);
+			ArrayList<PieItem> newMenu = new ArrayList<>();
+			// 1. Retain existing pie items (selected apps and all non-app items).
+			for (PieItem item : targetMenu) {
+				if (item == null) continue;
+				if (item instanceof Apps.AppIcon) {
+					Apps.AppIcon icon = (Apps.AppIcon) item;
+					LauncherItemKey key = new LauncherItemKey(
+							icon.componentName, icon.userHandle);
+					if (selectedKeys.contains(key)) {
+						newMenu.add(icon);
+					}
+				} else {
+					newMenu.add(item);
 				}
 			}
 			// 2. Append newly selected icons.

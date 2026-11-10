@@ -47,6 +47,7 @@ import de.markusfisch.android.pielauncher.activity.PreferencesActivity;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppSearch;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.BackgroundBlur;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 import de.markusfisch.android.pielauncher.graphics.Converter;
@@ -129,10 +130,10 @@ public class AppPieView extends View {
                     ? HAPTIC_FEEDBACK_DOWN
                     : HapticFeedbackConstants.SEGMENT_TICK;
 
-    private final CanvasPieMenu<Apps.AppIcon> pieMenu = new CanvasPieMenu<>();
-    private final ArrayList<Apps.AppIcon> menuPrimary =
+    private final CanvasPieMenu<PieItem> pieMenu = new CanvasPieMenu<>();
+    private final ArrayList<PieItem> menuPrimary =
             PieLauncherApp.apps.menuPrimary;
-    private final ArrayList<Apps.AppIcon> menuSecondary =
+    private final ArrayList<PieItem> menuSecondary =
             PieLauncherApp.apps.menuSecondary;
     private final ViewStateManager stateManager = new ViewStateManager(new ViewStateManager.Listener() {
         @Override
@@ -297,7 +298,7 @@ public class AppPieView extends View {
 
         actionHandler = new AppActionHandler(prefs, new AppActionHandler.Listener() {
             @Override
-            public void onLaunchingIcon(Apps.AppIcon icon) {
+            public void onLaunchingIcon(PieItem icon) {
                 pieRenderer.setLaunchingIcon(icon);
             }
 
@@ -945,7 +946,7 @@ public class AppPieView extends View {
         }
     }
 
-    public void addIconInteractively(Apps.AppIcon appIcon) {
+    public void addIconInteractively(PieItem appIcon) {
         if (listListener != null) {
             listListener.onHideList();
         }
@@ -959,7 +960,7 @@ public class AppPieView extends View {
         }
     }
 
-    private void editIcon(Apps.AppIcon icon) {
+    private void editIcon(PieItem icon) {
         if (pieMenu.icons != menuPrimary &&
                 pieMenu.icons != menuSecondary) {
             setMenu(menuPrimary);
@@ -1000,7 +1001,7 @@ public class AppPieView extends View {
             Point at,
             TapFlags tapFlags) {
         if (stateManager.getMode() == ViewStateManager.MODE_PIE) {
-            Apps.AppIcon appIcon = null;
+            PieItem appIcon = null;
             int index = pieMenu.getSelectedIcon();
             if (index > -1 && index < pieMenu.icons.size()) {
                 appIcon = pieMenu.icons.get(index);
@@ -1070,9 +1071,10 @@ public class AppPieView extends View {
                         PickPieAppsActivity.start(context, isPrimaryMenu());
                     }
                 } else {
-                    removeIconFromPie(pieEditor.getGrabbedIcon(),
+                    boolean isDrawer = pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
                             PieLauncherApp.apps.isDrawerIcon(
-                                    (Apps.AppIcon) pieEditor.getGrabbedIcon()));
+                                    (Apps.AppIcon) pieEditor.getGrabbedIcon());
+                    removeIconFromPie(pieEditor.getGrabbedIcon(), isDrawer);
                 }
                 return true;
             case EDIT_SETTINGS_OR_UNDO:
@@ -1101,12 +1103,15 @@ public class AppPieView extends View {
                     if (PieLauncherApp.iconPack.hasPacks()) {
                         storeMenu();
                         changeIcon(context, pieEditor.getGrabbedIcon());
-                    } else if (PieLauncherApp.apps.isDrawerIcon(
-                            (Apps.AppIcon) pieEditor.getGrabbedIcon())) {
+                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
+                            PieLauncherApp.apps.isDrawerIcon(
+                                    (Apps.AppIcon) pieEditor.getGrabbedIcon())) {
                         removeIconFromPie(pieEditor.getGrabbedIcon(), true);
-                    } else {
+                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon) {
                         PickIconActivity.askToHide(context,
                                 ((Apps.AppIcon) pieEditor.getGrabbedIcon()).componentName);
+                    } else if (pieEditor.getGrabbedIcon() != null) {
+                        pieEditor.getGrabbedIcon().showOptions(context);
                     }
                 }
                 return true;
@@ -1116,10 +1121,12 @@ public class AppPieView extends View {
                 } else {
                     pieEditor.rollback(pieMenu.icons);
                     fadeOutMode();
-                    if (PieLauncherApp.apps.isDrawerIcon(
-                            (Apps.AppIcon) pieEditor.getGrabbedIcon())) {
+                    if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
+                            PieLauncherApp.apps.isDrawerIcon(
+                                    (Apps.AppIcon) pieEditor.getGrabbedIcon())) {
                         removeIconFromPie(pieEditor.getGrabbedIcon(), true);
-                    } else if (Apps.isShortcut((Apps.AppIcon) pieEditor.getGrabbedIcon())) {
+                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon &&
+                            Apps.isShortcut((Apps.AppIcon) pieEditor.getGrabbedIcon())) {
                         // The end target uninstalls apps; a pinned shortcut (e.g.
                         // a PWA) has nothing to uninstall, so remove it instead.
                         // Unlike launchAppInfo() this stays in-app, so we must end
@@ -1129,12 +1136,14 @@ public class AppPieView extends View {
                         PieLauncherApp.apps.removePinnedShortcut(context,
                                 (Apps.AppIcon) pieEditor.getGrabbedIcon());
                         endEditMode();
-                    } else {
+                    } else if (pieEditor.getGrabbedIcon() instanceof Apps.AppIcon) {
                         // Persist changes before launching app info because
                         // that can be used to uninstall an app which would
                         // trigger indexing what would reset any changes.
                         storeMenu();
                         actionHandler.requestAppInfo((Apps.AppIcon) pieEditor.getGrabbedIcon());
+                    } else {
+                        endEditMode();
                     }
                 }
                 return true;
@@ -1200,7 +1209,7 @@ public class AppPieView extends View {
                 : insets.getInsets(WindowInsets.Type.ime()).bottom;
     }
 
-    private void removeIconFromPie(Apps.AppIcon icon, boolean isDrawerIcon) {
+    private void removeIconFromPie(PieItem icon, boolean isDrawerIcon) {
         if (isDrawerIcon) {
             prefs.setOpenListWith(Preferences.OPEN_LIST_WITH_TAP);
         }
@@ -1211,7 +1220,7 @@ public class AppPieView extends View {
             }
             int idx = pieMenu.icons.indexOf(icon);
             if (idx >= 0) {
-                pieMenu.icons.set(idx, Apps.AppIcon.createGhost());
+                pieMenu.icons.set(idx, PieItem.createGhost());
                 Apps.shrinkRigidCapacityIfNeeded(pieMenu.icons);
             }
         } else {
@@ -1224,10 +1233,10 @@ public class AppPieView extends View {
     }
 
     private static void centerSmoothCoordinatesAt(
-            List<Apps.AppIcon> icons,
+            List<PieItem> icons,
             int centerX,
             int centerY) {
-        for (Apps.AppIcon ic : icons) {
+        for (PieItem ic : icons) {
             if (ic != null) {
                 ic.setStartPosition(centerX, centerY);
             }
@@ -1235,8 +1244,10 @@ public class AppPieView extends View {
     }
 
     public void changeIcon(Context context, PieMenu.Icon icon) {
-        Apps.AppIcon appIcon = (Apps.AppIcon) icon;
-        PickIconActivity.start(context, appIcon.componentName);
+        if (icon instanceof Apps.AppIcon) {
+            Apps.AppIcon appIcon = (Apps.AppIcon) icon;
+            PickIconActivity.start(context, appIcon.componentName);
+        }
     }
 
     public void returnToList() {
@@ -1246,7 +1257,7 @@ public class AppPieView extends View {
     }
 
     private void onCircle(int direction) {
-        List<Apps.AppIcon> icons = getAlternateMenu(
+        List<PieItem> icons = getAlternateMenu(
                 prefs.circleSwapsMenus());
         if (icons == null || icons.isEmpty() || icons.equals(pieMenu.icons)) {
             return;
@@ -1262,7 +1273,7 @@ public class AppPieView extends View {
         boolean alternate = viewWidth > viewHeight
                 ? x < viewWidth >> 1
                 : y < viewHeight >> 1;
-        List<Apps.AppIcon> icons = alternate
+        List<PieItem> icons = alternate
                 ? getAlternateMenu(prefs.splitPieMenu())
                 : menuPrimary;
         setMenu(icons == null || icons.isEmpty()
@@ -1270,7 +1281,7 @@ public class AppPieView extends View {
                 : icons);
     }
 
-    private List<Apps.AppIcon> getAlternateMenu(int option) {
+    private List<PieItem> getAlternateMenu(int option) {
         switch (option) {
             case Preferences.ALTERNATE_MENU_SECONDARY:
                 return menuSecondary;
@@ -1290,7 +1301,7 @@ public class AppPieView extends View {
         }
     }
 
-    private void setMenu(List<Apps.AppIcon> icons) {
+    private void setMenu(List<PieItem> icons) {
         pieMenu.icons = icons;
         applyPiePreferences();
     }
@@ -1321,7 +1332,7 @@ public class AppPieView extends View {
     private void editIconAt(Point point) {
         int size = pieMenu.icons.size();
         for (int i = 0; i < size; ++i) {
-            Apps.AppIcon icon = (Apps.AppIcon) pieMenu.icons.get(i);
+            PieItem icon = pieMenu.icons.get(i);
             if (icon == null || icon.isGhost) {
                 continue;
             }

@@ -9,9 +9,10 @@ import java.util.Map;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
+import de.markusfisch.android.pielauncher.content.PieItem;
 
 public class MenuStorage {
-	public static ArrayList<Apps.AppIcon> restore(
+	public static ArrayList<PieItem> restore(
 			Context context,
 			String fileName,
 			Map<LauncherItemKey, Apps.AppIcon> allApps) {
@@ -22,7 +23,7 @@ public class MenuStorage {
 	public static void store(
 			Context context,
 			String fileName,
-			List<Apps.AppIcon> icons) {
+			List<? extends PieItem> icons) {
 		PieLauncherApp.getDatabase(context).storeMenu(fileName, icons);
 	}
 }

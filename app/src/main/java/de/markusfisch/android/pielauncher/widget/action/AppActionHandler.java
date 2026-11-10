@@ -8,6 +8,7 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppLauncher;
 import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.Database;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.widget.AppPieView;
 import de.markusfisch.android.pielauncher.widget.touch.TapFlags;
@@ -15,7 +16,7 @@ import de.markusfisch.android.pielauncher.widget.touch.TapFlags;
 public class AppActionHandler {
 
     public interface Listener {
-        void onLaunchingIcon(Apps.AppIcon icon);
+        void onLaunchingIcon(PieItem icon);
 
         boolean isListFiltered();
 
@@ -57,17 +58,27 @@ public class AppActionHandler {
     }
 
     public void launchApp(Context context, Apps.AppIcon appIcon) {
-        if (listener != null) {
-            listener.onLaunchingIcon(appIcon);
+        launchPieItem(context, appIcon);
+    }
+
+    public void launchPieItem(Context context, PieItem item) {
+        if (item == null) {
+            return;
         }
-        if (actionCallback != null) {
-            actionCallback.onAppTapped(appIcon);
-        } else if (AppLauncher.launchApp(context, appIcon)) {
-            Database database = PieLauncherApp.getDatabase(context);
-            database.recordLaunchAsync(appIcon);
-            if (listener != null && listener.isListFiltered() &&
-                    prefs.rememberSearchPicks()) {
-                database.recordSearchPickAsync(listener.getFilterQuery(), appIcon);
+        if (listener != null) {
+            listener.onLaunchingIcon(item);
+        }
+        if (actionCallback != null && item instanceof Apps.AppIcon) {
+            actionCallback.onAppTapped((Apps.AppIcon) item);
+        } else if (item.launch(context)) {
+            if (item instanceof Apps.AppIcon) {
+                Apps.AppIcon appIcon = (Apps.AppIcon) item;
+                Database database = PieLauncherApp.getDatabase(context);
+                database.recordLaunchAsync(appIcon);
+                if (listener != null && listener.isListFiltered() &&
+                        prefs.rememberSearchPicks()) {
+                    database.recordSearchPickAsync(listener.getFilterQuery(), appIcon);
+                }
             }
         }
     }
@@ -75,7 +86,7 @@ public class AppActionHandler {
     public boolean performPieAction(
             Context context,
             TapFlags tapFlags,
-            Apps.AppIcon appIcon,
+            PieItem appIcon,
             boolean pieVisible) {
         boolean result = false;
         boolean openList = false;
@@ -85,7 +96,8 @@ public class AppActionHandler {
                 break;
             case Preferences.OPEN_LIST_WITH_ICON:
                 result = openList =
-                        PieLauncherApp.apps.isDrawerIcon(appIcon);
+                        appIcon instanceof Apps.AppIcon &&
+                                PieLauncherApp.apps.isDrawerIcon((Apps.AppIcon) appIcon);
                 break;
             case Preferences.OPEN_LIST_WITH_LONG_PRESS:
                 openList = tapFlags.longPress;
@@ -109,7 +121,7 @@ public class AppActionHandler {
                 listListener.onOpenList(false);
             }
         } else if (pieVisible && appIcon != null) {
-            launchApp(context, appIcon);
+            launchPieItem(context, appIcon);
             result = true;
         }
         return result;

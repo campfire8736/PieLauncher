@@ -51,7 +51,7 @@ public class AppsRigidTest {
 		Apps.AppIcon b = createIcon("B");
 		Apps.AppIcon c = createIcon("C");
 
-		List<Apps.AppIcon> menu = new ArrayList<>();
+		List<PieItem> menu = new ArrayList<>();
 		menu.add(a);
 		menu.add(b);
 		menu.add(c);
@@ -75,7 +75,7 @@ public class AppsRigidTest {
 		Apps.AppIcon a = createIcon("A");
 		Apps.AppIcon b = createIcon("B");
 
-		List<Apps.AppIcon> menu = new ArrayList<>();
+		List<PieItem> menu = new ArrayList<>();
 		menu.add(a);
 		menu.add(Apps.AppIcon.createGhost());
 		menu.add(b);
@@ -95,7 +95,7 @@ public class AppsRigidTest {
 		Apps.AppIcon c = createIcon("C");
 		Apps.AppIcon d = createIcon("D");
 
-		List<Apps.AppIcon> menu = new ArrayList<>();
+		List<PieItem> menu = new ArrayList<>();
 		menu.add(a); // Slot 0
 		menu.add(b); // Slot 1
 		menu.add(c); // Slot 2
@@ -120,7 +120,7 @@ public class AppsRigidTest {
 		Apps.AppIcon a = createIcon("A");
 		Apps.AppIcon c = createIcon("C");
 
-		List<Apps.AppIcon> menu = new ArrayList<>();
+		List<PieItem> menu = new ArrayList<>();
 		menu.add(a);    // Slot 0 (even)
 		menu.add(Apps.AppIcon.createGhost()); // Slot 1
 		menu.add(c);    // Slot 2 (even)
@@ -135,7 +135,7 @@ public class AppsRigidTest {
 
 		// Now test with an odd slot occupied:
 		Apps.AppIcon b = createIcon("B");
-		List<Apps.AppIcon> menuWithOdd = new ArrayList<>();
+		List<PieItem> menuWithOdd = new ArrayList<>();
 		menuWithOdd.add(a); // Slot 0
 		menuWithOdd.add(b); // Slot 1 (odd)
 		menuWithOdd.add(Apps.AppIcon.createGhost());
@@ -156,7 +156,7 @@ public class AppsRigidTest {
 		Apps.AppIcon c = createIcon("C");
 		Apps.AppIcon d = createIcon("D");
 
-		List<Apps.AppIcon> menu = new ArrayList<>();
+		List<PieItem> menu = new ArrayList<>();
 		menu.add(a); // Slot 0
 		menu.add(b); // Slot 1
 		menu.add(c); // Slot 2

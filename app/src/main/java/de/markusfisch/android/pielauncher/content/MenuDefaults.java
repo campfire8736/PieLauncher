@@ -18,7 +18,7 @@ import de.markusfisch.android.pielauncher.content.Apps.AppIcon;
 
 public class MenuDefaults {
 	public static void createInitialMenu(
-			List<AppIcon> menu,
+			List<PieItem> menu,
 			Map<LauncherItemKey, AppIcon> allApps,
 			PackageManager pm) {
 		Intent[] intents = new Intent[]{
@@ -65,7 +65,7 @@ public class MenuDefaults {
 	}
 
 	public static void createMenuForPopularApps(
-			List<AppIcon> menu,
+			List<PieItem> menu,
 			Map<LauncherItemKey, AppIcon> allApps,
 			int numberOfIcons) {
 		String[] popularApps = new String[]{
@@ -98,7 +98,7 @@ public class MenuDefaults {
 	}
 
 	private static void fillMenu(
-			List<AppIcon> menu,
+			List<PieItem> menu,
 			Map<LauncherItemKey, AppIcon> allApps,
 			ArrayList<LauncherItemKey> defaults,
 			int numberOfIcons) {
@@ -115,7 +115,7 @@ public class MenuDefaults {
 		}
 	}
 
-	private static void addMenuIcon(List<AppIcon> menu, AppIcon appIcon) {
+	private static void addMenuIcon(List<PieItem> menu, AppIcon appIcon) {
 		if (appIcon != null) {
 			menu.add(appIcon);
 		}

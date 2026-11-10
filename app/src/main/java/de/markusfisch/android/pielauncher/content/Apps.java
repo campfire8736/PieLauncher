@@ -128,8 +128,8 @@ public class Apps {
 	public static final String ACTION_CONFIRM_PIN_SHORTCUT =
 			"android.content.pm.action.CONFIRM_PIN_SHORTCUT";
 
-	public final ArrayList<AppIcon> menuPrimary = new ArrayList<>();
-	public final ArrayList<AppIcon> menuSecondary = new ArrayList<>();
+	public final ArrayList<PieItem> menuPrimary = new ArrayList<>();
+	public final ArrayList<PieItem> menuSecondary = new ArrayList<>();
 	public final HiddenAppsStorage hiddenAppsStorage = new HiddenAppsStorage();
 	public final HashMap<LauncherItemKey, AppIcon> apps = new HashMap<>();
 
@@ -670,10 +670,10 @@ public class Apps {
 	}
 
 	private static class Menus {
-		final List<AppIcon> primary;
-		final List<AppIcon> secondary;
+		final List<PieItem> primary;
+		final List<PieItem> secondary;
 
-		Menus(List<AppIcon> primary, List<AppIcon> secondary) {
+		Menus(List<PieItem> primary, List<PieItem> secondary) {
 			this.primary = primary;
 			this.secondary = secondary;
 		}
@@ -814,13 +814,13 @@ public class Apps {
 		return appIcon;
 	}
 
-	private List<AppIcon> getPrimaryMenu(Context context,
+	private List<PieItem> getPrimaryMenu(Context context,
 			Map<LauncherItemKey, AppIcon> allApps,
 			boolean useDrawerIcon) {
 		AppIcon drawerIcon = useDrawerIcon
 				? addDrawerIcon(context, allApps)
 				: null;
-		ArrayList<AppIcon> menu = MenuStorage.restore(context,
+		ArrayList<PieItem> menu = MenuStorage.restore(context,
 				MENU_PRIMARY, allApps);
 		if (drawerIcon != null) {
 			if (!menu.contains(drawerIcon)) {
@@ -838,10 +838,10 @@ public class Apps {
 		return menu;
 	}
 
-	private List<AppIcon> getSecondaryMenu(
+	private List<PieItem> getSecondaryMenu(
 			Context context,
 			Map<LauncherItemKey, AppIcon> allApps) {
-		ArrayList<AppIcon> menu = MenuStorage.restore(context,
+		ArrayList<PieItem> menu = MenuStorage.restore(context,
 				MENU_SECONDARY, allApps);
 		if (menu.isEmpty()) {
 			// Just add a few apps so users aren't confused by an empty menu.
@@ -891,32 +891,34 @@ public class Apps {
 	}
 
 	private void removePackageFromPieMenu(
-			List<AppIcon> icons,
+			List<PieItem> icons,
 			String packageName,
 			UserHandle userHandle) {
-		Iterator<AppIcon> it = icons.iterator();
+		Iterator<PieItem> it = icons.iterator();
 		while (it.hasNext()) {
-			AppIcon appIcon = it.next();
-			if (appIcon != null &&
-					isPackageMatch(appIcon, packageName, true) &&
-					(userHandle == null || userHandle.equals(appIcon.userHandle))) {
-				it.remove();
+			PieItem item = it.next();
+			if (item instanceof AppIcon) {
+				AppIcon appIcon = (AppIcon) item;
+				if (isPackageMatch(appIcon, packageName, true) &&
+						(userHandle == null || userHandle.equals(appIcon.userHandle))) {
+					it.remove();
+				}
 			}
 		}
 	}
 
-	public static boolean isGhost(AppIcon icon) {
+	public static boolean isGhost(PieItem icon) {
 		return icon == null || icon.isGhost;
 	}
 
-	public static void ensureRigidCapacityForAdd(List<AppIcon> icons) {
+	public static void ensureRigidCapacityForAdd(List<PieItem> icons) {
 		if (icons.isEmpty()) {
-			icons.add(AppIcon.createGhost());
-			icons.add(AppIcon.createGhost());
+			icons.add(PieItem.createGhost());
+			icons.add(PieItem.createGhost());
 			return;
 		}
 		boolean hasEmptySlot = false;
-		for (AppIcon ic : icons) {
+		for (PieItem ic : icons) {
 			if (isGhost(ic)) {
 				hasEmptySlot = true;
 				break;
@@ -927,15 +929,15 @@ public class Apps {
 		}
 	}
 
-	public static void expandRigidCapacity(List<AppIcon> icons) {
+	public static void expandRigidCapacity(List<PieItem> icons) {
 		int oldS = icons.size();
 		int newS = Math.max(2, oldS << 1);
-		List<AppIcon> expanded = new ArrayList<>(newS);
+		List<PieItem> expanded = new ArrayList<>(newS);
 		for (int i = 0; i < newS; ++i) {
-			expanded.add(AppIcon.createGhost());
+			expanded.add(PieItem.createGhost());
 		}
 		for (int i = 0; i < oldS; ++i) {
-			AppIcon ic = icons.get(i);
+			PieItem ic = icons.get(i);
 			if (!isGhost(ic)) {
 				expanded.set(i * 2, ic);
 			}
@@ -944,7 +946,7 @@ public class Apps {
 		icons.addAll(expanded);
 	}
 
-	public static void shrinkRigidCapacityIfNeeded(List<AppIcon> icons) {
+	public static void shrinkRigidCapacityIfNeeded(List<PieItem> icons) {
 		int S = icons.size();
 		if (S <= 2 || (S & (S - 1)) != 0) {
 			return;
@@ -952,7 +954,7 @@ public class Apps {
 		int appCount = 0;
 		boolean allEven = true;
 		for (int i = 0; i < S; ++i) {
-			AppIcon ic = icons.get(i);
+			PieItem ic = icons.get(i);
 			if (!isGhost(ic)) {
 				appCount++;
 				if ((i % 2) != 0) {
@@ -966,10 +968,10 @@ public class Apps {
 		}
 		if (appCount <= S / 2 && allEven) {
 			int halfS = S / 2;
-			List<AppIcon> shrunk = new ArrayList<>(halfS);
+			List<PieItem> shrunk = new ArrayList<>(halfS);
 			for (int i = 0; i < halfS; ++i) {
-				AppIcon ic = icons.get(i * 2);
-				shrunk.add(isGhost(ic) ? AppIcon.createGhost() : ic);
+				PieItem ic = icons.get(i * 2);
+				shrunk.add(isGhost(ic) ? PieItem.createGhost() : ic);
 			}
 			icons.clear();
 			icons.addAll(shrunk);
@@ -977,9 +979,9 @@ public class Apps {
 		}
 	}
 
-	public static void convertToRigid(List<AppIcon> menu) {
-		List<AppIcon> nonNull = new ArrayList<>();
-		for (AppIcon ic : menu) {
+	public static void convertToRigid(List<PieItem> menu) {
+		List<PieItem> nonNull = new ArrayList<>();
+		for (PieItem ic : menu) {
 			if (!isGhost(ic)) {
 				nonNull.add(ic);
 			}
@@ -994,9 +996,9 @@ public class Apps {
 			S <<= 1;
 		}
 		int k = Integer.numberOfTrailingZeros(S);
-		List<AppIcon> rigidMenu = new ArrayList<>(S);
+		List<PieItem> rigidMenu = new ArrayList<>(S);
 		for (int i = 0; i < S; ++i) {
-			rigidMenu.add(AppIcon.createGhost());
+			rigidMenu.add(PieItem.createGhost());
 		}
 		for (int i = 0; i < N; ++i) {
 			int slot = Integer.reverse(i) >>> (32 - k);
@@ -1006,9 +1008,9 @@ public class Apps {
 		menu.addAll(rigidMenu);
 	}
 
-	public static void convertToStandard(List<AppIcon> menu) {
-		List<AppIcon> nonNull = new ArrayList<>();
-		for (AppIcon ic : menu) {
+	public static void convertToStandard(List<PieItem> menu) {
+		List<PieItem> nonNull = new ArrayList<>();
+		for (PieItem ic : menu) {
 			if (!isGhost(ic)) {
 				nonNull.add(ic);
 			}
@@ -1029,16 +1031,19 @@ public class Apps {
 	}
 
 	public static void updateSelectionInRigidMenu(
-			List<AppIcon> targetMenu,
+			List<PieItem> targetMenu,
 			Set<LauncherItemKey> selectedKeys,
 			List<AppIcon> allAvailableApps) {
 		for (int i = 0; i < targetMenu.size(); ++i) {
-			AppIcon icon = targetMenu.get(i);
-			if (!isGhost(icon)) {
-				LauncherItemKey key = new LauncherItemKey(
-						icon.componentName, icon.userHandle);
-				if (!selectedKeys.contains(key)) {
-					targetMenu.set(i, AppIcon.createGhost());
+			PieItem item = targetMenu.get(i);
+			if (!isGhost(item)) {
+				if (item instanceof AppIcon) {
+					AppIcon icon = (AppIcon) item;
+					LauncherItemKey key = new LauncherItemKey(
+							icon.componentName, icon.userHandle);
+					if (!selectedKeys.contains(key)) {
+						targetMenu.set(i, PieItem.createGhost());
+					}
 				}
 			}
 		}
@@ -1056,8 +1061,8 @@ public class Apps {
 		}
 		if (!newlySelected.isEmpty()) {
 			if (targetMenu.isEmpty()) {
-				targetMenu.add(AppIcon.createGhost());
-				targetMenu.add(AppIcon.createGhost());
+				targetMenu.add(PieItem.createGhost());
+				targetMenu.add(PieItem.createGhost());
 			}
 			for (AppIcon newIcon : newlySelected) {
 				int freeSlot = findFreeSlotInPriorityOrder(targetMenu);
@@ -1071,7 +1076,7 @@ public class Apps {
 		shrinkRigidCapacityIfNeeded(targetMenu);
 	}
 
-	private static int findFreeSlotInPriorityOrder(List<AppIcon> menu) {
+	private static int findFreeSlotInPriorityOrder(List<PieItem> menu) {
 		int S = menu.size();
 		if (S < 1) {
 			return -1;

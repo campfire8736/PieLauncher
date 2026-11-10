@@ -15,6 +15,7 @@ import org.robolectric.annotation.Config;
 import org.robolectric.annotation.GraphicsMode;
 
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +33,7 @@ public class PieEditorTest {
     private PieEditor.Listener mockListener;
 
     private PieEditor pieEditor;
-    private CanvasPieMenu<Apps.AppIcon> pieMenu;
+    private CanvasPieMenu<PieItem> pieMenu;
     private Bitmap mockBitmap;
 
     @Before
@@ -139,7 +140,7 @@ public class PieEditorTest {
     public void testTransactionLifecycle() {
         Apps.AppIcon icon1 = createTestAppIcon("Test App 1");
         Apps.AppIcon icon2 = createTestAppIcon("Test App 2");
-        java.util.List<Apps.AppIcon> initialIcons = new java.util.ArrayList<>();
+        java.util.List<PieItem> initialIcons = new java.util.ArrayList<>();
         initialIcons.add(icon1);
         initialIcons.add(icon2);
 
@@ -271,13 +272,13 @@ public class PieEditorTest {
         pieMenu.setRigid(true);
         Apps.AppIcon icon1 = createTestAppIcon("App 1");
         Apps.AppIcon icon2 = createTestAppIcon("App 2");
-        java.util.List<Apps.AppIcon> initial = new java.util.ArrayList<>();
+        java.util.List<PieItem> initial = new java.util.ArrayList<>();
         initial.add(icon1);
         initial.add(icon2);
 
         pieEditor.beginEdit(initial);
 
-        java.util.List<Apps.AppIcon> swapped = new java.util.ArrayList<>();
+        java.util.List<PieItem> swapped = new java.util.ArrayList<>();
         swapped.add(icon2);
         swapped.add(icon1);
 

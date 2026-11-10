@@ -14,6 +14,7 @@ import android.os.SystemClock;
 
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 import de.markusfisch.android.pielauncher.graphics.Converter;
 import de.markusfisch.android.pielauncher.graphics.PieMenu;
@@ -141,7 +142,7 @@ public class EditorRenderer {
             Canvas canvas,
             Fader fadeEdit,
             CanvasPieMenu pieMenu,
-            Apps.AppIcon grabbedIcon,
+            PieItem grabbedIcon,
             long grabbedIconAt,
             Rect highlightedAction,
             float animationDuration,
@@ -166,7 +167,7 @@ public class EditorRenderer {
             Canvas canvas,
             Fader fadeEdit,
             CanvasPieMenu pieMenu,
-            Apps.AppIcon grabbedIcon,
+            PieItem grabbedIcon,
             long grabbedIconAt,
             Rect highlightedAction,
             float animationDuration,
@@ -498,7 +499,7 @@ public class EditorRenderer {
             boolean hasGrabbedIcon,
             int hoveredSlot,
             int sourceSlot,
-            Apps.AppIcon grabbedIcon) {
+            PieItem grabbedIcon) {
         if (!hasGrabbedIcon || pieMenu == null || !pieMenu.isRigid()) {
             return;
         }

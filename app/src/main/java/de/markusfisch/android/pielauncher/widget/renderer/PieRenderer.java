@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.widget.state.Fader;
@@ -20,7 +21,7 @@ public class PieRenderer {
 
     private int circleDirection;
     private long lastCircleAt = 0;
-    public Apps.AppIcon launchingIcon;
+    public PieItem launchingIcon;
 
     public PieRenderer(CanvasPieMenu pieMenu, Fader fadePie, Preferences prefs) {
         this.pieMenu = pieMenu;
@@ -32,9 +33,9 @@ public class PieRenderer {
         this.lastCircleAt = time;
     }
 
-    public void startCircleTransition(int direction, List<Apps.AppIcon> currentIcons, long now) {
+    public void startCircleTransition(int direction, List<PieItem> currentIcons, long now) {
         outgoingPieIcons.clear();
-        for (Apps.AppIcon icon : currentIcons) {
+        for (PieItem icon : currentIcons) {
             if (icon == null) {
                 continue;
             }
@@ -48,11 +49,11 @@ public class PieRenderer {
         this.lastCircleAt = now;
     }
 
-    public void setLaunchingIcon(Apps.AppIcon icon) {
+    public void setLaunchingIcon(PieItem icon) {
         this.launchingIcon = icon;
     }
 
-    public Apps.AppIcon getLaunchingIcon() {
+    public PieItem getLaunchingIcon() {
         return launchingIcon;
     }
 

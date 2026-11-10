@@ -130,13 +130,13 @@ public class AppSearch {
 			}
 			switch (prefs.excludePie()) {
 				case Preferences.EXCLUDE_PIE_ALL: {
-					Set<AppIcon> sec = new HashSet<>(repo.menuSecondary);
+					Set<PieItem> sec = new HashSet<>(repo.menuSecondary);
 					sec.remove(null);
 					list.removeAll(sec);
 					// Fall through.
 				}
 				case Preferences.EXCLUDE_PIE_PRIMARY: {
-					Set<AppIcon> pri = new HashSet<>(repo.menuPrimary);
+					Set<PieItem> pri = new HashSet<>(repo.menuPrimary);
 					pri.remove(null);
 					list.removeAll(pri);
 					break;

@@ -74,8 +74,8 @@ public class PieRendererTest {
 
     @Test
     public void testDraw_WithLaunchingIcon_PassesLaunchingIconToCalculate() {
-        de.markusfisch.android.pielauncher.content.Apps.AppIcon icon =
-                org.mockito.Mockito.mock(de.markusfisch.android.pielauncher.content.Apps.AppIcon.class);
+        de.markusfisch.android.pielauncher.content.PieItem icon =
+                org.mockito.Mockito.mock(de.markusfisch.android.pielauncher.content.PieItem.class);
         pieRenderer.setLaunchingIcon(icon);
 
         pieRenderer.draw(mockCanvas, touch, 0.8f, 300f, false);
@@ -90,7 +90,7 @@ public class PieRendererTest {
         when(mockPieMenu.getCenterY()).thenReturn(500);
 
         de.markusfisch.android.pielauncher.content.Apps.AppIcon icon = createTestAppIcon("App");
-        java.util.List<de.markusfisch.android.pielauncher.content.Apps.AppIcon> icons =
+        java.util.List<de.markusfisch.android.pielauncher.content.PieItem> icons =
                 java.util.Collections.singletonList(icon);
 
         long start = 1000L;

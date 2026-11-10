@@ -17,6 +17,7 @@ import java.util.List;
 
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.widget.AppPieView;
 import de.markusfisch.android.pielauncher.widget.touch.TapFlags;
@@ -39,7 +40,7 @@ public class AppActionHandlerTest {
     private boolean openedList = false;
     private boolean hidList = false;
     private Apps.AppIcon tappedApp = null;
-    private Apps.AppIcon launchingIcon = null;
+    private PieItem launchingIcon = null;
     private Apps.AppIcon infoRequestedApp = null;
     private Apps.AppIcon editOptionsApp = null;
 
@@ -69,7 +70,7 @@ public class AppActionHandlerTest {
 
         actionHandler = new AppActionHandler(prefs, new AppActionHandler.Listener() {
             @Override
-            public void onLaunchingIcon(Apps.AppIcon icon) {
+            public void onLaunchingIcon(PieItem icon) {
                 launchingIcon = icon;
             }
 

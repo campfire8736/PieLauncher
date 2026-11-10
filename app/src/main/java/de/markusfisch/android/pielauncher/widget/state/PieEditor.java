@@ -8,6 +8,7 @@ import java.util.List;
 
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.PieItem;
 import de.markusfisch.android.pielauncher.graphics.CanvasPieMenu;
 import de.markusfisch.android.pielauncher.graphics.PieMenu;
 
@@ -22,31 +23,31 @@ public class PieEditor {
     }
 
     private final Listener listener;
-    private final CanvasPieMenu<Apps.AppIcon> pieMenu;
+    private final CanvasPieMenu<PieItem> pieMenu;
 
     private int lastCenterX;
     private int lastCenterY;
 
-    private final List<Apps.AppIcon> ungrabbedIcons = new ArrayList<>();
-    private Apps.AppIcon grabbedIcon;
+    private final List<PieItem> ungrabbedIcons = new ArrayList<>();
+    private PieItem grabbedIcon;
     private long grabbedIconAt;
     private int lastInsertAt;
     private int grabbedSourceSlot = -1;
     private int lastHoveredSlot = -1;
-    private Apps.AppIcon displacedHovered;
-    private Apps.AppIcon hoveredGhost;
+    private PieItem displacedHovered;
+    private PieItem hoveredGhost;
     private double hoveredGhostBaseSize;
     private double twist;
     private Point touch;
 
-    private final List<Apps.AppIcon> backup = new ArrayList<>();
+    private final List<PieItem> backup = new ArrayList<>();
 
-    public PieEditor(Listener listener, CanvasPieMenu<Apps.AppIcon> pieMenu) {
+    public PieEditor(Listener listener, CanvasPieMenu<PieItem> pieMenu) {
         this.listener = listener;
         this.pieMenu = pieMenu;
     }
 
-    public void beginEdit(List<Apps.AppIcon> currentIcons) {
+    public void beginEdit(List<PieItem> currentIcons) {
         backup.clear();
         backup.addAll(currentIcons);
     }
@@ -55,7 +56,7 @@ public class PieEditor {
         backup.clear();
     }
 
-    public void rollback(List<Apps.AppIcon> currentIcons) {
+    public void rollback(List<PieItem> currentIcons) {
         resetDisplacedApp();
         currentIcons.clear();
         currentIcons.addAll(backup);
@@ -112,7 +113,7 @@ public class PieEditor {
         this.twist = twist;
     }
 
-    public Apps.AppIcon getGrabbedIcon() {
+    public PieItem getGrabbedIcon() {
         return grabbedIcon;
     }
 
@@ -124,7 +125,7 @@ public class PieEditor {
         return lastInsertAt;
     }
 
-    public List<Apps.AppIcon> getUngrabbedIcons() {
+    public List<PieItem> getUngrabbedIcons() {
         return ungrabbedIcons;
     }
 
@@ -144,7 +145,7 @@ public class PieEditor {
         return displacedHovered != null && !displacedHovered.isGhost;
     }
 
-    public void editIcon(Apps.AppIcon icon) {
+    public void editIcon(PieItem icon) {
         grabbedIcon = icon;
         grabbedIconAt = android.os.SystemClock.uptimeMillis();
         ungrabbedIcons.clear();
@@ -155,7 +156,7 @@ public class PieEditor {
             lastHoveredSlot = -1;
             displacedHovered = null;
             if (grabbedSourceSlot >= 0) {
-                Apps.AppIcon ghost = Apps.AppIcon.createGhost();
+                PieItem ghost = PieItem.createGhost();
                 ghost.size = grabbedIcon.size;
                 ghost.x = grabbedIcon.x;
                 ghost.y = grabbedIcon.y;
@@ -225,7 +226,7 @@ public class PieEditor {
     private void commitRigidGrabbedItem() {
         int targetSlot = lastHoveredSlot;
         if (targetSlot >= 0 && targetSlot < pieMenu.icons.size() && targetSlot != grabbedSourceSlot) {
-            Apps.AppIcon targetIcon = pieMenu.icons.get(targetSlot);
+            PieItem targetIcon = pieMenu.icons.get(targetSlot);
             if (targetIcon != null && grabbedSourceSlot >= 0) {
                 displacedHovered = null;
                 if (hoveredGhost != null) {
@@ -238,7 +239,7 @@ public class PieEditor {
                 resetDisplacedApp();
                 pieMenu.icons.set(targetSlot, grabbedIcon);
                 if (grabbedSourceSlot >= 0) {
-                    pieMenu.icons.set(grabbedSourceSlot, Apps.AppIcon.createGhost());
+                    pieMenu.icons.set(grabbedSourceSlot, PieItem.createGhost());
                 }
             }
         } else {
@@ -351,7 +352,7 @@ public class PieEditor {
         if (hoveredSlot != lastHoveredSlot) {
             resetDisplacedApp();
             if (hoveredSlot >= 0 && hoveredSlot != grabbedSourceSlot && grabbedSourceSlot >= 0) {
-                Apps.AppIcon targetIcon = pieMenu.icons.get(hoveredSlot);
+                PieItem targetIcon = pieMenu.icons.get(hoveredSlot);
                 if (targetIcon != null) {
                     if (Apps.isGhost(targetIcon)) {
                         hoveredGhost = targetIcon;

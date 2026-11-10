@@ -251,6 +251,55 @@ public class FolderLifecycleIntegrationTest {
 		assertEquals(folderItems, pieMenu.icons);
 	}
 
+	@Test
+	public void testEditMode_SecondaryMenu_DisablesAddFolder() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		// Enable split menu so secondary menu is available
+		prefs.setSplitPieMenu(Preferences.ALTERNATE_MENU_SECONDARY);
+
+		// Enter edit mode
+		Method editIconMethod = AppPieView.class.getDeclaredMethod("editIcon", PieItem.class);
+		editIconMethod.setAccessible(true);
+		editIconMethod.invoke(pieView, (PieItem) null);
+
+		java.lang.reflect.Field rendererField = AppPieView.class.getDeclaredField("editorRenderer");
+		rendererField.setAccessible(true);
+		de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer editorRenderer =
+				(de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) rendererField.get(pieView);
+
+		// Primary menu initially -> addFolder is enabled
+		assertTrue(editorRenderer.isAddFolderEnabled());
+
+		java.lang.reflect.Field touchField = AppPieView.class.getDeclaredField("touch");
+		touchField.setAccessible(true);
+		android.graphics.Point touchPoint = (android.graphics.Point) touchField.get(pieView);
+
+		Method performEditActionMethod = AppPieView.class.getDeclaredMethod("performEditAction", Context.class);
+		performEditActionMethod.setAccessible(true);
+
+		// Switch to secondary menu via EDIT_SETTINGS_OR_UNDO action
+		touchPoint.set(editorRenderer.iconCenterRect.centerX(), editorRenderer.iconCenterRect.centerY());
+		performEditActionMethod.invoke(pieView, activity);
+
+		// Now on secondary menu -> addFolder is disabled
+		assertFalse(editorRenderer.isAddFolderEnabled());
+
+		// Attempting ADD_FOLDER while on secondary menu must NOT add any items
+		int secondarySizeBefore = PieLauncherApp.apps.menuSecondary.size();
+		touchPoint.set(editorRenderer.iconFolderRect.centerX(), editorRenderer.iconFolderRect.centerY());
+		performEditActionMethod.invoke(pieView, activity);
+		assertEquals(secondarySizeBefore, PieLauncherApp.apps.menuSecondary.size());
+
+		// Switch back to primary menu -> addFolder is enabled again
+		touchPoint.set(editorRenderer.iconCenterRect.centerX(), editorRenderer.iconCenterRect.centerY());
+		performEditActionMethod.invoke(pieView, activity);
+		assertTrue(editorRenderer.isAddFolderEnabled());
+	}
+
 	private Apps.AppIcon createAppIcon(String pkg, String label) {
 		try {
 			Constructor<Apps.AppIcon> constructor =

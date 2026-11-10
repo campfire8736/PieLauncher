@@ -389,6 +389,11 @@ public class EditorRendererTest {
         assertEquals(EditorAction.END_EDIT_MODE, editorRenderer.getActionAt(new Point(250, 50), hasGrabbedIcon));
         assertEquals(EditorAction.ADD_FOLDER, editorRenderer.getActionAt(new Point(350, 50), hasGrabbedIcon));
 
+        // When addFolder is disabled, touching folder action returns NONE
+        editorRenderer.setAddFolderEnabled(false);
+        assertEquals(EditorAction.NONE, editorRenderer.getActionAt(new Point(350, 50), hasGrabbedIcon));
+        editorRenderer.setAddFolderEnabled(true);
+
         assertEquals(EditorAction.CHANGE_TWIST, editorRenderer.getActionAt(new Point(50, 150), hasGrabbedIcon));
         assertEquals(EditorAction.CHANGE_ICON_SCALE, editorRenderer.getActionAt(new Point(150, 150), hasGrabbedIcon));
         assertEquals(EditorAction.CHANGE_RADIUS, editorRenderer.getActionAt(new Point(250, 150), hasGrabbedIcon));

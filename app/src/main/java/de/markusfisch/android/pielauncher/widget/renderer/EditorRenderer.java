@@ -82,6 +82,7 @@ public class EditorRenderer {
     public Bitmap iconPreferences;
     public Bitmap iconDone;
 
+    private boolean addFolderEnabled = true;
     private float actionSize;
     private float actionSizeSq;
 
@@ -287,7 +288,14 @@ public class EditorRenderer {
             drawAction(canvas, iconChangeIconScale, iconChangeIconScaleRect, 0f, highlightedAction);
             drawAction(canvas, iconChangeRadius, iconChangeRadiusRect, 0f, highlightedAction);
             drawAction(canvas, iconAdd, iconStartRect, 0f, highlightedAction);
-            drawAction(canvas, iconFolder, iconFolderRect, 0f, highlightedAction);
+            if (addFolderEnabled) {
+                drawAction(canvas, iconFolder, iconFolderRect, 0f, highlightedAction);
+            } else {
+                int oldAlpha = paintAction.getAlpha();
+                paintAction.setAlpha(Math.round(oldAlpha * 0.35f));
+                drawAction(canvas, iconFolder, iconFolderRect, 0f, null);
+                paintAction.setAlpha(oldAlpha);
+            }
             if (hasSecondaryMenu) {
                 drawAction(canvas, iconSplitPie, iconCenterRect, 0f, highlightedAction);
             }
@@ -451,6 +459,14 @@ public class EditorRenderer {
         return insetsTop;
     }
 
+    public boolean isAddFolderEnabled() {
+        return addFolderEnabled;
+    }
+
+    public void setAddFolderEnabled(boolean enabled) {
+        this.addFolderEnabled = enabled;
+    }
+
     public void setTextDimensions(int controlsPadding, float textOffset, float sp) {
         this.controlsPadding = controlsPadding;
         this.textOffset = textOffset;
@@ -609,7 +625,7 @@ public class EditorRenderer {
             } else if (contains(iconChangeRadiusRect, touch)) {
                 return EditorAction.CHANGE_RADIUS;
             } else if (contains(iconFolderRect, touch)) {
-                return EditorAction.ADD_FOLDER;
+                return addFolderEnabled ? EditorAction.ADD_FOLDER : EditorAction.NONE;
             }
         }
 

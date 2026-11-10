@@ -1086,6 +1086,7 @@ public class AppPieView extends View {
                 pieMenu.icons != menuSecondary) {
             setMenu(menuPrimary);
         }
+        editorRenderer.setAddFolderEnabled(isPrimaryMenu());
         pieConfig.updateSplitPieIcon(getResources(), editorRenderer, !isPrimaryMenu());
         setCenter(viewWidth >> 1, viewHeight >> 1);
         layoutEditorRenderer();
@@ -1212,7 +1213,9 @@ public class AppPieView extends View {
                 }
                 return true;
             case ADD_FOLDER:
-                addFolderToPie(context);
+                if (isPrimaryMenu()) {
+                    addFolderToPie(context);
+                }
                 return true;
             case EDIT_SETTINGS_OR_UNDO:
                 if (hasSecondaryMenu()) {
@@ -1222,6 +1225,7 @@ public class AppPieView extends View {
                             viewWidth >> 1, viewHeight >> 1);
                     pieConfig.updateSplitPieIcon(context, editorRenderer, !isPrimaryMenu());
                     pieConfig.updateChangeIcons(context, editorRenderer);
+                    editorRenderer.setAddFolderEnabled(isPrimaryMenu());
                     invalidate();
                 } else {
                     if (editListener != null) {
@@ -1241,10 +1245,13 @@ public class AppPieView extends View {
     }
 
     private void addFolderToPie(Context context) {
+        if (!isPrimaryMenu()) {
+            return;
+        }
         FolderItem folder = FolderManager.createNewFolder(context, PieLauncherApp.apps.apps);
         List<PieItem> currentMenu = activeFolder != null
                 ? activeFolder.items
-                : (isPrimaryMenu() ? menuPrimary : menuSecondary);
+                : menuPrimary;
         Apps.addItemToPieMenu(currentMenu, folder, pieMenu.isRigid());
         storeMenu();
         pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
@@ -1471,7 +1478,9 @@ public class AppPieView extends View {
                 setHighlightedAction(editorRenderer.iconStartRect);
                 break;
             case ADD_FOLDER:
-                setHighlightedAction(editorRenderer.iconFolderRect);
+                if (isPrimaryMenu()) {
+                    setHighlightedAction(editorRenderer.iconFolderRect);
+                }
                 break;
             case EDIT_SETTINGS_OR_UNDO:
                 setHighlightedAction(editorRenderer.iconCenterRect);

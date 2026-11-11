@@ -17,14 +17,28 @@ import de.markusfisch.android.pielauncher.content.Apps;
 import de.markusfisch.android.pielauncher.content.LauncherItemKey;
 
 public class PickPieAppsAdapter extends ArrayAdapter<Apps.AppIcon> {
+	public interface LocationProvider {
+		String getLocationLabel(Apps.AppIcon icon);
+	}
+
 	private final Set<LauncherItemKey> selectedKeys;
+	private final LocationProvider locationProvider;
 
 	public PickPieAppsAdapter(
 			Context context,
 			List<Apps.AppIcon> apps,
 			Set<LauncherItemKey> selectedKeys) {
+		this(context, apps, selectedKeys, null);
+	}
+
+	public PickPieAppsAdapter(
+			Context context,
+			List<Apps.AppIcon> apps,
+			Set<LauncherItemKey> selectedKeys,
+			LocationProvider locationProvider) {
 		super(context, 0, apps);
 		this.selectedKeys = selectedKeys;
+		this.locationProvider = locationProvider;
 	}
 
 	@Override
@@ -44,6 +58,18 @@ public class PickPieAppsAdapter extends ArrayAdapter<Apps.AppIcon> {
 			boolean isSelected = selectedKeys.contains(key);
 			holder.checkBox.setChecked(isSelected);
 			holder.iconView.setAlpha(isSelected ? .5f : 1f);
+
+			if (holder.locationView != null) {
+				String location = locationProvider != null
+						? locationProvider.getLocationLabel(appIcon)
+						: null;
+				if (location != null) {
+					holder.locationView.setText(location);
+					holder.locationView.setVisibility(View.VISIBLE);
+				} else {
+					holder.locationView.setVisibility(View.GONE);
+				}
+			}
 		}
 		return convertView;
 	}
@@ -54,6 +80,7 @@ public class PickPieAppsAdapter extends ArrayAdapter<Apps.AppIcon> {
 			holder = new ViewHolder();
 			holder.iconView = view.findViewById(R.id.icon);
 			holder.nameView = view.findViewById(R.id.name);
+			holder.locationView = view.findViewById(R.id.location);
 			holder.checkBox = view.findViewById(R.id.selected);
 			view.setTag(holder);
 		}
@@ -63,6 +90,7 @@ public class PickPieAppsAdapter extends ArrayAdapter<Apps.AppIcon> {
 	private static final class ViewHolder {
 		private ImageView iconView;
 		private TextView nameView;
+		private TextView locationView;
 		private CheckBox checkBox;
 	}
 }

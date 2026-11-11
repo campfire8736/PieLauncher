@@ -165,4 +165,7 @@
 	<string name="delete_folder">Delete folder</string>
 	<string name="edit_folder">Edit folder</string>
 	<string name="tip_add_folder">Add folder to pie menu</string>
+	<string name="main_pie_menu">Main Menu</string>
+	<string name="moved_from">moved from %1$s</string>
+	<string name="folder_format">Folder \"%1$s\"</string>
 </resources>

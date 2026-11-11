@@ -15,8 +15,10 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import de.markusfisch.android.pielauncher.R;
@@ -24,6 +26,7 @@ import de.markusfisch.android.pielauncher.adapter.PickPieAppsAdapter;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.content.AppLauncher;
 import de.markusfisch.android.pielauncher.content.Apps;
+import de.markusfisch.android.pielauncher.content.Database;
 import de.markusfisch.android.pielauncher.content.DrawerSectionRegistry;
 import de.markusfisch.android.pielauncher.content.FolderItem;
 import de.markusfisch.android.pielauncher.content.FolderManager;
@@ -46,6 +49,7 @@ public class PickPieAppsActivity extends Activity {
 	private final Set<LauncherItemKey> initialKeys = new HashSet<>();
 	private final List<PickPieAppsAdapter> adapters = new ArrayList<>();
 	private final List<Apps.AppIcon> allApps = new ArrayList<>();
+	private final Map<String, String> folderAssignments = new HashMap<>();
 
 	private boolean isPrimary = true;
 	private String folderId = null;
@@ -88,6 +92,7 @@ public class PickPieAppsActivity extends Activity {
 		if (folderId != null) {
 			folder = FolderManager.getOrCreateFolder(this, folderId, PieLauncherApp.apps.apps);
 		}
+		folderAssignments.putAll(PieLauncherApp.getDatabase(this).getPrimaryMenuFolderAssignments());
 
 		BackgroundBlur.setBlurRadius(getWindow(),
 				PieLauncherApp.getPrefs(this).getBackgroundBlurRadius());
@@ -182,7 +187,13 @@ public class PickPieAppsActivity extends Activity {
 		List<String> added = new ArrayList<>();
 		for (LauncherItemKey key : selectedKeys) {
 			if (!initialKeys.contains(key)) {
-				added.add(getAppLabel(key));
+				String label = getAppLabel(key);
+				String fromLocation = getAssignedLocationLabel(getAppIcon(key));
+				if (fromLocation != null) {
+					added.add(label + " (" + getString(R.string.moved_from, fromLocation) + ")");
+				} else {
+					added.add(label);
+				}
 			}
 		}
 		Collections.sort(added, String.CASE_INSENSITIVE_ORDER);
@@ -220,18 +231,53 @@ public class PickPieAppsActivity extends Activity {
 		return sb.toString();
 	}
 
-	private String getAppLabel(LauncherItemKey key) {
+	private Apps.AppIcon getAppIcon(LauncherItemKey key) {
+		if (key == null) {
+			return null;
+		}
 		Apps.AppIcon icon = PieLauncherApp.apps.apps.get(key);
-		if (icon != null && icon.label != null) {
-			return icon.label;
+		if (icon != null) {
+			return icon;
 		}
 		for (Apps.AppIcon item : allApps) {
 			if (item != null && key.equals(new LauncherItemKey(
 					item.componentName, item.userHandle))) {
-				return item.label;
+				return item;
 			}
 		}
-		return key.componentName != null
+		return null;
+	}
+
+	private String getAssignedLocationLabel(Apps.AppIcon icon) {
+		if (icon == null) {
+			return null;
+		}
+		String itemKey = icon.getItemKey(this);
+		String assignedFolderId = folderAssignments.get(itemKey);
+		if (assignedFolderId == null) {
+			return null;
+		}
+		String currentContainerId = folder != null ? folder.id : Database.FOLDER_ROOT;
+		if (assignedFolderId.equals(currentContainerId)) {
+			return null;
+		}
+		if (Database.FOLDER_ROOT.equals(assignedFolderId)) {
+			return getString(R.string.main_pie_menu);
+		}
+		FolderItem assignedFolder = FolderManager.getOrCreateFolder(
+				this, assignedFolderId, PieLauncherApp.apps.apps);
+		String folderLabel = assignedFolder != null && assignedFolder.getLabel() != null
+				? assignedFolder.getLabel()
+				: getString(R.string.folder);
+		return getString(R.string.folder_format, folderLabel);
+	}
+
+	private String getAppLabel(LauncherItemKey key) {
+		Apps.AppIcon icon = getAppIcon(key);
+		if (icon != null && icon.label != null) {
+			return icon.label;
+		}
+		return key != null && key.componentName != null
 				? key.componentName.flattenToShortString()
 				: "";
 	}
@@ -333,7 +379,7 @@ public class PickPieAppsActivity extends Activity {
 			}
 
 			PickPieAppsAdapter sectionAdapter = new PickPieAppsAdapter(
-					this, group.items, selectedKeys);
+					this, group.items, selectedKeys, this::getAssignedLocationLabel);
 			grid.setAdapter(sectionAdapter);
 			adapters.add(sectionAdapter);
 
@@ -355,10 +401,49 @@ public class PickPieAppsActivity extends Activity {
 		List<PieItem> targetMenu = getTargetMenu();
 		Preferences prefs = PieLauncherApp.getPrefs(this);
 		boolean isRigid = prefs != null && prefs.isRigidPie();
+		String currentContainerId = folder != null ? folder.id : Database.FOLDER_ROOT;
 
+		// 1. Reassign any newly selected app that was previously elsewhere
+		Set<String> modifiedOtherFolderIds = new HashSet<>();
+		boolean modifiedPrimaryMenu = false;
+
+		for (LauncherItemKey key : selectedKeys) {
+			if (!initialKeys.contains(key)) {
+				Apps.AppIcon icon = getAppIcon(key);
+				if (icon != null) {
+					String oldContainerId = folderAssignments.get(icon.getItemKey(this));
+					if (oldContainerId != null && !oldContainerId.equals(currentContainerId)) {
+						if (Database.FOLDER_ROOT.equals(oldContainerId)) {
+							Apps.removeItemFromPieMenu(PieLauncherApp.apps.menuPrimary, icon, isRigid);
+							modifiedPrimaryMenu = true;
+						} else {
+							FolderItem oldFolder = FolderManager.getOrCreateFolder(
+									this, oldContainerId, PieLauncherApp.apps.apps);
+							if (oldFolder != null) {
+								Apps.removeItemFromPieMenu(oldFolder.items, icon, isRigid);
+								modifiedOtherFolderIds.add(oldFolder.id);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (modifiedPrimaryMenu && folder != null) {
+			PieLauncherApp.getDatabase(this).storeMenu("menu", PieLauncherApp.apps.menuPrimary);
+		}
+		for (String otherFolderId : modifiedOtherFolderIds) {
+			FolderItem otherFolder = FolderManager.getOrCreateFolder(
+					this, otherFolderId, PieLauncherApp.apps.apps);
+			if (otherFolder != null) {
+				PieLauncherApp.getDatabase(this).storeMenu("folder:" + otherFolder.id, otherFolder.items);
+			}
+		}
+
+		// 2. Update targetMenu
 		if (!isRigid) {
 			ArrayList<PieItem> newMenu = new ArrayList<>();
-			// 1. Retain existing pie items (selected apps and all non-app items).
+			// Retain existing pie items (selected apps and all non-app items).
 			for (PieItem item : targetMenu) {
 				if (item == null) continue;
 				if (item instanceof Apps.AppIcon) {
@@ -372,7 +457,7 @@ public class PickPieAppsActivity extends Activity {
 					newMenu.add(item);
 				}
 			}
-			// 2. Append newly selected icons.
+			// Append newly selected icons.
 			for (Apps.AppIcon icon : allApps) {
 				if (icon != null) {
 					LauncherItemKey key = new LauncherItemKey(

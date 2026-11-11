@@ -26,6 +26,7 @@ import org.robolectric.annotation.GraphicsMode;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -561,5 +562,70 @@ public class PickPieAppsActivityTest {
 		// Verify menuSecondary remains unchanged with only appB
 		assertEquals(1, PieLauncherApp.apps.menuSecondary.size());
 		assertTrue(PieLauncherApp.apps.menuSecondary.contains(appB));
+	}
+
+	@Test
+	public void testAppReassignation_ShowsMovedFromInConfirmationAndRemovesFromPreviousLocation() {
+		Context context = ApplicationProvider.getApplicationContext();
+
+		// Put appA on the Main Menu and store it
+		PieLauncherApp.apps.menuPrimary.clear();
+		PieLauncherApp.apps.menuPrimary.add(appA);
+		PieLauncherApp.getDatabase(context).storeMenu("menu", PieLauncherApp.apps.menuPrimary);
+
+		// Create a folder
+		FolderItem folder = FolderManager.createNewFolder(context, PieLauncherApp.apps.apps);
+		folder.items.clear();
+
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_FOLDER_ID, folder.id);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		GridView gridView = activity.findViewById(R.id.apps);
+		assertNotNull(gridView);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+		assertNotNull(adapter);
+
+		// View for appA (index 0) should show location as "Main Menu"
+		View view0 = adapter.getView(0, null, gridView);
+		android.widget.TextView locationView0 = view0.findViewById(R.id.location);
+		assertNotNull(locationView0);
+		assertEquals(View.VISIBLE, locationView0.getVisibility());
+		assertEquals(activity.getString(R.string.main_pie_menu), locationView0.getText().toString());
+
+		// Select appA (click index 0) to add it to the folder
+		gridView.performItemClick(null, 0, adapter.getItemId(0));
+
+		// Click Apply to trigger confirmation dialog
+		activity.findViewById(R.id.apply).performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+
+		android.widget.TextView messageView = dialog.findViewById(android.R.id.message);
+		assertNotNull(messageView);
+		String message = messageView.getText().toString();
+
+		// Verify confirmation dialog displays where appA is moving from
+		assertTrue(message.contains(activity.getString(R.string.moved_from, activity.getString(R.string.main_pie_menu))));
+
+		// Confirm dialog
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+		assertTrue(activity.isFinishing());
+
+		// Verify appA was added to the folder
+		assertTrue(folder.items.contains(appA));
+
+		// Verify appA was removed from the Main Menu
+		assertFalse(PieLauncherApp.apps.menuPrimary.contains(appA));
+
+		// Verify database assignments reflect the reassignation
+		Map<String, String> assignments = PieLauncherApp.getDatabase(context).getPrimaryMenuFolderAssignments();
+		assertEquals(folder.id, assignments.get(appA.getItemKey(context)));
 	}
 }

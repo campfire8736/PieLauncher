@@ -443,6 +443,7 @@ public class PickPieAppsActivity extends Activity {
 		// 2. Update targetMenu
 		if (!isRigid) {
 			ArrayList<PieItem> newMenu = new ArrayList<>();
+			Set<LauncherItemKey> retainedKeys = new HashSet<>();
 			// Retain existing pie items (selected apps and all non-app items).
 			for (PieItem item : targetMenu) {
 				if (item == null) continue;
@@ -450,8 +451,9 @@ public class PickPieAppsActivity extends Activity {
 					Apps.AppIcon icon = (Apps.AppIcon) item;
 					LauncherItemKey key = new LauncherItemKey(
 							icon.componentName, icon.userHandle);
-					if (selectedKeys.contains(key)) {
+					if (selectedKeys.contains(key) && !retainedKeys.contains(key)) {
 						newMenu.add(icon);
+						retainedKeys.add(key);
 					}
 				} else {
 					newMenu.add(item);
@@ -462,8 +464,9 @@ public class PickPieAppsActivity extends Activity {
 				if (icon != null) {
 					LauncherItemKey key = new LauncherItemKey(
 							icon.componentName, icon.userHandle);
-					if (selectedKeys.contains(key) && !newMenu.contains(icon)) {
+					if (selectedKeys.contains(key) && !retainedKeys.contains(key)) {
 						newMenu.add(icon);
+						retainedKeys.add(key);
 					}
 				}
 			}

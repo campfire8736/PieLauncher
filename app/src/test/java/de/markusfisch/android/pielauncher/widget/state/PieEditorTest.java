@@ -56,7 +56,7 @@ public class PieEditorTest {
                     );
             constructor.setAccessible(true);
             return constructor.newInstance(
-                    new ComponentName("com.test", "Activity"),
+                    new ComponentName("com.test", label),
                     label,
                     mockBitmap,
                     Process.myUserHandle()

@@ -325,13 +325,17 @@ public class PickPieAppsActivityTest {
 	}
 
 	private Apps.AppIcon createAppIcon(String name, String pkg) {
+		return createAppIcon(name, pkg, "Activity");
+	}
+
+	private Apps.AppIcon createAppIcon(String name, String pkg, String cls) {
 		try {
 			Bitmap bitmap = Bitmap.createBitmap(48, 48, Bitmap.Config.ARGB_8888);
 			Constructor<Apps.AppIcon> constructor = Apps.AppIcon.class.getDeclaredConstructor(
 					ComponentName.class, String.class, Bitmap.class, UserHandle.class);
 			constructor.setAccessible(true);
 			return constructor.newInstance(
-					new ComponentName(pkg, "Activity"),
+					new ComponentName(pkg, cls),
 					name, bitmap, Process.myUserHandle());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -627,5 +631,49 @@ public class PickPieAppsActivityTest {
 		// Verify database assignments reflect the reassignation
 		Map<String, String> assignments = PieLauncherApp.getDatabase(context).getPrimaryMenuFolderAssignments();
 		assertEquals(folder.id, assignments.get(appA.getItemKey(context)));
+	}
+
+	@Test
+	public void testAddingAppToFolder_DoesNotDuplicateExistingFolderItems() {
+		Context context = ApplicationProvider.getApplicationContext();
+
+		// Simulate folder containing AppIcon instances created prior to re-indexing (distinct objects from appA, appB)
+		Apps.AppIcon folderAppA = createAppIcon("App A", "com.test.a", "ActivityA");
+		Apps.AppIcon folderAppB = createAppIcon("App B", "com.test.b", "ActivityB");
+
+		FolderItem folder = FolderManager.createNewFolder(context, PieLauncherApp.apps.apps);
+		folder.items.clear();
+		folder.items.add(folderAppA);
+		folder.items.add(folderAppB);
+
+		// Selection screen opens with appA and appB already in folder, and user toggles appC
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_FOLDER_ID, folder.id);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		GridView gridView = activity.findViewById(R.id.apps);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+
+		// Toggle appC (index 2) to add it
+		gridView.performItemClick(null, 2, adapter.getItemId(2));
+
+		// Apply changes
+		activity.findViewById(R.id.apply).performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+		assertTrue(activity.isFinishing());
+
+		// Verify folder items contain exactly 3 items: appA, appB, appC without any duplication
+		assertEquals(3, folder.items.size());
+		assertTrue(folder.items.contains(appA));
+		assertTrue(folder.items.contains(appB));
+		assertTrue(folder.items.contains(appC));
 	}
 }

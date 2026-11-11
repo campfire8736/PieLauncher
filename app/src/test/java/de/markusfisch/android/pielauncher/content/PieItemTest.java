@@ -148,4 +148,42 @@ public class PieItemTest {
 		assertEquals(DeleteShortcutAction.ID, actions.get(1).getId());
 		assertEquals("Delete shortcut", actions.get(1).getTip(context));
 	}
+
+	@Test
+	public void testAppIconEqualsAndHashCode() {
+		ComponentName cn1 = new ComponentName("com.pkg.a", "com.pkg.a.MainActivity");
+		ComponentName cn2 = new ComponentName("com.pkg.b", "com.pkg.b.MainActivity");
+		Apps.AppIcon icon1 = new Apps.AppIcon(cn1, "App A", (Bitmap) null, null);
+		Apps.AppIcon icon1Duplicate = new Apps.AppIcon(cn1, "App A", (Bitmap) null, null);
+		Apps.AppIcon icon2 = new Apps.AppIcon(cn2, "App B", (Bitmap) null, null);
+
+		assertEquals(icon1, icon1Duplicate);
+		assertEquals(icon1.hashCode(), icon1Duplicate.hashCode());
+		assertFalse(icon1.equals(icon2));
+
+		// Pinned shortcut comparison
+		icon1.shortcutId = "sc1";
+		icon1.shortcutPackage = "com.pkg.a";
+		assertFalse(icon1.equals(icon1Duplicate));
+		icon1Duplicate.shortcutId = "sc1";
+		icon1Duplicate.shortcutPackage = "com.pkg.a";
+		assertEquals(icon1, icon1Duplicate);
+
+		// Ghosts must not be equal across distinct instances
+		Apps.AppIcon ghost1 = Apps.AppIcon.createGhost();
+		Apps.AppIcon ghost2 = Apps.AppIcon.createGhost();
+		assertFalse(ghost1.equals(ghost2));
+		assertEquals(ghost1, ghost1);
+	}
+
+	@Test
+	public void testFolderItemEqualsAndHashCode() {
+		FolderItem folder1 = new FolderItem("folder123", "Folder 1", null);
+		FolderItem folder2 = new FolderItem("folder123", "Folder 1 Renamed", null);
+		FolderItem folder3 = new FolderItem("folder456", "Folder 2", null);
+
+		assertEquals(folder1, folder2);
+		assertEquals(folder1.hashCode(), folder2.hashCode());
+		assertFalse(folder1.equals(folder3));
+	}
 }

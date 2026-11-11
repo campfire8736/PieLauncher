@@ -184,4 +184,30 @@ public class AppsRigidTest {
 		assertEquals(d, menu.get(1));
 		assertTrue(Apps.isGhost(menu.get(3)));
 	}
+
+	@Test
+	public void testUpdateSelectionInRigidMenu_WithDistinctInstances_DoesNotDuplicateApps() {
+		Apps.AppIcon aOld = createIcon("A");
+		Apps.AppIcon aNew = createIcon("A"); // Distinct object instance
+		Apps.AppIcon b = createIcon("B");
+
+		List<PieItem> menu = new ArrayList<>();
+		menu.add(aOld);
+		menu.add(Apps.AppIcon.createGhost());
+
+		Set<LauncherItemKey> selectedKeys = new HashSet<>();
+		selectedKeys.add(new LauncherItemKey(aNew.componentName, aNew.userHandle));
+		selectedKeys.add(new LauncherItemKey(b.componentName, b.userHandle));
+
+		List<Apps.AppIcon> allAvailable = new ArrayList<>();
+		allAvailable.add(aNew);
+		allAvailable.add(b);
+
+		Apps.updateSelectionInRigidMenu(menu, selectedKeys, allAvailable);
+
+		// Size must be 2, slot 0 = A, slot 1 = B. A must NOT be duplicated!
+		assertEquals(2, menu.size());
+		assertEquals(aOld, menu.get(0));
+		assertEquals(b, menu.get(1));
+	}
 }

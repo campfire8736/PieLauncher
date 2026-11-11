@@ -126,6 +126,42 @@ public class Apps {
 			return actions;
 		}
 
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (!(o instanceof AppIcon)) {
+				return false;
+			}
+			AppIcon icon = (AppIcon) o;
+			if (isGhost || icon.isGhost) {
+				return false;
+			}
+			if (componentName == null || icon.componentName == null) {
+				return false;
+			}
+			if (!componentName.equals(icon.componentName)) {
+				return false;
+			}
+			if (userHandle != null ? !userHandle.equals(icon.userHandle) : icon.userHandle != null) {
+				return false;
+			}
+			if (shortcutId != null ? !shortcutId.equals(icon.shortcutId) : icon.shortcutId != null) {
+				return false;
+			}
+			return shortcutPackage != null ? shortcutPackage.equals(icon.shortcutPackage) : icon.shortcutPackage == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = componentName != null ? componentName.hashCode() : 0;
+			result = 31 * result + (userHandle != null ? userHandle.hashCode() : 0);
+			result = 31 * result + (shortcutId != null ? shortcutId.hashCode() : 0);
+			result = 31 * result + (shortcutPackage != null ? shortcutPackage.hashCode() : 0);
+			return result;
+		}
+
 		byte[] iconBytes;
 		double frecencyScore;
 		long frecencyUpdatedAt;
@@ -247,6 +283,11 @@ public class Apps {
 			boolean isRigid) {
 		if (menu == null || item == null) {
 			return;
+		}
+		for (PieItem existing : menu) {
+			if (existing != null && !existing.isGhost && existing.equals(item)) {
+				return;
+			}
 		}
 		if (isRigid) {
 			ensureRigidCapacityForAdd(menu);
@@ -700,6 +741,7 @@ public class Apps {
 		menuPrimary.addAll(menus.primary);
 		menuSecondary.clear();
 		menuSecondary.addAll(menus.secondary);
+		FolderManager.updateFolders(newApps);
 		if (done) {
 			indexing = false;
 		}
@@ -1106,6 +1148,7 @@ public class Apps {
 			List<PieItem> targetMenu,
 			Set<LauncherItemKey> selectedKeys,
 			List<AppIcon> allAvailableApps) {
+		Set<LauncherItemKey> existingKeys = new HashSet<>();
 		for (int i = 0; i < targetMenu.size(); ++i) {
 			PieItem item = targetMenu.get(i);
 			if (!isGhost(item)) {
@@ -1113,8 +1156,10 @@ public class Apps {
 					AppIcon icon = (AppIcon) item;
 					LauncherItemKey key = new LauncherItemKey(
 							icon.componentName, icon.userHandle);
-					if (!selectedKeys.contains(key)) {
+					if (!selectedKeys.contains(key) || existingKeys.contains(key)) {
 						targetMenu.set(i, PieItem.createGhost());
+					} else {
+						existingKeys.add(key);
 					}
 				}
 			}
@@ -1125,8 +1170,9 @@ public class Apps {
 				if (!isGhost(icon)) {
 					LauncherItemKey key = new LauncherItemKey(
 							icon.componentName, icon.userHandle);
-					if (selectedKeys.contains(key) && !targetMenu.contains(icon)) {
+					if (selectedKeys.contains(key) && !existingKeys.contains(key)) {
 						newlySelected.add(icon);
+						existingKeys.add(key);
 					}
 				}
 			}

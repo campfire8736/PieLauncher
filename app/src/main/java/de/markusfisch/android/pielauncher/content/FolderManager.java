@@ -74,6 +74,25 @@ public class FolderManager {
 		return new ArrayList<>(folders.values());
 	}
 
+	public static synchronized void updateFolders(Map<LauncherItemKey, Apps.AppIcon> allApps) {
+		if (allApps == null) {
+			return;
+		}
+		for (FolderItem folder : folders.values()) {
+			for (int i = 0; i < folder.items.size(); i++) {
+				PieItem item = folder.items.get(i);
+				if (item instanceof Apps.AppIcon && !item.isGhost) {
+					Apps.AppIcon icon = (Apps.AppIcon) item;
+					LauncherItemKey key = new LauncherItemKey(icon.componentName, icon.userHandle);
+					Apps.AppIcon updated = allApps.get(key);
+					if (updated != null) {
+						folder.items.set(i, updated);
+					}
+				}
+			}
+		}
+	}
+
 	public static synchronized void clearCache() {
 		folders.clear();
 	}

@@ -74,8 +74,8 @@ public class DatabaseTest {
 		List<PieItem> secondary = new ArrayList<>();
 		secondary.add(app3);
 
-		database.storeMenu("menu", primary);
-		database.storeMenu("menu_alt", secondary);
+		database.storeMenuSync("menu", primary);
+		database.storeMenuSync("menu_alt", secondary);
 
 		List<PieItem> restoredPrimary = database.restoreMenu("menu", allApps);
 		assertEquals(2, restoredPrimary.size());
@@ -93,7 +93,7 @@ public class DatabaseTest {
 		folderItems.add(app1);
 		folderItems.add(app3);
 
-		database.storeMenu("folder:my_folder", folderItems);
+		database.storeMenuSync("folder:my_folder", folderItems);
 
 		List<PieItem> restored = database.restoreMenu("folder:my_folder", allApps);
 		assertEquals(2, restored.size());
@@ -106,7 +106,7 @@ public class DatabaseTest {
 		// App 1 is added to Main Menu ("menu")
 		List<PieItem> primary = new ArrayList<>();
 		primary.add(app1);
-		database.storeMenu("menu", primary);
+		database.storeMenuSync("menu", primary);
 
 		Map<String, String> assignments = database.getPrimaryMenuFolderAssignments();
 		assertEquals("root", assignments.get(app1.getItemKey(context)));
@@ -114,7 +114,7 @@ public class DatabaseTest {
 		// App 1 is now added to folder:test_f
 		List<PieItem> folderItems = new ArrayList<>();
 		folderItems.add(app1);
-		database.storeMenu("folder:test_f", folderItems);
+		database.storeMenuSync("folder:test_f", folderItems);
 
 		assignments = database.getPrimaryMenuFolderAssignments();
 		// In the database table pie_menu_primary, app1's folder_id is now test_f (not duplicated!)
@@ -126,11 +126,11 @@ public class DatabaseTest {
 		FolderItem folder = new FolderItem("f_to_del", "Folder To Del", null, new ArrayList<>());
 		List<PieItem> root = new ArrayList<>();
 		root.add(folder);
-		database.storeMenu("menu", root);
+		database.storeMenuSync("menu", root);
 
 		List<PieItem> folderContent = new ArrayList<>();
 		folderContent.add(app2);
-		database.storeMenu("folder:f_to_del", folderContent);
+		database.storeMenuSync("folder:f_to_del", folderContent);
 
 		Map<String, String> assignments = database.getPrimaryMenuFolderAssignments();
 		assertTrue(assignments.containsKey("folder:f_to_del"));

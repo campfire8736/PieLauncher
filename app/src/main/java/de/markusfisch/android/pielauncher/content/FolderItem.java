@@ -48,4 +48,21 @@ public class FolderItem extends PieItem {
 		actions.add(new EditFolderAction());
 		return actions;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof FolderItem)) {
+			return false;
+		}
+		FolderItem folder = (FolderItem) o;
+		return id != null ? id.equals(folder.id) : folder.id == null;
+	}
+
+	@Override
+	public int hashCode() {
+		return id != null ? id.hashCode() : 0;
+	}
 }

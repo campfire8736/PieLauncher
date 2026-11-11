@@ -185,6 +185,18 @@ public class Database {
 		storeMenuEntries(name, snapshot);
 	}
 
+	public void storeMenuSync(String name, List<? extends PieItem> icons) {
+		List<Pair<Integer, String>> snapshot = new ArrayList<>();
+		int position = 0;
+		for (PieItem icon : icons) {
+			if (icon != null && !icon.isGhost) {
+				snapshot.add(new Pair<>(position, icon.getItemKey(context)));
+			}
+			position++;
+		}
+		storeMenuEntries(name, snapshot);
+	}
+
 	public void deleteMenu(String name) {
 		Pair<String, String> target = resolveTableAndFolder(name);
 		String table = target.first;

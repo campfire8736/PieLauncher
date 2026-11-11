@@ -667,6 +667,66 @@ public class FolderLifecycleIntegrationTest {
 		assertEquals(PieLauncherApp.apps.menuPrimary, pieMenu.icons);
 	}
 
+	@Test
+	public void testEditModeHeaderAndFolderMetadataEditing() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		android.widget.TextView toolbar = activity.findViewById(R.id.toolbar);
+		android.widget.ImageView toolbarEdit = activity.findViewById(R.id.toolbar_edit);
+
+		// 1. Enter edit mode in Main Pie
+		java.lang.reflect.Method showEditorMethod = HomeActivity.class.getDeclaredMethod("showEditor");
+		showEditorMethod.setAccessible(true);
+		showEditorMethod.invoke(activity);
+
+		assertTrue(pieView.inEditMode());
+		assertFalse(pieView.isInFolder());
+		assertEquals(android.view.View.VISIBLE, toolbar.getVisibility());
+		assertEquals(activity.getString(R.string.edit_pie_menu), toolbar.getText().toString());
+		assertNotNull(toolbar.getCompoundDrawables()[0]);
+		assertEquals(android.view.View.GONE, toolbarEdit.getVisibility());
+
+		// 2. Switch to editing a folder
+		FolderItem folder = FolderManager.createNewFolder(
+				activity, "header_folder", "Old Name", 0xff2196f3, new ArrayList<>());
+		pieView.setActiveFolder(folder);
+		showEditorMethod.invoke(activity);
+
+		assertTrue(pieView.inEditMode());
+		assertTrue(pieView.isInFolder());
+		assertEquals("Old Name", toolbar.getText().toString());
+		assertNotNull(toolbar.getCompoundDrawables()[0]);
+		assertEquals(android.view.View.VISIBLE, toolbarEdit.getVisibility());
+
+		// 3. Click toolbar_edit to edit folder name and color
+		toolbarEdit.performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		assertTrue(dialog.isShowing());
+
+		android.widget.EditText nameInput = dialog.findViewById(R.id.folder_name);
+		assertNotNull(nameInput);
+		assertEquals("Old Name", nameInput.getText().toString());
+
+		nameInput.setText("Updated Folder");
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+		// Header is updated
+		assertEquals("Updated Folder", toolbar.getText().toString());
+		assertEquals("Updated Folder", folder.getLabel());
+
+		// Database is updated
+		de.markusfisch.android.pielauncher.content.Database.FolderRecord record =
+				PieLauncherApp.getDatabase(activity).getFolder(folder.id);
+		assertNotNull(record);
+		assertEquals("Updated Folder", record.name);
+	}
+
 	private Apps.AppIcon createAppIcon(String pkg, String label) {
 		try {
 			Constructor<Apps.AppIcon> constructor =

@@ -11,12 +11,31 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:orientation="vertical">
-		<TextView
-			style="@style/Toolbar"
-			android:id="@+id/toolbar"
-			android:drawableLeft="@drawable/ic_back"
-			android:drawableStart="@drawable/ic_back"
-			android:visibility="gone"/>
+		<RelativeLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+			<TextView
+				style="@style/Toolbar"
+				android:id="@+id/toolbar"
+				android:drawableLeft="@drawable/ic_back"
+				android:drawableStart="@drawable/ic_back"
+				android:visibility="gone"/>
+			<ImageView
+				android:id="@+id/toolbar_edit"
+				android:layout_width="48dp"
+				android:layout_height="48dp"
+				android:layout_alignParentRight="true"
+				android:layout_alignParentEnd="true"
+				android:layout_alignBottom="@+id/toolbar"
+				android:layout_marginBottom="4dp"
+				android:layout_marginRight="8dp"
+				android:layout_marginEnd="8dp"
+				android:padding="12dp"
+				android:src="@drawable/ic_edit"
+				android:contentDescription="@string/edit_folder"
+				android:background="?android:attr/selectableItemBackgroundBorderless"
+				android:visibility="gone"/>
+		</RelativeLayout>
 		<FrameLayout
 			android:id="@+id/floating_toolbar"
 			android:layout_width="match_parent"

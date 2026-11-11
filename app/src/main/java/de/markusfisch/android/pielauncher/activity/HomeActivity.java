@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -45,6 +47,7 @@ public class HomeActivity extends Activity {
 	private ToolbarBackground toolbarBackground;
 	private AppPieView pieView;
 	private TextView toolbar;
+	private ImageView toolbarEdit;
 	private View floatingToolbar;
 	private EditText searchInput;
 	private ImageView prefsButton;
@@ -132,12 +135,16 @@ public class HomeActivity extends Activity {
 		toolbarBackground = new ToolbarBackground(this);
 		pieView = findViewById(R.id.pie);
 		toolbar = findViewById(R.id.toolbar);
+		toolbarEdit = findViewById(R.id.toolbar_edit);
 		floatingToolbar = findViewById(R.id.floating_toolbar);
 		searchInput = findViewById(R.id.search);
 		prefsButton = findViewById(R.id.preferences);
 		editButton = findViewById(R.id.edit);
 
 		toolbar.setOnClickListener(v -> handleBack());
+		if (toolbarEdit != null) {
+			toolbarEdit.setOnClickListener(v -> editActiveFolderMetadata());
+		}
 
 		int pillRadius = Math.round(24f * getResources().getDisplayMetrics().density);
 		GradientDrawable pillDrawable = new GradientDrawable();
@@ -412,16 +419,27 @@ public class HomeActivity extends Activity {
 		});
 		pieView.setEditorListener(inEditMode -> {
 			if (inEditMode) {
-				toolbar.setText(pieView.isInFolder() && pieView.getActiveFolder() != null
-						? pieView.getActiveFolder().getLabel()
-						: getString(R.string.edit_pie_menu));
+				updateEditorHeader();
 				toolbar.setVisibility(View.VISIBLE);
 				setAlpha(toolbar, 1f);
+				if (toolbarEdit != null) {
+					setAlpha(toolbarEdit, 1f);
+				}
 				floatingToolbar.setVisibility(View.GONE);
 				hideKeyboardAndActionButtons();
 			} else {
+				if (toolbarEdit != null) {
+					toolbarEdit.setVisibility(View.GONE);
+				}
 				if (pieView.inListMode()) {
 					toolbar.setText(R.string.category_app_drawer);
+					int iconSize = Math.round(24f * getResources().getDisplayMetrics().density);
+					Drawable back = getDrawable(R.drawable.ic_back);
+					if (back != null) {
+						back = back.mutate();
+						back.setBounds(0, 0, iconSize, iconSize);
+						toolbar.setCompoundDrawables(back, null, null, null);
+					}
 					toolbar.setVisibility(View.VISIBLE);
 					setAlpha(toolbar, 1f);
 					floatingToolbar.setVisibility(View.VISIBLE);
@@ -602,6 +620,16 @@ public class HomeActivity extends Activity {
 		}
 
 		toolbar.setText(R.string.category_app_drawer);
+		int iconSize = Math.round(24f * getResources().getDisplayMetrics().density);
+		Drawable back = getDrawable(R.drawable.ic_back);
+		if (back != null) {
+			back = back.mutate();
+			back.setBounds(0, 0, iconSize, iconSize);
+			toolbar.setCompoundDrawables(back, null, null, null);
+		}
+		if (toolbarEdit != null) {
+			toolbarEdit.setVisibility(View.GONE);
+		}
 		toolbar.setVisibility(View.VISIBLE);
 		floatingToolbar.setVisibility(View.VISIBLE);
 		searchInput.setVisibility(View.VISIBLE);
@@ -641,6 +669,9 @@ public class HomeActivity extends Activity {
 		}
 		if (pieView == null || !pieView.inEditMode()) {
 			toolbar.setVisibility(View.GONE);
+			if (toolbarEdit != null) {
+				toolbarEdit.setVisibility(View.GONE);
+			}
 		}
 		if (pieView != null && !pieView.inEditMode() && pieView.isInFolder()) {
 			pieView.exitFolder();
@@ -650,6 +681,57 @@ public class HomeActivity extends Activity {
 		// ACTION_DOWN event.
 		pieView.hideList();
 		updateSystemBars();
+	}
+
+	private void updateEditorHeader() {
+		if (pieView == null || !pieView.inEditMode()) {
+			return;
+		}
+		int iconSize = Math.round(24f * getResources().getDisplayMetrics().density);
+		if (pieView.isInFolder() && pieView.getActiveFolder() != null) {
+			FolderItem folder = pieView.getActiveFolder();
+			toolbar.setText(folder.getLabel());
+			Drawable folderDrawable = folder.bitmap != null
+					? new BitmapDrawable(getResources(), folder.bitmap)
+					: getDrawable(R.drawable.ic_folder);
+			if (folderDrawable != null) {
+				folderDrawable.setBounds(0, 0, iconSize, iconSize);
+				toolbar.setCompoundDrawables(folderDrawable, null, null, null);
+			}
+			if (toolbarEdit != null) {
+				toolbarEdit.setVisibility(View.VISIBLE);
+			}
+		} else {
+			toolbar.setText(R.string.edit_pie_menu);
+			Drawable pieDrawable = getDrawable(R.drawable.ic_launcher_monochrome);
+			if (pieDrawable != null) {
+				pieDrawable = pieDrawable.mutate();
+				pieDrawable.setTint(toolbar.getCurrentTextColor());
+				pieDrawable.setBounds(0, 0, iconSize, iconSize);
+				toolbar.setCompoundDrawables(pieDrawable, null, null, null);
+			}
+			if (toolbarEdit != null) {
+				toolbarEdit.setVisibility(View.GONE);
+			}
+		}
+	}
+
+	private void editActiveFolderMetadata() {
+		FolderItem activeFolder = pieView != null ? pieView.getActiveFolder() : null;
+		if (activeFolder == null) {
+			return;
+		}
+		FolderDialog.show(
+				this,
+				R.string.edit_folder,
+				activeFolder.getLabel(),
+				activeFolder.color,
+				android.R.string.ok,
+				(name, color) -> {
+					FolderManager.updateFolderMetadata(this, activeFolder, name, color);
+					updateEditorHeader();
+					pieView.invalidate();
+				});
 	}
 
 	private void resetHomeState() {

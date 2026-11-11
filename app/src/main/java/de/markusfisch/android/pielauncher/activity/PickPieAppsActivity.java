@@ -12,6 +12,7 @@ import android.view.Window;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +45,9 @@ import de.markusfisch.android.pielauncher.widget.ScrollWithListenerView;
 public class PickPieAppsActivity extends Activity {
 	public static final String EXTRA_IS_PRIMARY = "is_primary";
 	public static final String EXTRA_FOLDER_ID = "folder_id";
+	public static final String EXTRA_CREATE_FOLDER = "create_folder";
+	public static final String EXTRA_FOLDER_NAME = "folder_name";
+	public static final String EXTRA_FOLDER_COLOR = "folder_color";
 
 	private final Set<LauncherItemKey> selectedKeys = new HashSet<>();
 	private final Set<LauncherItemKey> initialKeys = new HashSet<>();
@@ -52,6 +56,9 @@ public class PickPieAppsActivity extends Activity {
 	private final Map<String, String> folderAssignments = new HashMap<>();
 
 	private boolean isPrimary = true;
+	private boolean isCreateFolder = false;
+	private String folderName = null;
+	private int folderColor = FolderItem.DEFAULT_COLOR;
 	private String folderId = null;
 	private FolderItem folder = null;
 	private ToolbarBackground toolbarBackground;
@@ -78,6 +85,14 @@ public class PickPieAppsActivity extends Activity {
 		start(context, false, folderId);
 	}
 
+	public static void startCreateFolder(Context context, String folderName, int folderColor) {
+		Intent intent = new Intent(context, PickPieAppsActivity.class);
+		intent.putExtra(EXTRA_CREATE_FOLDER, true);
+		intent.putExtra(EXTRA_FOLDER_NAME, folderName);
+		intent.putExtra(EXTRA_FOLDER_COLOR, folderColor);
+		context.startActivity(intent);
+	}
+
 	@Override
 	protected void onCreate(Bundle state) {
 		Preferences prefs = PieLauncherApp.getPrefs(this);
@@ -88,8 +103,11 @@ public class PickPieAppsActivity extends Activity {
 		setContentView(R.layout.activity_pick_pie_apps);
 
 		isPrimary = getIntent().getBooleanExtra(EXTRA_IS_PRIMARY, true);
+		isCreateFolder = getIntent().getBooleanExtra(EXTRA_CREATE_FOLDER, false);
+		folderName = getIntent().getStringExtra(EXTRA_FOLDER_NAME);
+		folderColor = getIntent().getIntExtra(EXTRA_FOLDER_COLOR, FolderItem.DEFAULT_COLOR);
 		folderId = getIntent().getStringExtra(EXTRA_FOLDER_ID);
-		if (folderId != null) {
+		if (folderId != null && !isCreateFolder) {
 			folder = FolderManager.getOrCreateFolder(this, folderId, PieLauncherApp.apps.apps);
 		}
 		folderAssignments.putAll(PieLauncherApp.getDatabase(this).getPrimaryMenuFolderAssignments());
@@ -126,6 +144,9 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private List<PieItem> getTargetMenu() {
+		if (isCreateFolder) {
+			return Collections.emptyList();
+		}
 		if (folder != null) {
 			return folder.items;
 		}
@@ -154,6 +175,9 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private boolean hasModifications() {
+		if (isCreateFolder) {
+			return !selectedKeys.isEmpty();
+		}
 		return !selectedKeys.equals(initialKeys);
 	}
 
@@ -171,14 +195,15 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private void confirmApplySelection() {
-		if (!hasModifications()) {
+		if (!isCreateFolder && !hasModifications()) {
 			finish();
 			return;
 		}
 		Dialog.newDialog(this)
-				.setTitle(R.string.apply_changes)
+				.setTitle(isCreateFolder ? R.string.create_folder : R.string.apply_changes)
 				.setMessage(buildChangesSummary())
-				.setPositiveButton(R.string.apply, (dialog, which) -> applySelection())
+				.setPositiveButton(isCreateFolder ? R.string.create_folder : R.string.apply,
+						(dialog, which) -> applySelection())
 				.setNegativeButton(android.R.string.cancel, null)
 				.show();
 	}
@@ -197,6 +222,13 @@ public class PickPieAppsActivity extends Activity {
 			}
 		}
 		Collections.sort(added, String.CASE_INSENSITIVE_ORDER);
+
+		if (isCreateFolder && added.isEmpty()) {
+			String name = folderName != null && !folderName.trim().isEmpty()
+					? folderName
+					: getString(R.string.folder);
+			return getString(R.string.folder_format, name);
+		}
 
 		List<String> removed = new ArrayList<>();
 		for (LauncherItemKey key : initialKeys) {
@@ -398,6 +430,10 @@ public class PickPieAppsActivity extends Activity {
 	}
 
 	private void applySelection() {
+		if (isCreateFolder) {
+			applyCreateFolder();
+			return;
+		}
 		List<PieItem> targetMenu = getTargetMenu();
 		Preferences prefs = PieLauncherApp.getPrefs(this);
 		boolean isRigid = prefs != null && prefs.isRigidPie();
@@ -485,6 +521,82 @@ public class PickPieAppsActivity extends Activity {
 				Preferences.EXCLUDE_PIE_NONE) {
 			PieLauncherApp.apps.propagateUpdate();
 		}
+		finish();
+	}
+
+	private void applyCreateFolder() {
+		Preferences prefs = PieLauncherApp.getPrefs(this);
+		boolean isRigid = prefs != null && prefs.isRigidPie();
+
+		// 1. Reassign any newly selected app that was previously elsewhere
+		Set<String> modifiedOtherFolderIds = new HashSet<>();
+		boolean modifiedPrimaryMenu = false;
+
+		for (LauncherItemKey key : selectedKeys) {
+			Apps.AppIcon icon = getAppIcon(key);
+			if (icon != null) {
+				String oldContainerId = folderAssignments.get(icon.getItemKey(this));
+				if (oldContainerId != null) {
+					if (Database.FOLDER_ROOT.equals(oldContainerId)) {
+						Apps.removeItemFromPieMenu(PieLauncherApp.apps.menuPrimary, icon, isRigid);
+						modifiedPrimaryMenu = true;
+					} else {
+						FolderItem oldFolder = FolderManager.getOrCreateFolder(
+								this, oldContainerId, PieLauncherApp.apps.apps);
+						if (oldFolder != null) {
+							Apps.removeItemFromPieMenu(oldFolder.items, icon, isRigid);
+							modifiedOtherFolderIds.add(oldFolder.id);
+						}
+					}
+				}
+			}
+		}
+
+		if (modifiedPrimaryMenu) {
+			PieLauncherApp.getDatabase(this).storeMenu("menu", PieLauncherApp.apps.menuPrimary);
+		}
+		for (String otherFolderId : modifiedOtherFolderIds) {
+			FolderItem otherFolder = FolderManager.getOrCreateFolder(
+					this, otherFolderId, PieLauncherApp.apps.apps);
+			if (otherFolder != null) {
+				PieLauncherApp.getDatabase(this).storeMenu("folder:" + otherFolder.id, otherFolder.items);
+			}
+		}
+
+		// 2. Build folder items
+		List<PieItem> newFolderItems = new ArrayList<>();
+		for (Apps.AppIcon icon : allApps) {
+			if (icon != null) {
+				LauncherItemKey key = new LauncherItemKey(
+						icon.componentName, icon.userHandle);
+				if (selectedKeys.contains(key)) {
+					newFolderItems.add(icon);
+				}
+			}
+		}
+		if (isRigid) {
+			Apps.convertToRigid(newFolderItems);
+		}
+
+		// 3. Create and persist new folder
+		String id = folderId != null ? folderId : String.valueOf(System.currentTimeMillis());
+		String name = folderName != null && !folderName.trim().isEmpty()
+				? folderName
+				: getString(R.string.folder);
+		FolderItem newFolder = FolderManager.createNewFolder(
+				this, id, name, folderColor, newFolderItems);
+
+		Apps.addItemToPieMenu(PieLauncherApp.apps.menuPrimary, newFolder, isRigid);
+		PieLauncherApp.apps.store(this);
+
+		if (PieLauncherApp.getPrefs(this).excludePie() !=
+				Preferences.EXCLUDE_PIE_NONE) {
+			PieLauncherApp.apps.propagateUpdate();
+		}
+		Toast.makeText(
+				this,
+				getString(R.string.added_to_home_screen, newFolder.getLabel()),
+				Toast.LENGTH_SHORT).show();
 		finish();
 	}
 }

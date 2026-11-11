@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.os.Process;
 import android.os.UserHandle;
 import android.widget.GridView;
@@ -23,6 +24,7 @@ import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,7 @@ import de.markusfisch.android.pielauncher.adapter.PickPieAppsAdapter;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.widget.AppPieView;
+import de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -305,6 +308,39 @@ public class FolderLifecycleIntegrationTest {
 		touchPoint.set(editorRenderer.iconCenterRect.centerX(), editorRenderer.iconCenterRect.centerY());
 		performEditActionMethod.invoke(pieView, activity);
 		assertTrue(editorRenderer.isAddFolderEnabled());
+	}
+
+	@Test
+	public void testAddFolderAction_TriggersFolderCreationDialog() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		Method showEditorMethod = HomeActivity.class.getDeclaredMethod("showEditor");
+		showEditorMethod.setAccessible(true);
+		showEditorMethod.invoke(activity);
+
+		Field rendererField = AppPieView.class.getDeclaredField("editorRenderer");
+		rendererField.setAccessible(true);
+		EditorRenderer editorRenderer = (EditorRenderer) rendererField.get(pieView);
+
+		Field touchPointField = AppPieView.class.getDeclaredField("touch");
+		touchPointField.setAccessible(true);
+		Point touchPoint = (Point) touchPointField.get(pieView);
+
+		Method performEditActionMethod = AppPieView.class.getDeclaredMethod("performEditAction", Context.class);
+		performEditActionMethod.setAccessible(true);
+
+		// Click ADD_FOLDER action icon
+		touchPoint.set(editorRenderer.iconFolderRect.centerX(), editorRenderer.iconFolderRect.centerY());
+		performEditActionMethod.invoke(pieView, activity);
+
+		// Check that dialog is shown
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		assertTrue(dialog.isShowing());
 	}
 
 	@Test

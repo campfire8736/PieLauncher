@@ -108,6 +108,8 @@ public class AppPieView extends View {
         }
         void onPickPieApps(boolean isPrimary, String folderId);
         void onPreferences();
+        default void onAddFolder() {
+        }
     }
 
     public interface EditorListener {
@@ -1248,7 +1250,11 @@ public class AppPieView extends View {
                 return true;
             case ADD_FOLDER:
                 if (isPrimaryMenu()) {
-                    addFolderToPie(context);
+                    if (editListener != null) {
+                        editListener.onAddFolder();
+                    } else {
+                        promptAddFolder(context);
+                    }
                 }
                 return true;
             case RETURN_TO_MAIN_PIE:
@@ -1279,6 +1285,16 @@ public class AppPieView extends View {
             default:
                 return false;
         }
+    }
+
+    private void promptAddFolder(Context context) {
+        FolderDialog.show(
+                context,
+                R.string.create_folder,
+                context.getString(R.string.folder),
+                FolderDialog.FOLDER_COLORS[0],
+                R.string.next,
+                (name, color) -> PickPieAppsActivity.startCreateFolder(context, name, color));
     }
 
     private void addFolderToPie(Context context) {

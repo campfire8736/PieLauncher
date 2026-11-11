@@ -676,4 +676,94 @@ public class PickPieAppsActivityTest {
 		assertTrue(folder.items.contains(appB));
 		assertTrue(folder.items.contains(appC));
 	}
+
+	@Test
+	public void testCreateFolder_DiscardDoesNotCreateFolder() {
+		Context context = ApplicationProvider.getApplicationContext();
+		int initialFolderCount = FolderManager.getAllFolders().size();
+		int initialPrimaryCount = PieLauncherApp.apps.menuPrimary.size();
+
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_CREATE_FOLDER, true);
+		intent.putExtra(PickPieAppsActivity.EXTRA_FOLDER_NAME, "Unsaved Folder");
+		intent.putExtra(PickPieAppsActivity.EXTRA_FOLDER_COLOR, 0xff009688);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		GridView gridView = activity.findViewById(R.id.apps);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+
+		// Toggle appA (index 0)
+		gridView.performItemClick(null, 0, adapter.getItemId(0));
+
+		// Press back to trigger discard dialog
+		activity.onBackPressed();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick(); // Discard
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+		assertTrue(activity.isFinishing());
+
+		// Verify no new folder was created or added to primary menu
+		assertEquals(initialFolderCount, FolderManager.getAllFolders().size());
+		assertEquals(initialPrimaryCount, PieLauncherApp.apps.menuPrimary.size());
+	}
+
+	@Test
+	public void testCreateFolder_ApplyCreatesFolderWithColorAndItems() {
+		Context context = ApplicationProvider.getApplicationContext();
+		int testColor = 0xffe91e63;
+
+		Intent intent = new Intent();
+		intent.putExtra(PickPieAppsActivity.EXTRA_CREATE_FOLDER, true);
+		intent.putExtra(PickPieAppsActivity.EXTRA_FOLDER_NAME, "My New Folder");
+		intent.putExtra(PickPieAppsActivity.EXTRA_FOLDER_COLOR, testColor);
+
+		ActivityController<PickPieAppsActivity> controller =
+				Robolectric.buildActivity(PickPieAppsActivity.class, intent).setup();
+		PickPieAppsActivity activity = controller.get();
+
+		GridView gridView = activity.findViewById(R.id.apps);
+		PickPieAppsAdapter adapter = (PickPieAppsAdapter) gridView.getAdapter();
+
+		// Toggle appA (index 0) and appB (index 1)
+		gridView.performItemClick(null, 0, adapter.getItemId(0));
+		gridView.performItemClick(null, 1, adapter.getItemId(1));
+
+		// Apply
+		activity.findViewById(R.id.apply).performClick();
+		android.app.AlertDialog dialog = (android.app.AlertDialog)
+				org.robolectric.shadows.ShadowAlertDialog.getLatestDialog();
+		assertNotNull(dialog);
+		dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick(); // Apply
+		org.robolectric.shadows.ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+		assertTrue(activity.isFinishing());
+
+		// Find created folder in menuPrimary
+		FolderItem createdFolder = null;
+		for (de.markusfisch.android.pielauncher.content.PieItem item : PieLauncherApp.apps.menuPrimary) {
+			if (item instanceof FolderItem && "My New Folder".equals(item.getLabel())) {
+				createdFolder = (FolderItem) item;
+				break;
+			}
+		}
+		assertNotNull(createdFolder);
+		assertEquals("My New Folder", createdFolder.getLabel());
+		assertEquals(testColor, createdFolder.color);
+		assertNotNull(createdFolder.bitmap);
+		assertTrue(createdFolder.items.contains(appA));
+		assertTrue(createdFolder.items.contains(appB));
+
+		// Verify database also persisted it
+		de.markusfisch.android.pielauncher.content.Database.FolderRecord record =
+				PieLauncherApp.getDatabase(context).getFolder(createdFolder.id);
+		assertNotNull(record);
+		assertEquals("My New Folder", record.name);
+		assertEquals(testColor, record.color);
+	}
 }

@@ -36,6 +36,7 @@ import de.markusfisch.android.pielauncher.preference.Preferences;
 import de.markusfisch.android.pielauncher.view.SoftKeyboard;
 import de.markusfisch.android.pielauncher.view.SystemBars;
 import de.markusfisch.android.pielauncher.widget.AppPieView;
+import de.markusfisch.android.pielauncher.widget.FolderDialog;
 
 public class HomeActivity extends Activity {
 	private Preferences prefs;
@@ -454,6 +455,20 @@ public class HomeActivity extends Activity {
 			public void onPreferences() {
 				showEditorOnResume = true;
 				PreferencesActivity.start(HomeActivity.this);
+			}
+
+			@Override
+			public void onAddFolder() {
+				FolderDialog.show(
+						HomeActivity.this,
+						R.string.create_folder,
+						getString(R.string.folder),
+						FolderDialog.FOLDER_COLORS[0],
+						R.string.next,
+						(name, color) -> {
+							showEditorOnResume = true;
+							PickPieAppsActivity.startCreateFolder(HomeActivity.this, name, color);
+						});
 			}
 		});
 	}

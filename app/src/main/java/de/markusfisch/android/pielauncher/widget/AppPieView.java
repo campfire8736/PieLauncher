@@ -533,6 +533,10 @@ public class AppPieView extends View {
         pieEditor.storeMenu();
         pieEditor.commit();
         releaseIcon();
+        if (activeFolder != null) {
+            returnMenuBeforeFolder = menuPrimary;
+            exitFolder();
+        }
         editorRenderer.setInFolder(false);
         stateManager.endEditMode();
         if (prefs.excludePie() != Preferences.EXCLUDE_PIE_NONE) {

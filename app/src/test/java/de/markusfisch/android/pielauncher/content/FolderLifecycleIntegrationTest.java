@@ -597,6 +597,40 @@ public class FolderLifecycleIntegrationTest {
 		assertEquals(PieLauncherApp.apps.menuPrimary, pieMenu.icons);
 	}
 
+	@Test
+	public void testLeavingEditModeFromFolder_ReturnsToMainPie() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		List<PieItem> folderItems = new ArrayList<>();
+		folderItems.add(createAppIcon("com.pkg.item", "Folder Item"));
+		FolderItem folder = new FolderItem("test_folder", "My Folder", null, folderItems);
+
+		pieView.setActiveFolder(folder);
+		java.lang.reflect.Method showEditorMethod = HomeActivity.class.getDeclaredMethod("showEditor");
+		showEditorMethod.setAccessible(true);
+		showEditorMethod.invoke(activity);
+
+		assertTrue(pieView.inEditMode());
+		assertTrue(pieView.isInFolder());
+		assertEquals(folder, pieView.getActiveFolder());
+
+		// End edit mode directly (e.g. tapping END_EDIT_MODE or resetHomeState)
+		pieView.endEditMode();
+
+		assertFalse(pieView.inEditMode());
+		assertFalse(pieView.isInFolder());
+		assertNull(pieView.getActiveFolder());
+
+		java.lang.reflect.Field pieMenuField = AppPieView.class.getDeclaredField("pieMenu");
+		pieMenuField.setAccessible(true);
+		de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+				(de.markusfisch.android.pielauncher.graphics.CanvasPieMenu) pieMenuField.get(pieView);
+		assertEquals(PieLauncherApp.apps.menuPrimary, pieMenu.icons);
+	}
+
 	private Apps.AppIcon createAppIcon(String pkg, String label) {
 		try {
 			Constructor<Apps.AppIcon> constructor =

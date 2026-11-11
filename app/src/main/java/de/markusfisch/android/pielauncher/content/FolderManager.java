@@ -34,7 +34,6 @@ public class FolderManager {
 		}
 		List<PieItem> items = PieLauncherApp.getDatabase(context).restoreMenu("folder:" + id, allApps);
 		if (items.isEmpty()) {
-			MenuDefaults.createInitialMenu(items, allApps, context.getPackageManager());
 			if (PieLauncherApp.getPrefs(context).isRigidPie()) {
 				Apps.convertToRigid(items);
 			}
@@ -53,7 +52,6 @@ public class FolderManager {
 			Map<LauncherItemKey, Apps.AppIcon> allApps) {
 		String id = String.valueOf(System.currentTimeMillis());
 		List<PieItem> items = new ArrayList<>();
-		MenuDefaults.createInitialMenu(items, allApps, context.getPackageManager());
 		if (PieLauncherApp.getPrefs(context).isRigidPie()) {
 			Apps.convertToRigid(items);
 		}

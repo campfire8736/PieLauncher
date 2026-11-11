@@ -51,6 +51,11 @@ public class Database {
 	private static final String SEARCH_PICKS = "search_picks";
 	private static final String QUERY = "query";
 
+	public static final String PIE_MENU_PRIMARY = "pie_menu_primary";
+	public static final String PIE_MENU_SECONDARY = "pie_menu_secondary";
+	public static final String FOLDER_ID = "folder_id";
+	public static final String FOLDER_ROOT = "root";
+
 	private static final String MENU_ITEMS = "menu_items";
 	private static final String MENU_NAME = "menu_name";
 	private static final String POSITION = "position";
@@ -94,14 +99,29 @@ public class Database {
 		executor.execute(task);
 	}
 
+	public Pair<String, String> resolveTableAndFolder(String name) {
+		if (PRIMARY_MENU_FILE.equals(name)) {
+			return new Pair<>(PIE_MENU_PRIMARY, FOLDER_ROOT);
+		} else if (SECONDARY_MENU_FILE.equals(name)) {
+			return new Pair<>(PIE_MENU_SECONDARY, FOLDER_ROOT);
+		} else if (name != null && name.startsWith("folder:")) {
+			return new Pair<>(PIE_MENU_PRIMARY, name.substring("folder:".length()));
+		}
+		return new Pair<>(PIE_MENU_PRIMARY, name != null ? name : FOLDER_ROOT);
+	}
+
 	public ArrayList<PieItem> restoreMenu(
 			String name,
 			Map<LauncherItemKey, Apps.AppIcon> allApps) {
+		Pair<String, String> target = resolveTableAndFolder(name);
+		String table = target.first;
+		String folderId = target.second;
+
 		ArrayList<PieItem> icons = new ArrayList<>();
-		Cursor cursor = openHelper.getReadableDatabase().query(MENU_ITEMS,
+		Cursor cursor = openHelper.getReadableDatabase().query(table,
 				new String[]{ITEM_KEY, POSITION},
-				MENU_NAME + "=?",
-				new String[]{name},
+				FOLDER_ID + "=?",
+				new String[]{folderId},
 				null,
 				null,
 				POSITION);
@@ -166,8 +186,21 @@ public class Database {
 	}
 
 	public void deleteMenu(String name) {
+		Pair<String, String> target = resolveTableAndFolder(name);
+		String table = target.first;
+		String folderId = target.second;
+
 		SQLiteDatabase db = openHelper.getWritableDatabase();
-		db.delete(MENU_ITEMS, MENU_NAME + "=?", new String[]{name});
+		db.beginTransaction();
+		try {
+			db.delete(table, FOLDER_ID + "=?", new String[]{folderId});
+			if (name != null && name.startsWith("folder:")) {
+				db.delete(table, ITEM_KEY + "=?", new String[]{name});
+			}
+			db.setTransactionSuccessful();
+		} finally {
+			db.endTransaction();
+		}
 	}
 
 	public void deleteMenuAsync(String name) {
@@ -175,21 +208,44 @@ public class Database {
 	}
 
 	private void storeMenuEntries(String name, List<Pair<Integer, String>> entries) {
+		Pair<String, String> target = resolveTableAndFolder(name);
+		String table = target.first;
+		String folderId = target.second;
+
 		SQLiteDatabase db = openHelper.getWritableDatabase();
 		db.beginTransaction();
 		try {
-			db.delete(MENU_ITEMS, MENU_NAME + "=?", new String[]{name});
+			db.delete(table, FOLDER_ID + "=?", new String[]{folderId});
 			for (Pair<Integer, String> entry : entries) {
 				ContentValues values = new ContentValues();
-				values.put(MENU_NAME, name);
-				values.put(POSITION, entry.first);
 				values.put(ITEM_KEY, entry.second);
-				db.insertOrThrow(MENU_ITEMS, null, values);
+				values.put(FOLDER_ID, folderId);
+				values.put(POSITION, entry.first);
+				db.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
 			}
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
 		}
+	}
+
+	public Map<String, String> getAssignedFolders(String table) {
+		Map<String, String> assignments = new HashMap<>();
+		Cursor cursor = openHelper.getReadableDatabase().query(table,
+				new String[]{ITEM_KEY, FOLDER_ID},
+				null, null, null, null, null);
+		try {
+			while (cursor.moveToNext()) {
+				assignments.put(cursor.getString(0), cursor.getString(1));
+			}
+		} finally {
+			cursor.close();
+		}
+		return assignments;
+	}
+
+	public Map<String, String> getPrimaryMenuFolderAssignments() {
+		return getAssignedFolders(PIE_MENU_PRIMARY);
 	}
 
 	public void restoreHiddenApps(Set<ComponentName> componentNames) {
@@ -419,14 +475,20 @@ public class Database {
 
 	private void migrateMenu(SQLiteDatabase db, String fileName)
 			throws IOException {
-		db.delete(MENU_ITEMS, MENU_NAME + "=?", new String[]{fileName});
+		Pair<String, String> target = resolveTableAndFolder(fileName);
+		String table = target.first;
+		String folderId = target.second;
+		db.delete(table, FOLDER_ID + "=?", new String[]{folderId});
 		int position = 0;
 		for (String itemKey : readLines(fileName)) {
+			if (!itemKey.contains(":")) {
+				itemKey = "app:" + itemKey;
+			}
 			ContentValues values = new ContentValues();
-			values.put(MENU_NAME, fileName);
-			values.put(POSITION, position++);
 			values.put(ITEM_KEY, itemKey);
-			db.insertOrThrow(MENU_ITEMS, null, values);
+			values.put(FOLDER_ID, folderId);
+			values.put(POSITION, position++);
+			db.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
 		}
 	}
 
@@ -942,7 +1004,7 @@ public class Database {
 
 	private static class OpenHelper extends SQLiteOpenHelper {
 		OpenHelper(Context context) {
-			super(context, "app_cache.db", null, 5);
+			super(context, "app_cache.db", null, 6);
 		}
 
 		@Override
@@ -969,11 +1031,20 @@ public class Database {
 		}
 
 		private static void createStorageTables(SQLiteDatabase db) {
-			db.execSQL("CREATE TABLE " + MENU_ITEMS + " (" +
-					MENU_NAME + " TEXT NOT NULL," +
-					POSITION + " INTEGER NOT NULL," +
-					ITEM_KEY + " TEXT NOT NULL," +
-					"PRIMARY KEY (" + MENU_NAME + "," + POSITION + "));");
+			db.execSQL("CREATE TABLE " + PIE_MENU_PRIMARY + " (" +
+					ITEM_KEY + " TEXT PRIMARY KEY NOT NULL," +
+					FOLDER_ID + " TEXT NOT NULL," +
+					POSITION + " INTEGER NOT NULL);");
+			db.execSQL("CREATE INDEX idx_primary_folder_pos ON " +
+					PIE_MENU_PRIMARY + " (" + FOLDER_ID + ", " + POSITION + ");");
+
+			db.execSQL("CREATE TABLE " + PIE_MENU_SECONDARY + " (" +
+					ITEM_KEY + " TEXT PRIMARY KEY NOT NULL," +
+					FOLDER_ID + " TEXT NOT NULL," +
+					POSITION + " INTEGER NOT NULL);");
+			db.execSQL("CREATE INDEX idx_secondary_folder_pos ON " +
+					PIE_MENU_SECONDARY + " (" + FOLDER_ID + ", " + POSITION + ");");
+
 			db.execSQL("CREATE TABLE " + HIDDEN_APPS + " (" +
 					COMPONENT_NAME + " TEXT PRIMARY KEY NOT NULL);");
 			db.execSQL("CREATE TABLE " + ICON_MAPPING_SETS + " (" +
@@ -1029,6 +1100,72 @@ public class Database {
 					USER_SERIAL + "));");
 		}
 
+		private static void upgradeToV6(SQLiteDatabase db) {
+			db.execSQL("CREATE TABLE IF NOT EXISTS " + PIE_MENU_PRIMARY + " (" +
+					ITEM_KEY + " TEXT PRIMARY KEY NOT NULL," +
+					FOLDER_ID + " TEXT NOT NULL," +
+					POSITION + " INTEGER NOT NULL);");
+			db.execSQL("CREATE INDEX IF NOT EXISTS idx_primary_folder_pos ON " +
+					PIE_MENU_PRIMARY + " (" + FOLDER_ID + ", " + POSITION + ");");
+
+			db.execSQL("CREATE TABLE IF NOT EXISTS " + PIE_MENU_SECONDARY + " (" +
+					ITEM_KEY + " TEXT PRIMARY KEY NOT NULL," +
+					FOLDER_ID + " TEXT NOT NULL," +
+					POSITION + " INTEGER NOT NULL);");
+			db.execSQL("CREATE INDEX IF NOT EXISTS idx_secondary_folder_pos ON " +
+					PIE_MENU_SECONDARY + " (" + FOLDER_ID + ", " + POSITION + ");");
+
+			Cursor tableCursor = db.rawQuery(
+					"SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+					new String[]{MENU_ITEMS});
+			boolean oldTableExists = tableCursor != null && tableCursor.moveToFirst();
+			if (tableCursor != null) {
+				tableCursor.close();
+			}
+
+			if (oldTableExists) {
+				Cursor cursor = db.query(MENU_ITEMS,
+						new String[]{MENU_NAME, POSITION, ITEM_KEY},
+						null, null, null, null,
+						MENU_NAME + ", " + POSITION);
+				try {
+					while (cursor.moveToNext()) {
+						String menuName = cursor.getString(0);
+						int position = cursor.getInt(1);
+						String itemKey = cursor.getString(2);
+						if (itemKey == null || itemKey.isEmpty()) {
+							continue;
+						}
+						if (!itemKey.contains(":")) {
+							itemKey = "app:" + itemKey;
+						}
+
+						ContentValues values = new ContentValues();
+						values.put(ITEM_KEY, itemKey);
+						values.put(POSITION, position);
+
+						if (PRIMARY_MENU_FILE.equals(menuName)) {
+							values.put(FOLDER_ID, FOLDER_ROOT);
+							db.insertWithOnConflict(PIE_MENU_PRIMARY, null, values,
+									SQLiteDatabase.CONFLICT_IGNORE);
+						} else if (menuName != null && menuName.startsWith("folder:")) {
+							String folderId = menuName.substring("folder:".length());
+							values.put(FOLDER_ID, folderId);
+							db.insertWithOnConflict(PIE_MENU_PRIMARY, null, values,
+									SQLiteDatabase.CONFLICT_IGNORE);
+						} else if (SECONDARY_MENU_FILE.equals(menuName)) {
+							values.put(FOLDER_ID, FOLDER_ROOT);
+							db.insertWithOnConflict(PIE_MENU_SECONDARY, null, values,
+									SQLiteDatabase.CONFLICT_IGNORE);
+						}
+					}
+				} finally {
+					cursor.close();
+				}
+				db.execSQL("DROP TABLE IF EXISTS " + MENU_ITEMS);
+			}
+		}
+
 		@Override
 		public void onUpgrade(
 				SQLiteDatabase db,
@@ -1045,6 +1182,9 @@ public class Database {
 			}
 			if (oldVersion < 5) {
 				createSearchPicksTable(db);
+			}
+			if (oldVersion < 6) {
+				upgradeToV6(db);
 			}
 		}
 

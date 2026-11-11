@@ -7,23 +7,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FolderItem extends PieItem {
+	public static final int DEFAULT_COLOR = 0xffffffff;
+
 	public final String id;
 	public String label;
+	public int color;
 	public final List<PieItem> items = new ArrayList<>();
 
 	public FolderItem(String id, String label, Bitmap icon) {
+		this(id, label, DEFAULT_COLOR, icon);
+	}
+
+	public FolderItem(String id, String label, int color, Bitmap icon) {
 		super(icon);
 		this.id = id;
 		this.label = label;
+		this.color = color;
 	}
 
 	public FolderItem(String id, String label, Bitmap icon, List<PieItem> items) {
+		this(id, label, DEFAULT_COLOR, icon, items);
+	}
+
+	public FolderItem(String id, String label, int color, Bitmap icon, List<PieItem> items) {
 		super(icon);
 		this.id = id;
 		this.label = label;
+		this.color = color;
 		if (items != null) {
 			this.items.addAll(items);
 		}
+	}
+
+	public void updateMetadata(Context context, String newLabel, int newColor) {
+		this.label = newLabel;
+		this.color = newColor;
+		this.bitmap = FolderManager.createFolderIcon(context, newColor);
 	}
 
 	@Override

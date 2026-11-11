@@ -2,6 +2,7 @@ package de.markusfisch.android.pielauncher.content;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 import de.markusfisch.android.pielauncher.R;
 import de.markusfisch.android.pielauncher.app.PieLauncherApp;
+import de.markusfisch.android.pielauncher.graphics.Converter;
 import de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer;
 
 public class FolderManager {
@@ -32,6 +34,12 @@ public class FolderManager {
 		if (folders.containsKey(id)) {
 			return folders.get(id);
 		}
+		Database.FolderRecord record = PieLauncherApp.getDatabase(context).getFolder(id);
+		String name = record != null && record.name != null ? record.name : context.getString(R.string.folder);
+		int color = record != null ? record.color : FolderItem.DEFAULT_COLOR;
+		if (record == null) {
+			PieLauncherApp.getDatabase(context).insertOrUpdateFolder(id, name, color);
+		}
 		List<PieItem> items = PieLauncherApp.getDatabase(context).restoreMenu("folder:" + id, allApps);
 		if (items.isEmpty()) {
 			if (PieLauncherApp.getPrefs(context).isRigidPie()) {
@@ -40,8 +48,9 @@ public class FolderManager {
 		}
 		FolderItem folder = new FolderItem(
 				id,
-				context.getString(R.string.folder),
-				createFolderIcon(context),
+				name,
+				color,
+				createFolderIcon(context, color),
 				items);
 		folders.put(id, folder);
 		return folder;
@@ -49,25 +58,69 @@ public class FolderManager {
 
 	public static synchronized FolderItem createNewFolder(
 			Context context,
-			Map<LauncherItemKey, Apps.AppIcon> allApps) {
-		String id = String.valueOf(System.currentTimeMillis());
-		List<PieItem> items = new ArrayList<>();
-		if (PieLauncherApp.getPrefs(context).isRigidPie()) {
-			Apps.convertToRigid(items);
+			String id,
+			String name,
+			int color,
+			List<PieItem> items) {
+		if (id == null) {
+			id = String.valueOf(System.currentTimeMillis());
+		}
+		if (name == null || name.trim().isEmpty()) {
+			name = context.getString(R.string.folder);
+		}
+		if (color == 0) {
+			color = FolderItem.DEFAULT_COLOR;
+		}
+		if (items == null) {
+			items = new ArrayList<>();
+		}
+		if (items.isEmpty()) {
+			if (PieLauncherApp.getPrefs(context).isRigidPie()) {
+				Apps.convertToRigid(items);
+			}
 		}
 		FolderItem folder = new FolderItem(
 				id,
-				context.getString(R.string.folder),
-				createFolderIcon(context),
+				name,
+				color,
+				createFolderIcon(context, color),
 				items);
 		folders.put(id, folder);
-		PieLauncherApp.getDatabase(context).storeMenu("folder:" + id, folder.items);
+		Database db = PieLauncherApp.getDatabase(context);
+		db.insertOrUpdateFolder(id, name, color);
+		db.storeMenu("folder:" + id, folder.items);
 		return folder;
+	}
+
+	public static synchronized FolderItem createNewFolder(
+			Context context,
+			Map<LauncherItemKey, Apps.AppIcon> allApps) {
+		return createNewFolder(context, null, context.getString(R.string.folder),
+				FolderItem.DEFAULT_COLOR, null);
+	}
+
+	public static synchronized void updateFolderMetadata(
+			Context context,
+			FolderItem folder,
+			String name,
+			int color) {
+		if (folder == null) {
+			return;
+		}
+		if (name == null || name.trim().isEmpty()) {
+			name = context.getString(R.string.folder);
+		}
+		if (color == 0) {
+			color = FolderItem.DEFAULT_COLOR;
+		}
+		folder.updateMetadata(context, name, color);
+		PieLauncherApp.getDatabase(context).insertOrUpdateFolder(folder.id, name, color);
 	}
 
 	public static synchronized void deleteFolder(Context context, String id) {
 		folders.remove(id);
 		PieLauncherApp.getDatabase(context).deleteMenuAsync("folder:" + id);
+		PieLauncherApp.getDatabase(context).deleteFolderAsync(id);
 	}
 
 	public static synchronized Collection<FolderItem> getAllFolders() {
@@ -97,7 +150,20 @@ public class FolderManager {
 		folders.clear();
 	}
 
+	public static Bitmap createFolderIcon(Context context, int color) {
+		if (context == null) {
+			return null;
+		}
+		Drawable d = context.getDrawable(R.drawable.ic_folder);
+		if (d != null) {
+			d = d.mutate();
+			d.setTint(color != 0 ? color : 0xffffffff);
+			return Converter.getBitmapFromDrawable(d);
+		}
+		return null;
+	}
+
 	public static Bitmap createFolderIcon(Context context) {
-		return EditorRenderer.getWhiteBitmapFromDrawable(context, R.drawable.ic_folder);
+		return createFolderIcon(context, 0xffffffff);
 	}
 }

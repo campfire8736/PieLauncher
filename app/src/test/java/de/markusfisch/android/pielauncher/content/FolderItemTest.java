@@ -111,4 +111,34 @@ public class FolderItemTest {
 		action.perform(context, folder, listener);
 		assertEquals(folder, edited[0]);
 	}
+
+	@Test
+	public void testFolderMetadataAndColorPersistence() {
+		int testColor = 0xffff5722;
+		FolderItem folder = FolderManager.createNewFolder(context, "custom_f", "Work Apps", testColor, null);
+		assertNotNull(folder);
+		assertEquals("Work Apps", folder.getLabel());
+		assertEquals(testColor, folder.color);
+		assertNotNull(folder.bitmap);
+
+		// Clear memory cache to force reloading from database
+		FolderManager.clearCache();
+
+		FolderItem restored = FolderManager.getOrCreateFolder(context, "custom_f", new HashMap<>());
+		assertNotNull(restored);
+		assertEquals("Work Apps", restored.getLabel());
+		assertEquals(testColor, restored.color);
+		assertNotNull(restored.bitmap);
+
+		// Update metadata
+		int newColor = 0xff4caf50;
+		FolderManager.updateFolderMetadata(context, restored, "Productivity", newColor);
+		assertEquals("Productivity", restored.getLabel());
+		assertEquals(newColor, restored.color);
+
+		FolderManager.clearCache();
+		FolderItem reRestored = FolderManager.getOrCreateFolder(context, "custom_f", new HashMap<>());
+		assertEquals("Productivity", reRestored.getLabel());
+		assertEquals(newColor, reRestored.color);
+	}
 }

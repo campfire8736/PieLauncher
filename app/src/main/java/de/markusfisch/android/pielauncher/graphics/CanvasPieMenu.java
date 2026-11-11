@@ -14,7 +14,7 @@ public class CanvasPieMenu<T extends CanvasPieMenu.CanvasIcon> extends PieMenu<T
 
 	public static class CanvasIcon extends PieMenu.Icon {
 		public final Rect rect = new Rect();
-		public final Bitmap bitmap;
+		public Bitmap bitmap;
 
 		private double smoothedSize;
 		private int smoothedX;

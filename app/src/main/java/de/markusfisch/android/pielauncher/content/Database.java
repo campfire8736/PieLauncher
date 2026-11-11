@@ -53,8 +53,23 @@ public class Database {
 
 	public static final String PIE_MENU_PRIMARY = "pie_menu_primary";
 	public static final String PIE_MENU_SECONDARY = "pie_menu_secondary";
+	public static final String FOLDERS = "folders";
 	public static final String FOLDER_ID = "folder_id";
+	public static final String FOLDER_NAME = "name";
+	public static final String FOLDER_COLOR = "color";
 	public static final String FOLDER_ROOT = "root";
+
+	public static class FolderRecord {
+		public final String id;
+		public final String name;
+		public final int color;
+
+		public FolderRecord(String id, String name, int color) {
+			this.id = id;
+			this.name = name;
+			this.color = color;
+		}
+	}
 
 	private static final String MENU_ITEMS = "menu_items";
 	private static final String MENU_NAME = "menu_name";
@@ -207,7 +222,9 @@ public class Database {
 		try {
 			db.delete(table, FOLDER_ID + "=?", new String[]{folderId});
 			if (name != null && name.startsWith("folder:")) {
+				String fId = name.substring("folder:".length());
 				db.delete(table, ITEM_KEY + "=?", new String[]{name});
+				db.delete(FOLDERS, FOLDER_ID + "=?", new String[]{fId});
 			}
 			db.setTransactionSuccessful();
 		} finally {
@@ -217,6 +234,78 @@ public class Database {
 
 	public void deleteMenuAsync(String name) {
 		execute(() -> deleteMenu(name));
+	}
+
+	public void insertOrUpdateFolder(String id, String name, int color) {
+		ContentValues values = new ContentValues();
+		values.put(FOLDER_ID, id);
+		values.put(FOLDER_NAME, name);
+		values.put(FOLDER_COLOR, color);
+		openHelper.getWritableDatabase().insertWithOnConflict(
+				FOLDERS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+	}
+
+	public void insertOrUpdateFolderAsync(String id, String name, int color) {
+		execute(() -> insertOrUpdateFolder(id, name, color));
+	}
+
+	public FolderRecord getFolder(String id) {
+		if (id == null) {
+			return null;
+		}
+		Cursor cursor = openHelper.getReadableDatabase().query(
+				FOLDERS,
+				new String[]{FOLDER_ID, FOLDER_NAME, FOLDER_COLOR},
+				FOLDER_ID + "=?",
+				new String[]{id},
+				null, null, null);
+		if (cursor != null) {
+			try {
+				if (cursor.moveToFirst()) {
+					return new FolderRecord(
+							cursor.getString(0),
+							cursor.getString(1),
+							cursor.getInt(2));
+				}
+			} finally {
+				cursor.close();
+			}
+		}
+		return null;
+	}
+
+	public Map<String, FolderRecord> getAllFolders() {
+		Map<String, FolderRecord> map = new HashMap<>();
+		Cursor cursor = openHelper.getReadableDatabase().query(
+				FOLDERS,
+				new String[]{FOLDER_ID, FOLDER_NAME, FOLDER_COLOR},
+				null, null, null, null, null);
+		if (cursor != null) {
+			try {
+				while (cursor.moveToNext()) {
+					String id = cursor.getString(0);
+					map.put(id, new FolderRecord(
+							id,
+							cursor.getString(1),
+							cursor.getInt(2)));
+				}
+			} finally {
+				cursor.close();
+			}
+		}
+		return map;
+	}
+
+	public void deleteFolder(String id) {
+		if (id == null) {
+			return;
+		}
+		openHelper.getWritableDatabase().delete(
+				FOLDERS, FOLDER_ID + "=?", new String[]{id});
+	}
+
+	public void deleteFolderAsync(String id) {
+		execute(() -> deleteFolder(id));
 	}
 
 	private void storeMenuEntries(String name, List<Pair<Integer, String>> entries) {
@@ -1016,13 +1105,14 @@ public class Database {
 
 	private static class OpenHelper extends SQLiteOpenHelper {
 		OpenHelper(Context context) {
-			super(context, "app_cache.db", null, 6);
+			super(context, "app_cache.db", null, 7);
 		}
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 			createAppsTables(db);
 			createStorageTables(db);
+			createFoldersTable(db);
 			createUsageTables(db);
 			createShortcutsTable(db);
 			createSearchPicksTable(db);
@@ -1178,6 +1268,17 @@ public class Database {
 			}
 		}
 
+		private static void createFoldersTable(SQLiteDatabase db) {
+			db.execSQL("CREATE TABLE IF NOT EXISTS " + FOLDERS + " (" +
+					FOLDER_ID + " TEXT PRIMARY KEY NOT NULL," +
+					FOLDER_NAME + " TEXT NOT NULL," +
+					FOLDER_COLOR + " INTEGER NOT NULL);");
+		}
+
+		private static void upgradeToV7(SQLiteDatabase db) {
+			createFoldersTable(db);
+		}
+
 		@Override
 		public void onUpgrade(
 				SQLiteDatabase db,
@@ -1197,6 +1298,9 @@ public class Database {
 			}
 			if (oldVersion < 6) {
 				upgradeToV6(db);
+			}
+			if (oldVersion < 7) {
+				upgradeToV7(db);
 			}
 		}
 

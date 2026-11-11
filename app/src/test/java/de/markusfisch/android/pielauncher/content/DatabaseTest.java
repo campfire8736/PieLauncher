@@ -26,6 +26,7 @@ import de.markusfisch.android.pielauncher.app.PieLauncherApp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
@@ -141,5 +142,24 @@ public class DatabaseTest {
 		assignments = database.getPrimaryMenuFolderAssignments();
 		assertFalse(assignments.containsKey("folder:f_to_del"));
 		assertFalse(assignments.containsKey(app2.getItemKey(context)));
+	}
+
+	@Test
+	public void testFolderRecordCrud() {
+		database.insertOrUpdateFolder("folder_1", "Social", 0xffe91e63);
+		Database.FolderRecord record = database.getFolder("folder_1");
+		assertNotNull(record);
+		assertEquals("folder_1", record.id);
+		assertEquals("Social", record.name);
+		assertEquals(0xffe91e63, record.color);
+
+		database.insertOrUpdateFolder("folder_1", "Social Media", 0xff9c27b0);
+		record = database.getFolder("folder_1");
+		assertNotNull(record);
+		assertEquals("Social Media", record.name);
+		assertEquals(0xff9c27b0, record.color);
+
+		database.deleteFolder("folder_1");
+		assertNull(database.getFolder("folder_1"));
 	}
 }

@@ -47,7 +47,7 @@ public class PieItemTest {
 	public void testAppIconIsPieItem() {
 		assertTrue(testApp instanceof PieItem);
 		assertEquals("Test App", testApp.getLabel());
-		assertEquals("com.example.test/com.example.test.MainActivity", testApp.getItemKey(context));
+		assertEquals("app:com.example.test/com.example.test.MainActivity", testApp.getItemKey(context));
 	}
 
 	@Test

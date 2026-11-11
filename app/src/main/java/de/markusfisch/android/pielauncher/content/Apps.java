@@ -97,7 +97,7 @@ public class Apps {
 			if (componentName == null) {
 				return "";
 			}
-			return LauncherItemKey.flattenToString(context, componentName, userHandle);
+			return "app:" + LauncherItemKey.flattenToString(context, componentName, userHandle);
 		}
 
 		@Override

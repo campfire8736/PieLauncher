@@ -555,6 +555,67 @@ public class EditorRendererTest {
         assertBitmapIsWhite("dark iconDetails", darkRenderer.iconDetails);
     }
 
+    @Test
+    public void testLayout_InFolder_AllocatesIconCenterRectRegardlessOfSecondaryMenu() {
+        int width = 1080;
+        int height = 1920;
+        int controlsPadding = 80;
+
+        // In folder with secondary menu disabled: must allocate iconCenterRect (4 buttons)
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, false, true);
+        org.junit.Assert.assertFalse("iconCenterRect should not be empty when inFolder is true", editorRenderer.iconCenterRect.isEmpty());
+        assertEquals(editorRenderer.iconFolderRect.top, editorRenderer.iconCenterRect.top);
+        assertEquals(editorRenderer.iconCenterRect.top, editorRenderer.iconEndRect.top);
+        org.junit.Assert.assertTrue(editorRenderer.iconFolderRect.left < editorRenderer.iconCenterRect.left);
+        org.junit.Assert.assertTrue(editorRenderer.iconCenterRect.left < editorRenderer.iconEndRect.left);
+
+        // In folder with secondary menu enabled: must also allocate iconCenterRect (4 buttons)
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, true, true);
+        org.junit.Assert.assertFalse("iconCenterRect should not be empty when inFolder is true with secondary menu", editorRenderer.iconCenterRect.isEmpty());
+
+        // Not in folder and secondary menu disabled: iconCenterRect must be empty (3 buttons)
+        editorRenderer.layout(width, height, controlsPadding, 12f, 2f, 4, 48, false, false);
+        org.junit.Assert.assertTrue("iconCenterRect must be empty when not inFolder and secondary menu is disabled", editorRenderer.iconCenterRect.isEmpty());
+    }
+
+    @Test
+    public void testDraw_InFolder_DrawsReturnIconInsteadOfSplitPie() {
+        when(mockFaderEdit.get(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyFloat())).thenReturn(1f);
+        when(mockCanvas.getWidth()).thenReturn(1080);
+        when(mockCanvas.getHeight()).thenReturn(1920);
+
+        Bitmap iconReturn = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+        Bitmap iconSplitPie = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+        editorRenderer.iconReturn = iconReturn;
+        editorRenderer.iconSplitPie = iconSplitPie;
+
+        de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+                new de.markusfisch.android.pielauncher.graphics.CanvasPieMenu();
+
+        // 1. inFolder = true, hasSecondaryMenu = true
+        editorRenderer.setInFolder(true);
+        editorRenderer.draw(mockCanvas, mockFaderEdit, pieMenu, null, 0L, null, 0f, true, false);
+
+        verify(mockCanvas, atLeastOnce()).drawBitmap(org.mockito.ArgumentMatchers.eq(iconReturn), nullable(Rect.class), org.mockito.ArgumentMatchers.eq(editorRenderer.iconCenterRect), any(Paint.class));
+        verify(mockCanvas, never()).drawBitmap(org.mockito.ArgumentMatchers.eq(iconSplitPie), nullable(Rect.class), org.mockito.ArgumentMatchers.eq(editorRenderer.iconCenterRect), any(Paint.class));
+
+        // 2. inFolder = false, hasSecondaryMenu = true
+        editorRenderer.setInFolder(false);
+        editorRenderer.draw(mockCanvas, mockFaderEdit, pieMenu, null, 0L, null, 0f, true, false);
+        verify(mockCanvas, atLeastOnce()).drawBitmap(org.mockito.ArgumentMatchers.eq(iconSplitPie), nullable(Rect.class), org.mockito.ArgumentMatchers.eq(editorRenderer.iconCenterRect), any(Paint.class));
+    }
+
+    @Test
+    public void testGetActionAt_InFolder_ReturnsReturnToMainPie() {
+        editorRenderer.iconCenterRect.set(100, 0, 200, 100);
+
+        editorRenderer.setInFolder(true);
+        assertEquals(EditorAction.RETURN_TO_MAIN_PIE, editorRenderer.getActionAt(new Point(150, 50), false));
+
+        editorRenderer.setInFolder(false);
+        assertEquals(EditorAction.EDIT_SETTINGS_OR_UNDO, editorRenderer.getActionAt(new Point(150, 50), false));
+    }
+
     private static void assertBitmapIsWhite(String name, Bitmap bitmap) {
         org.junit.Assert.assertNotNull(name + " should not be null", bitmap);
         boolean hasOpaquePixel = false;

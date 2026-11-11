@@ -38,6 +38,7 @@ import de.markusfisch.android.pielauncher.widget.AppPieView;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
@@ -516,6 +517,84 @@ public class FolderLifecycleIntegrationTest {
 		// Verify menuSecondary is unchanged
 		assertEquals(1, PieLauncherApp.apps.menuSecondary.size());
 		assertTrue(PieLauncherApp.apps.menuSecondary.contains(secondaryApp));
+	}
+
+	@Test
+	public void testFolderInEditMode_HidesSecondaryMenuSwitch_AndReturnsToMainPieOnReturnButtonClick() throws Exception {
+		controller = Robolectric.buildActivity(HomeActivity.class).setup();
+		activity = controller.get();
+		AppPieView pieView = activity.findViewById(R.id.pie);
+		pieView.layout(0, 0, 1080, 2280);
+
+		PieLauncherApp.getPrefs(context).setSplitPieMenu(Preferences.ALTERNATE_MENU_SECONDARY);
+
+		List<PieItem> folderItems = new ArrayList<>();
+		Apps.AppIcon folderApp = createAppIcon("com.pkg.folderapp", "Folder App");
+		folderItems.add(folderApp);
+
+		FolderItem folder = new FolderItem("folder_return_test", "Return Test Folder", null, folderItems);
+		PieLauncherApp.apps.menuPrimary.add(folder);
+
+		// Enter folder and EditMode
+		pieView.setActiveFolder(folder);
+		Method showEditorMethod = HomeActivity.class.getDeclaredMethod("showEditor");
+		showEditorMethod.setAccessible(true);
+		showEditorMethod.invoke(activity);
+
+		assertTrue(pieView.inEditMode());
+		assertTrue(pieView.isInFolder());
+		assertEquals(folder, pieView.getActiveFolder());
+
+		java.lang.reflect.Field rendererField = AppPieView.class.getDeclaredField("editorRenderer");
+		rendererField.setAccessible(true);
+		de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer editorRenderer =
+				(de.markusfisch.android.pielauncher.widget.renderer.EditorRenderer) rendererField.get(pieView);
+
+		assertTrue(editorRenderer.isInFolder());
+		assertFalse(editorRenderer.isAddFolderEnabled());
+		assertFalse(editorRenderer.iconCenterRect.isEmpty());
+
+		// In a folder, iconCenterRect represents RETURN_TO_MAIN_PIE, not EDIT_SETTINGS_OR_UNDO
+		java.lang.reflect.Field touchField = AppPieView.class.getDeclaredField("touch");
+		touchField.setAccessible(true);
+		android.graphics.Point touchPoint = (android.graphics.Point) touchField.get(pieView);
+		touchPoint.set(editorRenderer.iconCenterRect.centerX(), editorRenderer.iconCenterRect.centerY());
+
+		assertEquals(de.markusfisch.android.pielauncher.widget.state.EditorAction.RETURN_TO_MAIN_PIE,
+				editorRenderer.getActionAt(touchPoint, false));
+
+		Method performEditActionMethod = AppPieView.class.getDeclaredMethod("performEditAction", Context.class);
+		performEditActionMethod.setAccessible(true);
+		boolean handled = (boolean) performEditActionMethod.invoke(pieView, activity);
+		assertTrue(handled);
+
+		// Verify returned to main pie while remaining in EditMode
+		assertFalse(pieView.isInFolder());
+		assertNull(pieView.getActiveFolder());
+		assertTrue(pieView.inEditMode());
+
+		java.lang.reflect.Field pieMenuField = AppPieView.class.getDeclaredField("pieMenu");
+		pieMenuField.setAccessible(true);
+		de.markusfisch.android.pielauncher.graphics.CanvasPieMenu pieMenu =
+				(de.markusfisch.android.pielauncher.graphics.CanvasPieMenu) pieMenuField.get(pieView);
+		assertEquals(PieLauncherApp.apps.menuPrimary, pieMenu.icons);
+
+		assertFalse(editorRenderer.isInFolder());
+		assertTrue(editorRenderer.isAddFolderEnabled());
+		assertEquals(de.markusfisch.android.pielauncher.widget.state.EditorAction.EDIT_SETTINGS_OR_UNDO,
+				editorRenderer.getActionAt(touchPoint, false));
+
+		// Test hardware back press inside a folder in EditMode also returns to main pie in EditMode
+		pieView.setActiveFolder(folder);
+		showEditorMethod.invoke(activity);
+		assertTrue(pieView.inEditMode());
+		assertTrue(pieView.isInFolder());
+
+		activity.onBackPressed();
+		assertFalse(pieView.isInFolder());
+		assertNull(pieView.getActiveFolder());
+		assertTrue(pieView.inEditMode());
+		assertEquals(PieLauncherApp.apps.menuPrimary, pieMenu.icons);
 	}
 
 	private Apps.AppIcon createAppIcon(String pkg, String label) {

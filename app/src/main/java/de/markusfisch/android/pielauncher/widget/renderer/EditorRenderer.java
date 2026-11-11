@@ -81,7 +81,9 @@ public class EditorRenderer {
     public Bitmap iconSplitPie;
     public Bitmap iconPreferences;
     public Bitmap iconDone;
+    public Bitmap iconReturn;
 
+    private boolean inFolder = false;
     private boolean addFolderEnabled = true;
     private float actionSize;
     private float actionSizeSq;
@@ -138,6 +140,7 @@ public class EditorRenderer {
         iconDetails = getWhiteBitmapFromDrawable(context, R.drawable.ic_details);
         iconDone = Converter.getBitmapFromDrawable(context, R.drawable.ic_done);
         iconPreferences = Converter.getBitmapFromDrawable(context, R.drawable.ic_preferences);
+        iconReturn = Converter.getBitmapFromDrawable(context, R.drawable.ic_back);
     }
 
     public static Bitmap getWhiteBitmapFromDrawable(Context context, int resId) {
@@ -296,7 +299,9 @@ public class EditorRenderer {
                 drawAction(canvas, iconFolder, iconFolderRect, 0f, null);
                 paintAction.setAlpha(oldAlpha);
             }
-            if (hasSecondaryMenu) {
+            if (inFolder) {
+                drawAction(canvas, iconReturn, iconCenterRect, 0f, highlightedAction);
+            } else if (hasSecondaryMenu) {
                 drawAction(canvas, iconSplitPie, iconCenterRect, 0f, highlightedAction);
             }
             drawAction(canvas, iconDone, iconEndRect, 0f, highlightedAction);
@@ -467,6 +472,14 @@ public class EditorRenderer {
         this.addFolderEnabled = enabled;
     }
 
+    public boolean isInFolder() {
+        return inFolder;
+    }
+
+    public void setInFolder(boolean inFolder) {
+        this.inFolder = inFolder;
+    }
+
     public void setTextDimensions(int controlsPadding, float textOffset, float sp) {
         this.controlsPadding = controlsPadding;
         this.textOffset = textOffset;
@@ -502,12 +515,28 @@ public class EditorRenderer {
             int spaceBetween,
             int iconSize,
             boolean hasSecondaryMenu) {
+        layout(viewWidth, viewHeight, controlsPadding, textOffset, sp, spaceBetween, iconSize, hasSecondaryMenu, inFolder);
+    }
+
+    public void layout(
+            int viewWidth,
+            int viewHeight,
+            int controlsPadding,
+            float textOffset,
+            float sp,
+            int spaceBetween,
+            int iconSize,
+            boolean hasSecondaryMenu,
+            boolean inFolder) {
+        this.inFolder = inFolder;
         boolean portrait = viewHeight > viewWidth;
 
+        boolean showCenterButton = inFolder || hasSecondaryMenu;
         Bitmap[] bottomIcons;
         Rect[] bottomRects;
-        if (hasSecondaryMenu) {
-            bottomIcons = new Bitmap[]{iconAdd, iconFolder, iconSplitPie, iconDone};
+        if (showCenterButton) {
+            Bitmap centerIcon = inFolder ? iconReturn : iconSplitPie;
+            bottomIcons = new Bitmap[]{iconAdd, iconFolder, centerIcon, iconDone};
             bottomRects = new Rect[]{iconStartRect, iconFolderRect, iconCenterRect, iconEndRect};
         } else {
             iconCenterRect.set(0, 0, 0, 0);
@@ -547,7 +576,7 @@ public class EditorRenderer {
         int botMinY = Math.min(iconStartRect.top, Math.min(iconFolderRect.top, iconEndRect.top));
         int botMaxY = Math.max(iconStartRect.bottom, Math.max(iconFolderRect.bottom, iconEndRect.bottom));
 
-        if (hasSecondaryMenu) {
+        if (showCenterButton) {
             botMinX = Math.min(botMinX, iconCenterRect.left);
             botMaxX = Math.max(botMaxX, iconCenterRect.right);
             botMinY = Math.min(botMinY, iconCenterRect.top);
@@ -632,7 +661,7 @@ public class EditorRenderer {
         if (contains(iconStartRect, touch)) {
             return EditorAction.BACK_OR_REMOVE_ICON;
         } else if (!iconCenterRect.isEmpty() && contains(iconCenterRect, touch)) {
-            return EditorAction.EDIT_SETTINGS_OR_UNDO;
+            return inFolder ? EditorAction.RETURN_TO_MAIN_PIE : EditorAction.EDIT_SETTINGS_OR_UNDO;
         } else if (contains(iconEndRect, touch)) {
             return EditorAction.END_EDIT_MODE;
         }

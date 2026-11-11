@@ -69,6 +69,10 @@ public class HomeActivity extends Activity {
 
 	private void handleBack() {
 		if (pieView.inEditMode()) {
+			if (pieView.isInFolder()) {
+				pieView.returnToMainPieFromFolder();
+				return;
+			}
 			pieView.endEditMode();
 			showAllApps();
 		} else if (pieView.inListMode()) {

@@ -8,5 +8,6 @@ public enum EditorAction {
     BACK_OR_REMOVE_ICON,
     ADD_FOLDER,
     EDIT_SETTINGS_OR_UNDO,
-    END_EDIT_MODE
+    END_EDIT_MODE,
+    RETURN_TO_MAIN_PIE
 }

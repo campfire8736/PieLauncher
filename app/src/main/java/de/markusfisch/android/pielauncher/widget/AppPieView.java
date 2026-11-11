@@ -315,6 +315,7 @@ public class AppPieView extends View {
             storeMenu();
             setActiveFolder(folder);
             setMenu(folder.items);
+            editorRenderer.setInFolder(true);
             editorRenderer.setAddFolderEnabled(false);
             setCenter(viewWidth >> 1, viewHeight >> 1);
             layoutEditorRenderer();
@@ -532,6 +533,7 @@ public class AppPieView extends View {
         pieEditor.storeMenu();
         pieEditor.commit();
         releaseIcon();
+        editorRenderer.setInFolder(false);
         stateManager.endEditMode();
         if (prefs.excludePie() != Preferences.EXCLUDE_PIE_NONE) {
             PieLauncherApp.apps.propagateUpdate();
@@ -653,6 +655,7 @@ public class AppPieView extends View {
             drawRenderNode(listRenderNode, canvas);
         }
 
+        editorRenderer.setInFolder(activeFolder != null);
         editorRenderer.setTouch(touch);
         invalidate |= editorRenderer.draw(
                 canvas,
@@ -1082,9 +1085,10 @@ public class AppPieView extends View {
 
     private void layoutEditorRenderer() {
         if (viewWidth > 0 && viewHeight > 0) {
+            editorRenderer.setInFolder(activeFolder != null);
             editorRenderer.layout(viewWidth, viewHeight, controlsPadding,
                     listRenderer.getTextOffset(), sp, spaceBetween, iconSize,
-                    hasSecondaryMenu());
+                    hasSecondaryMenu(), activeFolder != null);
         }
     }
 
@@ -1110,6 +1114,7 @@ public class AppPieView extends View {
                 pieMenu.icons != menuSecondary) {
             setMenu(menuPrimary);
         }
+        editorRenderer.setInFolder(activeFolder != null);
         editorRenderer.setAddFolderEnabled(isPrimaryMenu() && activeFolder == null);
         pieConfig.updateSplitPieIcon(getResources(), editorRenderer, !isPrimaryMenu());
         setCenter(viewWidth >> 1, viewHeight >> 1);
@@ -1242,15 +1247,13 @@ public class AppPieView extends View {
                     addFolderToPie(context);
                 }
                 return true;
+            case RETURN_TO_MAIN_PIE:
+                returnToMainPieFromFolder();
+                return true;
             case EDIT_SETTINGS_OR_UNDO:
                 if (hasSecondaryMenu()) {
                     storeMenu();
-                    if (activeFolder != null) {
-                        activeFolder = null;
-                        setMenu(menuPrimary);
-                    } else {
-                        setMenu(isPrimaryMenu() ? menuSecondary : menuPrimary);
-                    }
+                    setMenu(isPrimaryMenu() ? menuSecondary : menuPrimary);
                     centerSmoothCoordinatesAt(pieMenu.icons,
                             viewWidth >> 1, viewHeight >> 1);
                     pieConfig.updateSplitPieIcon(context, editorRenderer, !isPrimaryMenu());
@@ -1292,6 +1295,28 @@ public class AppPieView extends View {
                 context,
                 context.getString(R.string.added_to_home_screen, folder.getLabel()),
                 Toast.LENGTH_SHORT).show();
+    }
+
+    public void returnToMainPieFromFolder() {
+        if (activeFolder == null) {
+            return;
+        }
+        pieEditor.rollback(pieMenu.icons);
+        storeMenu();
+        exitFolder();
+        editorRenderer.setInFolder(false);
+        editorRenderer.setAddFolderEnabled(isPrimaryMenu());
+        pieConfig.updateSplitPieIcon(getContext(), editorRenderer, !isPrimaryMenu());
+        pieConfig.updateChangeIcons(getContext(), editorRenderer);
+        setCenter(viewWidth >> 1, viewHeight >> 1);
+        layoutEditorRenderer();
+        pieEditor.beginEdit(pieMenu.icons);
+        pieMenu.calculate(viewWidth >> 1, viewHeight >> 1);
+        centerSmoothCoordinatesAt(pieMenu.icons, viewWidth >> 1, viewHeight >> 1);
+        if (editorListener != null) {
+            editorListener.onEditorStateChanged(true);
+        }
+        invalidate();
     }
 
     private void updateAppShortcuts() {
@@ -1513,6 +1538,7 @@ public class AppPieView extends View {
                 }
                 break;
             case EDIT_SETTINGS_OR_UNDO:
+            case RETURN_TO_MAIN_PIE:
                 setHighlightedAction(editorRenderer.iconCenterRect);
                 break;
             case END_EDIT_MODE:
